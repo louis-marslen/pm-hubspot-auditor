@@ -462,7 +462,7 @@ Décision PO confirmée : un compte HubSpot Auditor peut contenir plusieurs work
 
 | Risque | Probabilité | Impact | Mitigation |
 |---|---|---|---|
-| R1 — Délai de validation de la Public App HubSpot | Moyenne | Élevé (bloque tout développement API) | Soumettre la Public App au plus tôt dans le projet, avant le développement des features |
+| R1 — Délai de validation de la Public App HubSpot | ~~Moyenne~~ **Résolu** | ~~Élevé~~ | **La Public App est déjà créée — ce risque est levé.** |
 | R2 — Changement des scopes HubSpot disponibles | Faible | Moyen | Surveiller les changelogs HubSpot API ; documenter les scopes alternatifs |
 | R3 — Utilisateur HubSpot sans droits admin | Moyenne | Moyen | Certains appels API peuvent retourner 403 sur des ressources restreintes. Gérer gracieusement en audit partiel (voir section 6.6) |
 | R4 — Rate limiting HubSpot lors de l'audit | Moyenne | Moyen | Implémenter le retry avec backoff dès EP-01 (voir section 6.6) |

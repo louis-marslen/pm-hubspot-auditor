@@ -333,6 +333,6 @@ Nous construisons un système d'authentification et de gestion de profil découp
 
 | # | Question | Impact | Statut |
 |---|---|---|---|
-| Q1 | Quel service d'envoi d'email transactionnel choisir ? | Implémentation | ❓ Décision équipe tech |
+| Q1 | Quel service d'envoi d'email transactionnel choisir ? | Implémentation | ✅ **Décision PO : Resend** (free tier). Simple à intégrer, généreux en volume gratuit pour la v1. |
 | Q2 | Faut-il implémenter un rate limiting sur les tentatives de connexion dès la v1 ? | Sécurité | ❓ Recommandé — à confirmer |
 | Q3 | La session "Se souvenir de moi" (30 jours) doit-elle être opt-in ou activée par défaut ? | UX | ❓ Décision design |

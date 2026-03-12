@@ -339,7 +339,7 @@ Les métadonnées sont affichées dans une section dédiée (footer ou section "
 | EP-01 — Connexion HubSpot OAuth | Fournit le token d'accès pour déclencher l'audit et les informations du workspace (nom, Portal ID) | Bloquant |
 | EP-02 — Audit des propriétés | Fournit le Score_proprietes et la liste structurée des problèmes P1-P16 | Bloquant pour Section 1 domaine Propriétés |
 | EP-03 — Audit des workflows | Fournit le Score_workflows et la liste structurée des problèmes W1-W7 | Bloquant pour Section 1 domaine Workflows |
-| API LLM (Claude API ou équivalent) | Génère le résumé exécutif | Dépendance externe — prévoir fallback (spécifié en 6.4) |
+| **API OpenAI** | Génère le résumé exécutif — **décision PO : OpenAI en v1** (crédits disponibles, switch possible ultérieurement) | Dépendance externe — prévoir fallback (spécifié en 6.4) |
 
 ### Risques identifiés
 
