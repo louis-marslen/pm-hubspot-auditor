@@ -211,6 +211,6 @@ Le score workflows contribue à **50% du score global** en phase NOW.
 
 | # | Question | Impact | Statut |
 |---|---|---|---|
-| Q1 | Comment calculer le `error_rate` (W1) si l'API HubSpot ne retourne pas directement ce ratio ? Faut-il calculer (nb erreurs / nb enrôlements) × 100 sur les 30 derniers jours ? | Impacte la faisabilité technique de W1 | ❓ À vérifier en implémentation |
-| Q2 | Pour W3 (zombie), doit-on exclure les workflows dont le trigger est un événement rare par nature (ex. "deal atteint un montant de 100K€") ? Risque de faux positifs sur des workflows métier légitimement peu déclenchés. | Impacte la pertinence des résultats | ❓ À valider en beta |
-| Q3 | Faut-il afficher un lien direct vers le workflow dans HubSpot depuis le rapport (deep link) ? Améliorerait significativement l'expérience mais dépend des URL patterns HubSpot. | UX — facilite la correction | ❓ À confirmer en implémentation |
+| Q1 | Comment calculer le `error_rate` (W1) si l'API HubSpot ne retourne pas directement ce ratio ? | Impacte la faisabilité technique de W1 | ✅ **Décision :** Calculer `error_rate = (nb_erreurs / nb_enrôlements) × 100` sur les 30 derniers jours. Si l'API ne fournit pas directement ces données agrégées, l'équipe tech doit trouver le endpoint approprié et documenter l'approche dans les specs d'implémentation. |
+| Q2 | Pour W3 (zombie), doit-on exclure les workflows dont le trigger est un événement rare par nature ? | Impacte la pertinence des résultats | ✅ **Décision PO :** Pas d'exclusion automatique en phase NOW. Les faux positifs éventuels seront traités lors de la beta. L'utilisateur peut ignorer manuellement un résultat (NEXT phase). |
+| Q3 | Faut-il afficher un lien direct vers le workflow dans HubSpot depuis le rapport (deep link) ? | UX — facilite la correction | ✅ **Décision PO :** Hors scope pour la v1. À ajouter en phase NEXT une fois le pattern d'URL HubSpot confirmé. |

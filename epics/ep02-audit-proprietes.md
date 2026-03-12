@@ -249,7 +249,7 @@ Le score propriétés contribue à **50% du score global** en phase NOW.
 
 | # | Question | Impact | Statut |
 |---|---|---|---|
-| Q1 | Calcul du taux de remplissage : se baser sur tous les records ou uniquement les records créés dans les 12 derniers mois ? Les workspaces anciens ont des milliers de records historiques qui faussent le calcul. | Impacte P2, P7–P14 | ❓ À décider |
-| Q2 | Pour P3 (redondance), comparer uniquement le libellé (`label`) ou aussi le nom interne (`name`) ? | Impacte le nombre de faux positifs | ❓ À décider |
-| Q3 | Seuil P2 à 5% : est-il le même pour tous les objets ? Un deal custom property à 5% peut être normale si peu de deals ont cette caractéristique. | Impacte la pertinence des résultats | ❓ À valider en beta |
-| Q4 | Faut-il permettre à l'utilisateur de marquer un problème comme "ignoré" (won't fix) pour qu'il disparaisse des prochains audits ? | Fonctionnalité de gestion du rapport | ❓ NEXT phase |
+| Q1 | Calcul du taux de remplissage : se baser sur tous les records ou uniquement les records créés dans les 12 derniers mois ? | Impacte P2, P7–P14 | ✅ **Décision PO :** Calculé sur TOUS les records, sans filtre temporel. Approche la plus simple et la plus représentative de l'état réel du workspace. |
+| Q2 | Pour P3 (redondance), comparer uniquement le libellé (`label`) ou aussi le nom interne (`name`) ? | Impacte le nombre de faux positifs | ✅ **Décision PO :** Comparer uniquement le `label` (libellé visible). Le nom interne est souvent auto-généré et génèrerait trop de faux positifs. |
+| Q3 | Seuil P2 à 5% : est-il le même pour tous les objets ? | Impacte la pertinence des résultats | ✅ **Décision PO :** Seuil uniforme à 5% pour tous les objets en phase NOW. À réévaluer lors de la beta en fonction des retours utilisateurs. |
+| Q4 | Faut-il permettre à l'utilisateur de marquer un problème comme "ignoré" (won't fix) ? | Fonctionnalité de gestion du rapport | ✅ **Décision PO :** NEXT phase — hors scope v1. |

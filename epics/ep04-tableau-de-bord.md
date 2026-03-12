@@ -311,8 +311,8 @@ lors de la prochaine revue de configuration].
 ## Questions ouvertes
 
 | # | Question | Impact | Statut |
-|---|---|---|---|----|
-| Q1 | Faut-il afficher le rapport dans une page web dédiée (URL unique par audit) ou dans un espace connecté ? Une URL unique permettrait le partage sans connexion, mais implique une politique de rétention des données. | Architecture + expérience de partage | ❓ À décider avant l'implémentation |
-| Q2 | La durée de conservation des rapports d'audit doit-elle être limitée (ex. 30 jours) ou indéfinie ? Impacte la base de données et les obligations RGPD. | Infrastructure + RGPD | ❓ À décider avant le lancement |
-| Q3 | Le résumé exécutif doit-il être généré par un LLM (plus fluide, plus contextuel) ou par un template statique (plus prévisible, plus facile à tester) ? | Qualité de l'output + complexité technique | ❓ À valider avec les contraintes d'implémentation |
-| Q4 | Faut-il permettre à l'utilisateur de masquer certains problèmes du rapport (ex. marquer comme "accepté / connu") avant de partager ? Ajouterait de la flexibilité mais complexifie le modèle de données. | UX avancée — NEXT phase probable | ❓ À mettre en backlog NEXT |
+|---|---|---|---|
+| Q1 | Faut-il afficher le rapport dans une page web dédiée (URL unique par audit) ou dans un espace connecté ? | Architecture + expérience de partage | ✅ **Décision PO :** URL unique par rapport, accessible sans connexion (comme Notion). Chaque rapport généré reçoit un UUID unique. La page de partage affiche le rapport complet en lecture seule avec une mention "Généré par HubSpot Auditor". |
+| Q2 | La durée de conservation des rapports d'audit doit-elle être limitée ou indéfinie ? | Infrastructure + RGPD | ✅ **Décision PO :** Conservation indéfinie. Pas de suppression automatique prévue en v1. |
+| Q3 | Le résumé exécutif doit-il être généré par un LLM ou par un template statique ? | Qualité de l'output + complexité technique | ✅ **Décision PO :** Généré par LLM. L'objectif est une analyse contextuelle et fluide, pas un texte rigide. L'équipe tech choisit le modèle et l'implémentation. |
+| Q4 | Faut-il permettre à l'utilisateur de masquer certains problèmes du rapport avant de partager ? | UX avancée | ✅ **Décision PO :** NEXT phase — hors scope v1. |
