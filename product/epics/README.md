@@ -39,6 +39,7 @@ parce que [hypothèse]. Nous mesurerons le succès via [métrique].
 
 | ID | Fichier | Phase | Statut |
 |---|---|---|---|
+| EP-00 | [ep00-compte-utilisateur.md](ep00-compte-utilisateur.md) | NOW | ✅ Rédigé |
 | EP-01 | [ep01-connexion-hubspot.md](ep01-connexion-hubspot.md) | NOW | ✅ Rédigé |
 | EP-02 | [ep02-audit-proprietes.md](ep02-audit-proprietes.md) | NOW | ✅ Rédigé |
 | EP-03 | [ep03-audit-workflows.md](ep03-audit-workflows.md) | NOW | ✅ Rédigé |

@@ -1,75 +1,59 @@
-# CLAUDE.md — pm-hubspot-auditor
+# CLAUDE.md — HubSpot Auditor
 
-## Contexte du projet
-
-Ce dépôt contient **uniquement des artefacts de product management** — pas de code source.
-L'objectif est de définir, structurer et documenter le produit **HubSpot Auditor** de manière exhaustive, du cadrage stratégique jusqu'aux spécifications techniques prêtes à passer en développement.
+Ce dépôt contient **à la fois les artefacts de product management et le code source** de HubSpot Auditor. Il est conçu pour un travail hybride : une instance Claude peut opérer en mode PM ou en mode Dev selon le contexte, avec un accès complet aux deux dimensions.
 
 ---
 
 ## Description du produit
 
-**HubSpot Auditor** est un outil SaaS permettant aux utilisateurs d'auditer leur workspace HubSpot. Il analyse la qualité, la cohérence et les bonnes pratiques d'un compte HubSpot (contacts, deals, propriétés, workflows, pipelines, équipes, intégrations, etc.) et restitue un rapport d'audit actionnable.
+**HubSpot Auditor** est un outil SaaS permettant aux utilisateurs d'auditer leur workspace HubSpot. Il analyse la qualité, la cohérence et les bonnes pratiques d'un compte HubSpot (contacts, deals, propriétés, workflows, pipelines, équipes, intégrations, etc.) et restitue un rapport d'audit actionnable avec des recommandations priorisées.
 
 ---
 
-## Ce que contient ce dépôt
+## Structure du dépôt
 
-| Dossier | Contenu attendu |
-|---|---|
-| `strategy/` | Vision produit, positionnement, analyse marché, personas |
-| `roadmap/` | Roadmap trimestrielle, priorisation, thèmes stratégiques |
-| `prd/` | Product Requirements Documents par feature ou epic |
-| `user-stories/` | User stories et critères d'acceptance par epic |
-| `specs/` | Spécifications fonctionnelles et techniques (wireframes textuels, flux, règles métier) |
-| `research/` | Insights utilisateurs, benchmarks, hypothèses |
-
----
-
-## Ce que ce dépôt ne contient pas
-
-- Aucun code source (frontend, backend, scripts)
-- Aucune configuration d'infrastructure
-- Aucun fichier de déploiement
-
----
-
-## Conventions de travail
-
-### Langue
-- Tous les documents sont rédigés en **français**, sauf les termes HubSpot/techniques qui restent en anglais (ex : "workflow", "pipeline", "deal stage").
-
-### Format des fichiers
-- Tout est en **Markdown** (`.md`)
-- Les noms de fichiers sont en `kebab-case`
-- Chaque fichier commence par un en-tête H1 avec le titre du document
-
-### Structure des PRD
-Chaque PRD suit ce plan :
-1. Résumé exécutif
-2. Problème utilisateur
-3. Objectifs & métriques de succès (OKRs / KPIs)
-4. Périmètre (in scope / out of scope)
-5. User stories associées
-6. Spécifications fonctionnelles
-7. Dépendances & risques
-8. Critères d'acceptance
-
-### Structure des User Stories
 ```
-En tant que [persona], je veux [action] afin de [bénéfice].
-
-Critères d'acceptance :
-- [ ] ...
-- [ ] ...
+pm-hubspot-auditor/
+├── product/          ← Artefacts PM (epics, PRDs, stratégie, roadmap)
+│   ├── CLAUDE.md     ← Instructions mode PM
+│   ├── strategy/
+│   ├── roadmap/
+│   ├── prd/
+│   ├── epics/
+│   └── research/
+├── src/              ← Code source de l'application
+│   └── CLAUDE.md     ← Instructions mode Dev
+└── skills/           ← Bibliothèque de skills Claude (PM + Tech)
+    ├── pm/           ← Skills product management
+    └── tech/         ← Skills développement
 ```
 
-### Priorisation
-Framework utilisé : **RICE** (Reach, Impact, Confidence, Effort)
+---
+
+## Deux modes de travail
+
+### Mode PM
+
+Actif quand on travaille dans `product/`. Objectif : définir, raffiner et documenter le produit.
+
+- Lire `product/CLAUDE.md` pour les instructions détaillées
+- Ne jamais créer ni modifier de fichiers dans `src/`
+- Skills disponibles : `skills/pm/`
+
+### Mode Dev
+
+Actif quand on travaille dans `src/`. Objectif : implémenter les features spécifiées dans les PRDs.
+
+- Lire `src/CLAUDE.md` pour les instructions détaillées
+- Ne jamais créer ni modifier de fichiers dans `product/`
+- Toujours lire le PRD correspondant dans `product/prd/` avant d'implémenter une feature
+- Skills disponibles : `skills/tech/`
 
 ---
 
-## Personas principaux
+## Contexte partagé (applicable dans les deux modes)
+
+### Personas principaux
 
 | Persona | Description |
 |---|---|
@@ -78,9 +62,7 @@ Framework utilisé : **RICE** (Reach, Impact, Confidence, Effort)
 | **Sales Manager** | Supervise les pipelines et deals. Veut identifier les deals bloqués ou mal qualifiés. |
 | **Admin HubSpot** | Gère les paramètres globaux du compte. Veut une vue d'ensemble de la santé du workspace. |
 
----
-
-## Domaines d'audit couverts (périmètre produit)
+### Domaines d'audit couverts
 
 1. **Contacts & Companies** — doublons, champs vides, segmentation
 2. **Deals & Pipelines** — deals bloqués, étapes mal configurées, taux de conversion
@@ -90,22 +72,28 @@ Framework utilisé : **RICE** (Reach, Impact, Confidence, Effort)
 6. **Intégrations** — connexions actives/inactives, erreurs de sync
 7. **Reporting** — tableaux de bord orphelins, rapports non utilisés
 
----
-
-## Principes produit
+### Principes produit
 
 - **Actionnable avant tout** : chaque problème détecté doit être accompagné d'une recommandation concrète
 - **Non-destructif** : l'outil lit et analyse, il ne modifie jamais les données HubSpot
 - **Priorisé** : les problèmes sont classés par criticité (critique / warning / info)
 - **Accessible** : les résultats doivent être compréhensibles sans expertise technique HubSpot
 
+### Décisions techniques actées
+
+| Décision | Choix retenu |
+|---|---|
+| Email transactionnel | Resend (compte gratuit) |
+| LLM (résumés exécutifs) | OpenAI API (crédits disponibles, switchable plus tard) |
+| Authentification HubSpot | OAuth 2.0 Authorization Code Flow — Public App déjà créée |
+| Partage de rapports | Lien public unique (style Notion), sans authentification requête |
+| Rétention des données | Indéfinie (pas de purge automatique en v1) |
+| Comptes utilisateurs | Email + mot de passe, multi-workspace HubSpot |
+
 ---
 
-## Instructions pour Claude
+## Conventions globales
 
-- Toujours adopter la posture d'un **Product Manager senior** avec une expertise HubSpot
-- Raisonner en termes de **valeur utilisateur** avant les détails techniques
-- Proposer des structures de documents avant de les rédiger si le périmètre est large
-- Respecter les conventions de nommage et de format définies ci-dessus
-- Ne jamais créer de code source — si une spec requiert un exemple technique, l'exprimer en pseudo-code ou en description textuelle
-- Maintenir la cohérence entre les documents (un PRD doit référencer les user stories, etc.)
+- Langue : **français** pour tous les documents, termes HubSpot/techniques en anglais
+- Fichiers : Markdown `.md`, noms en `kebab-case`, H1 en titre de fichier
+- Commits : descriptifs, en français ou anglais selon le contexte
