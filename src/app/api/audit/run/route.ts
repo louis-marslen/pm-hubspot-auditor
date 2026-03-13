@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getValidAccessToken } from "@/lib/hubspot/tokens";
-import { runAudit } from "@/lib/audit/engine";
+import { runFullAudit } from "@/lib/audit/engine";
+import { generateLlmSummary } from "@/lib/audit/llm-summary";
+
+// Audit complet (propriétés + workflows + LLM) peut dépasser 30s — nécessite Vercel Pro
+export const maxDuration = 300;
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -27,7 +31,7 @@ export async function POST(req: NextRequest) {
   // 3. Récupération de la connexion (RLS garantit l'appartenance)
   const { data: connection, error: connError } = await supabase
     .from("hubspot_connections")
-    .select("id, access_token, refresh_token, token_expires_at")
+    .select("id, access_token, refresh_token, token_expires_at, portal_id, portal_name")
     .eq("id", connectionId)
     .eq("user_id", user.id)
     .single();
@@ -52,6 +56,7 @@ export async function POST(req: NextRequest) {
   }
 
   const auditId = auditRun.id;
+  const startedAt = Date.now();
 
   // 5. Obtention du token valide
   let accessToken: string;
@@ -65,24 +70,38 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Erreur d'authentification HubSpot" }, { status: 500 });
   }
 
-  // 6. Exécution de l'audit
+  // 6. Exécution de l'audit complet
   try {
-    const results = await runAudit(accessToken);
+    const global = await runFullAudit(accessToken);
+    const llmSummary = await generateLlmSummary(global);
+    const executionDurationMs = Date.now() - startedAt;
 
-    await supabase
+    const { data: updated } = await supabase
       .from("audit_runs")
       .update({
         status: "completed",
-        results,
-        score: results.score,
-        total_critiques: results.totalCritiques,
-        total_avertissements: results.totalAvertissements,
-        total_infos: results.totalInfos,
+        results: global.propertyResults,
+        workflow_results: global.workflowResults,
+        llm_summary: llmSummary,
+        score: global.propertyResults.score,
+        property_score: global.propertyResults.score,
+        workflow_score: global.workflowResults?.score ?? null,
+        global_score: global.globalScore,
+        total_critiques: global.propertyResults.totalCritiques,
+        total_avertissements: global.propertyResults.totalAvertissements,
+        total_infos: global.propertyResults.totalInfos,
+        portal_id: connection.portal_id ?? null,
+        portal_name: connection.portal_name ?? null,
+        execution_duration_ms: executionDurationMs,
         completed_at: new Date().toISOString(),
       })
-      .eq("id", auditId);
+      .eq("id", auditId)
+      .select("share_token")
+      .single();
 
-    return NextResponse.json({ auditId });
+    const shareToken = updated?.share_token ?? null;
+
+    return NextResponse.json({ auditId, shareToken });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Erreur inconnue";
     await supabase

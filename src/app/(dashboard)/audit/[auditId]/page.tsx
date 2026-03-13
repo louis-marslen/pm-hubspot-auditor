@@ -1,13 +1,19 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { AuditResults } from "@/lib/audit/types";
+import { AuditResults, WorkflowAuditResults } from "@/lib/audit/types";
 import { AuditResultsView } from "@/components/audit/audit-results-view";
 
 interface AuditRun {
   id: string;
   status: string;
   results: AuditResults | null;
+  workflow_results: WorkflowAuditResults | null;
+  global_score: number | null;
+  llm_summary: string | null;
+  share_token: string | null;
+  portal_name: string | null;
+  execution_duration_ms: number | null;
   error: string | null;
   started_at: string;
   completed_at: string | null;
@@ -24,12 +30,19 @@ export default async function AuditPage({ params }: { params: Promise<{ auditId:
 
   const { data: audit } = await supabase
     .from("audit_runs")
-    .select("id, status, results, error, started_at, completed_at")
+    .select("id, status, results, workflow_results, global_score, llm_summary, share_token, portal_name, execution_duration_ms, error, started_at, completed_at")
     .eq("id", auditId)
     .eq("user_id", user.id)
     .single<AuditRun>();
 
   if (!audit) redirect("/workspaces");
+
+  // Score global affiché : global_score si disponible, sinon score propriétés
+  const globalScore = audit.global_score ?? audit.results?.score;
+  const globalScoreLabel =
+    globalScore !== undefined && globalScore !== null
+      ? getScoreLabel(globalScore)
+      : undefined;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -62,9 +75,26 @@ export default async function AuditPage({ params }: { params: Promise<{ auditId:
         )}
 
         {audit.status === "completed" && audit.results && (
-          <AuditResultsView r={audit.results} startedAt={audit.started_at} />
+          <AuditResultsView
+            r={audit.results}
+            w={audit.workflow_results}
+            globalScore={globalScore}
+            globalScoreLabel={globalScoreLabel}
+            llmSummary={audit.llm_summary}
+            shareToken={audit.share_token}
+            portalName={audit.portal_name}
+            startedAt={audit.started_at}
+            executionDurationMs={audit.execution_duration_ms}
+          />
         )}
       </main>
     </div>
   );
+}
+
+function getScoreLabel(score: number): string {
+  if (score <= 49) return "Critique";
+  if (score <= 69) return "À améliorer";
+  if (score <= 89) return "Bon";
+  return "Excellent";
 }

@@ -126,4 +126,48 @@ export const BUSINESS_IMPACTS: Record<string, BusinessImpact> = {
       "Des propriétés requises non renseignées dans certains stages indiquent que votre processus de vente n'est pas respecté. Vos deals avancent sans les informations nécessaires à leur qualification.",
     urgence: "élevée",
   },
+
+  // Workflows W1-W7
+  w1: {
+    titre: "Workflows actifs avec un fort taux d'erreur",
+    estimation:
+      "Un taux d'erreur supérieur à 10% signifie que vos workflows automatisés échouent régulièrement. Des contacts ou deals passent entre les mailles du filet, vos séquences marketing et vos alertes commerciales ne fonctionnent pas correctement.",
+    urgence: "critique",
+  },
+  w2: {
+    titre: "Workflows actifs sans aucune action configurée",
+    estimation:
+      "Ces workflows sont activés mais ne font rien. Ils consomment des ressources, peuvent enrôler des contacts inutilement et créent de la confusion dans votre configuration HubSpot.",
+    urgence: "critique",
+  },
+  w3: {
+    titre: "Workflows actifs sans enrôlement récent — potentiellement obsolètes",
+    estimation:
+      "Un workflow actif qui n'a enrôlé aucun contact depuis plus de 90 jours est probablement obsolète. Il encombre votre liste, génère une fausse impression d'automatisation active et peut déclencher des actions inattendues si les critères sont à nouveau remplis.",
+    urgence: "élevée",
+  },
+  w4: {
+    titre: "Workflows inactifs depuis plus de 90 jours à archiver",
+    estimation:
+      "Des workflows inactifs anciens encombrent votre espace de travail. S'ils ne sont plus nécessaires, les laisser en place crée de la confusion pour les nouvelles personnes rejoignant l'équipe et rend la maintenance plus difficile.",
+    urgence: "élevée",
+  },
+  w5: {
+    titre: "Workflows récemment désactivés à surveiller",
+    estimation:
+      "Ces workflows ont été désactivés récemment. Vérifiez s'il s'agit d'une désactivation temporaire ou définitive, et documenter la décision pour éviter une réactivation accidentelle.",
+    urgence: "modérée",
+  },
+  w6: {
+    titre: "Workflows avec des noms non descriptifs",
+    estimation:
+      "Des noms génériques comme 'Copy of...' ou 'New Workflow' rendent impossible la compréhension rapide de ce que fait un workflow. La maintenance, l'audit et l'onboarding sont significativement ralentis.",
+    urgence: "faible",
+  },
+  w7: {
+    titre: "Workflows non organisés dans des dossiers",
+    estimation:
+      "Sans organisation en dossiers, votre liste de workflows devient rapidement ingérable au-delà d'une dizaine d'automatisations. La navigation et la recherche prennent du temps inutilement.",
+    urgence: "faible",
+  },
 };

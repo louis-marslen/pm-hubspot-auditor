@@ -1,3 +1,45 @@
+export interface WorkflowIssue {
+  id: string;
+  name: string;
+  folderId: number | null;
+  createdAt: string;
+  updatedAt: string;
+  status: "ACTIVE" | "INACTIVE";
+  lastEnrollmentAt: string | null;
+  actionCount: number;
+  errorRate: number | null;     // null = non calculable
+  deactivatedAt: string | null; // proxy via updatedAt si INACTIVE
+  isLegacy?: boolean;           // ancienne génération "Simple"
+  notAnalyzed?: boolean;        // erreur API individuelle
+}
+
+export interface WorkflowAuditResults {
+  totalWorkflows: number;
+  hasWorkflows: boolean;
+  w1: WorkflowIssue[];
+  w2: WorkflowIssue[];
+  w3: WorkflowIssue[];
+  w4: WorkflowIssue[];
+  w5: WorkflowIssue[];
+  w6: WorkflowIssue[];
+  w7: WorkflowIssue[];
+  notAnalyzed: WorkflowIssue[];
+  score: number | null;      // null si hasWorkflows=false
+  scoreLabel: string | null;
+  totalCritiques: number;
+  totalAvertissements: number;
+  totalInfos: number;
+}
+
+export interface GlobalAuditResults {
+  propertyResults: AuditResults;
+  workflowResults: WorkflowAuditResults | null;
+  globalScore: number;
+  globalScoreLabel: string;
+  propertyWeight: number;
+  workflowWeight: number;
+}
+
 export interface PropertyIssue {
   label: string;
   name: string;

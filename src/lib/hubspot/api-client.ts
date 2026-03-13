@@ -50,17 +50,18 @@ export class HubSpotClient {
   }
 
   /**
-   * Traite un tableau d'items en groupes de 3, avec 400ms entre chaque groupe.
-   * Respecte la limite secondaire HubSpot sur le search endpoint (~4 req/sec).
+   * Traite un tableau d'items 2 par 2 avec 700ms entre chaque groupe.
+   * Rate effectif : 2/700ms ≈ 2.86 req/s — sous la limite secondaire HubSpot (4 req/s)
+   * pour le search endpoint, ce qui évite les 429 et les retries coûteux.
    */
   async batch<T, R>(items: T[], fn: (item: T) => Promise<R>): Promise<R[]> {
     const results: R[] = [];
-    for (let i = 0; i < items.length; i += 3) {
-      const chunk = items.slice(i, i + 3);
+    for (let i = 0; i < items.length; i += 2) {
+      const chunk = items.slice(i, i + 2);
       const chunkResults = await Promise.all(chunk.map(fn));
       results.push(...chunkResults);
-      if (i + 3 < items.length) {
-        await sleep(400);
+      if (i + 2 < items.length) {
+        await sleep(700);
       }
     }
     return results;

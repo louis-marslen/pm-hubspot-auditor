@@ -1,5 +1,7 @@
 import { HubSpotClient } from "@/lib/hubspot/api-client";
-import { AuditResults } from "@/lib/audit/types";
+import { AuditResults, WorkflowAuditResults, GlobalAuditResults } from "@/lib/audit/types";
+import { runWorkflowRules } from "@/lib/audit/rules/workflows";
+import { calculateGlobalScore } from "@/lib/audit/global-score";
 import {
   getCustomProperties,
   computeFillRates,
@@ -36,6 +38,8 @@ const OBJECT_TYPES = ["contacts", "companies", "deals"] as const;
  */
 export async function runAudit(accessToken: string): Promise<AuditResults> {
   const client = new HubSpotClient(accessToken);
+  const t = (label: string, since: number) => console.log(`[audit] ${label}: ${Date.now() - since}ms`);
+  const t0 = Date.now();
 
   // 1. Comptes totaux en parallèle
   const [totalContacts, totalCompanies, totalDeals] = await Promise.all([
@@ -43,6 +47,7 @@ export async function runAudit(accessToken: string): Promise<AuditResults> {
     countTotal(client, "companies"),
     countTotal(client, "deals"),
   ]);
+  t("counts", t0);
 
   const objectCounts = {
     contacts: totalContacts,
@@ -56,6 +61,7 @@ export async function runAudit(accessToken: string): Promise<AuditResults> {
     getCustomProperties(client, "companies"),
     getCustomProperties(client, "deals"),
   ]);
+  t("custom props", t0);
 
   const customPropertyCounts = {
     contacts: contactsProps.length,
@@ -63,10 +69,29 @@ export async function runAudit(accessToken: string): Promise<AuditResults> {
     deals: dealsProps.length,
   };
 
-  // 3. Fill rates séquentiels par type d'objet pour éviter de dépasser la limite secondaire HubSpot
-  const contactsFillRates = await computeFillRates(client, "contacts", contactsProps, totalContacts);
-  const companiesFillRates = await computeFillRates(client, "companies", companiesProps, totalCompanies);
-  const dealsFillRates = await computeFillRates(client, "deals", dealsProps, totalDeals);
+  // 3. Fill rates séquentiels par type d'objet pour éviter de dépasser la limite secondaire HubSpot.
+  // Optimisation : seules les propriétés > 90j sont pertinentes (P1/P2 ignorent les autres).
+  const ninetyDaysAgo = Date.now() - 90 * 24 * 60 * 60 * 1000;
+  const contactsPropsOld = contactsProps.filter((p) => new Date(p.createdAt).getTime() < ninetyDaysAgo);
+  const companiesPropsOld = companiesProps.filter((p) => new Date(p.createdAt).getTime() < ninetyDaysAgo);
+  const dealsPropsOld = dealsProps.filter((p) => new Date(p.createdAt).getTime() < ninetyDaysAgo);
+
+  // Plafond de 30 props par type : suffisant pour détecter P1/P2, évite les audits > 30s
+  // Les props sont triées par ancienneté (les plus vieilles d'abord = plus susceptibles d'être vides)
+  const sortByAge = (a: { createdAt: string }, b: { createdAt: string }) =>
+    new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+  const MAX_FILL_RATE_PROPS = 30;
+  const contactsPropsForRates = contactsPropsOld.sort(sortByAge).slice(0, MAX_FILL_RATE_PROPS);
+  const companiesPropsForRates = companiesPropsOld.sort(sortByAge).slice(0, MAX_FILL_RATE_PROPS);
+  const dealsPropsForRates = dealsPropsOld.sort(sortByAge).slice(0, MAX_FILL_RATE_PROPS);
+
+  console.log(`[audit] fill rates: contacts=${contactsPropsForRates.length}, companies=${companiesPropsForRates.length}, deals=${dealsPropsForRates.length} props à analyser`);
+  const contactsFillRates = await computeFillRates(client, "contacts", contactsPropsForRates, totalContacts);
+  t("fill rates contacts", t0);
+  const companiesFillRates = await computeFillRates(client, "companies", companiesPropsForRates, totalCompanies);
+  t("fill rates companies", t0);
+  const dealsFillRates = await computeFillRates(client, "deals", dealsPropsForRates, totalDeals);
+  t("fill rates deals", t0);
 
   // 4. Règles P1-P6 sur les propriétés custom
   const p1 = [
@@ -130,7 +155,9 @@ export async function runAudit(accessToken: string): Promise<AuditResults> {
     runP14(client, totalDealsOpen),
   ]);
   const p15 = await runP15(client);
+  t("p15", t0);
   const p16 = await runP16(client);
+  t("p16 / system rules done", t0);
 
   // 6. Calcul du score
   const partialResults = {
@@ -156,4 +183,24 @@ export async function runAudit(accessToken: string): Promise<AuditResults> {
     totalAvertissements: avertissements,
     totalInfos: infos,
   };
+}
+
+/**
+ * Audit des workflows uniquement.
+ */
+export async function runWorkflowAudit(accessToken: string): Promise<WorkflowAuditResults> {
+  return runWorkflowRules(accessToken);
+}
+
+/**
+ * Audit complet : propriétés + workflows en parallèle → score global.
+ * runAudit() reste intacte pour rétrocompatibilité.
+ */
+export async function runFullAudit(accessToken: string): Promise<GlobalAuditResults> {
+  const [propertyResults, workflowResults] = await Promise.all([
+    runAudit(accessToken),
+    runWorkflowAudit(accessToken),
+  ]);
+
+  return calculateGlobalScore(propertyResults, workflowResults);
 }

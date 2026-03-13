@@ -17,11 +17,11 @@ interface ScoreResult {
  * - Infos × 0.5, plafonnées à 5 pts
  * - Score final = max(0, 100 - somme des déductions plafonnées)
  *
- * Seuils :
- * - 0–40 → Critique
- * - 41–70 → À améliorer
- * - 71–90 → Bon
- * - 91–100 → Excellent
+ * Seuils (PRD-04) :
+ * - 0–49 → Critique
+ * - 50–69 → À améliorer
+ * - 70–89 → Bon
+ * - 90–100 → Excellent
  *
  * Comptage spécial :
  * - P7, P9, P11, P12, P13, P14 = 1 problème max si déclenché (pas 1 par record)
@@ -62,10 +62,11 @@ export function calculateScore(results: AuditResults): ScoreResult {
 
   const score = Math.max(0, Math.round(100 - deductionCritiques - deductionAvertissements - deductionInfos));
 
+  // Scale PRD-04 : 0-49 Critique, 50-69 À améliorer, 70-89 Bon, 90-100 Excellent
   let label: string;
-  if (score <= 40) label = "Critique";
-  else if (score <= 70) label = "À améliorer";
-  else if (score <= 90) label = "Bon";
+  if (score <= 49) label = "Critique";
+  else if (score <= 69) label = "À améliorer";
+  else if (score <= 89) label = "Bon";
   else label = "Excellent";
 
   return { score, label, critiques, avertissements, infos };
