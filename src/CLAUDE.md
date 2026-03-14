@@ -16,8 +16,13 @@ Les artefacts PM sont en lecture seule depuis ce mode. Si tu identifies une inco
 
 1. Lire le PRD correspondant dans `product/prd/`
 2. Lire l'epic correspondant dans `product/epics/`
-3. Vérifier les dépendances listées dans le PRD
-4. Consulter les décisions techniques actées dans le root `CLAUDE.md`
+3. **Lire les références design :**
+   - `product/prd/design-system-guidelines.md` — tokens (couleurs, typo, spacing), composants UI, patterns d'interaction
+   - `product/prd/screens-and-flows.md` — maquettes d'écrans, parcours utilisateurs, architecture de navigation
+4. Vérifier les dépendances listées dans le PRD
+5. Consulter les décisions techniques actées dans le root `CLAUDE.md`
+
+> **Règle UI/UX non négociable :** tout frontend doit utiliser les composants et tokens du design system. Zéro couleur hex en dur, zéro spacing arbitraire, zéro composant ad hoc quand un composant réutilisable existe. Voir le skill `feature-implementation` pour la checklist complète.
 
 ---
 
@@ -25,14 +30,15 @@ Les artefacts PM sont en lecture seule depuis ce mode. Si tu identifies une inco
 
 | Couche | Technologie |
 |---|---|
-| Frontend | À définir (Next.js recommandé) |
-| Backend | À définir (Node.js / Next.js API routes recommandé) |
-| Base de données | À définir (PostgreSQL / Supabase recommandé) |
+| Frontend | **Next.js 16** (App Router) + **React 19** + **Tailwind CSS 3** |
+| Backend | **Next.js API routes** (Node.js) |
+| Base de données | **Supabase** (PostgreSQL + Auth + RLS) |
 | Email transactionnel | **Resend** (compte gratuit) |
-| LLM | **OpenAI API** (GPT-4o pour les résumés exécutifs) |
+| LLM | **OpenAI API** (GPT-4.1 pour les résumés exécutifs) |
 | Authentification HubSpot | **OAuth 2.0 Authorization Code Flow** — Public App déjà créée |
+| Design system | **Tailwind tokens custom** (dark mode natif) + **Lucide Icons** + **Geist Sans** |
 
-> La stack exacte sera précisée lors du premier epic d'implémentation. Toujours demander confirmation avant d'introduire une nouvelle dépendance majeure.
+> Toujours demander confirmation avant d'introduire une nouvelle dépendance majeure.
 
 ---
 
@@ -57,13 +63,23 @@ Les artefacts PM sont en lecture seule depuis ce mode. Si tu identifies une inco
 
 ## PRDs de référence
 
-| Epic | PRD | Résumé |
-|---|---|---|
-| EP-00 | [product/prd/prd-00-compte-utilisateur.md](../product/prd/prd-00-compte-utilisateur.md) | Comptes email+password, multi-workspace HubSpot |
-| EP-01 | [product/prd/prd-01-connexion-hubspot.md](../product/prd/prd-01-connexion-hubspot.md) | OAuth HubSpot, gestion tokens, multi-portail |
-| EP-02 | [product/prd/prd-02-audit-proprietes.md](../product/prd/prd-02-audit-proprietes.md) | Analyse propriétés HubSpot (taux remplissage, doublons…) |
-| EP-03 | [product/prd/prd-03-audit-workflows.md](../product/prd/prd-03-audit-workflows.md) | Analyse workflows HubSpot (inactifs, erreurs, redondances) |
-| EP-04 | [product/prd/prd-04-tableau-de-bord.md](../product/prd/prd-04-tableau-de-bord.md) | Dashboard d'audit, rapport exportable, lien public, LLM summary |
+### Documents transverses (lecture obligatoire)
+
+| Document | Contenu |
+|---|---|
+| [design-system-guidelines.md](../product/prd/design-system-guidelines.md) | Tokens, composants UI, patterns, dark mode, accessibilité |
+| [screens-and-flows.md](../product/prd/screens-and-flows.md) | Maquettes d'écrans, parcours utilisateurs, architecture navigation |
+
+### PRDs par epic
+
+| Epic | PRD | Résumé | Statut |
+|---|---|---|---|
+| EP-00 | [prd-00-compte-utilisateur.md](../product/prd/prd-00-compte-utilisateur.md) | Comptes email+password, multi-workspace HubSpot | ✅ Livré |
+| EP-01 | [prd-01-connexion-hubspot.md](../product/prd/prd-01-connexion-hubspot.md) | OAuth HubSpot, gestion tokens, multi-portail | ✅ Livré |
+| EP-02 | [prd-02-audit-proprietes.md](../product/prd/prd-02-audit-proprietes.md) | Analyse propriétés HubSpot (taux remplissage, doublons…) | ✅ Livré |
+| EP-03 | [prd-03-audit-workflows.md](../product/prd/prd-03-audit-workflows.md) | Analyse workflows HubSpot (inactifs, erreurs, redondances) | ✅ Livré |
+| EP-04 | [prd-04-tableau-de-bord.md](../product/prd/prd-04-tableau-de-bord.md) | Dashboard d'audit, rapport exportable, lien public, LLM summary | ✅ Livré |
+| EP-UX | [prd-ux-design-system.md](../product/prd/prd-ux-design-system.md) | Design system, rattrapage UI/UX, parcours utilisateur | À implémenter |
 
 ---
 
@@ -72,7 +88,7 @@ Les artefacts PM sont en lecture seule depuis ce mode. Si tu identifies une inco
 Bibliothèque dans `skills/tech/` — trois catégories :
 
 - **Workflows** (`skills/tech/workflows/`) : processus de développement complets (feature, code review)
-- **Composants** (`skills/tech/components/`) : artefacts ciblés (ADR, tech spec, API spec, schéma DB)
+- **Composants** (`skills/tech/components/`) : artefacts ciblés (ADR, tech spec, API spec, schéma DB, UI component spec)
 - **Interactifs** (`skills/tech/interactive/`) : décisions guidées (choix de stack, investigation bug)
 
 Consulter `skills/tech/README.md` pour le catalogue complet.

@@ -33,6 +33,7 @@ Outils ciblés pour produire un artefact PM spécifique.
 | [`proto-persona`](pm/components/proto-persona.md) | Créer un proto-persona hypothesis-driven | Aligner l'équipe sur le client cible avant la validation |
 | [`enonce-positionnement`](pm/components/enonce-positionnement.md) | Créer un énoncé de positionnement style Geoffrey Moore | Clarifier la différenciation et le message stratégique |
 | [`cartographie-parcours-client`](pm/components/cartographie-parcours-client.md) | Créer une customer journey map complète | Diagnostiquer une expérience défaillante, aligner les équipes |
+| [`audit-ux`](pm/components/audit-ux.md) | Auditer l'UX d'un parcours existant (heuristiques Nielsen) | Évaluer un produit avant un redesign ou un rattrapage UX |
 | [`decoupage-user-story`](pm/components/decoupage-user-story.md) | Découper de grandes stories en stories livrables | Quand un backlog item est trop grand pour être estimé ou livré |
 
 ### Interactifs PM
@@ -56,6 +57,7 @@ session-strategie-produit (workflow maître)
 ├─ jobs-to-be-done
 ├─ enonce-probleme
 ├─ cartographie-parcours-client
+├─ audit-ux
 ├─ arbre-opportunites-solutions
 ├─ conseiller-priorisation
 └─ developpement-prd (workflow)
@@ -98,6 +100,7 @@ Artefacts ciblés pour documenter et concevoir les aspects techniques.
 | [`technical-design-doc`](tech/components/technical-design-doc.md) | Rédiger une spec technique détaillée avant implémentation | Avant de coder une feature complexe |
 | [`api-endpoint-spec`](tech/components/api-endpoint-spec.md) | Spécifier un endpoint REST (méthode, params, réponses, erreurs) | Concevoir ou documenter une route API |
 | [`database-schema`](tech/components/database-schema.md) | Modéliser des entités et leurs relations | Concevoir ou réviser le modèle de données |
+| [`ui-component-spec`](tech/components/ui-component-spec.md) | Spécifier un composant UI réutilisable (variants, props, états) | Créer ou refactoriser un composant du design system |
 
 ### Interactifs Tech
 
@@ -115,6 +118,7 @@ feature-implementation (workflow maître)
 ├─ technical-design-doc (composant)
 │  ├─ api-endpoint-spec
 │  └─ database-schema
+├─ ui-component-spec (si nouveau composant UI)
 ├─ architecture-decision-record (si décision structurante)
 └─ code-review (workflow, fin de cycle)
 

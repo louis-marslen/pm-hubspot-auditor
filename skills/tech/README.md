@@ -4,6 +4,6 @@ Skills de développement pour implémenter les features de HubSpot Auditor. Voir
 
 ## Catégories
 
-- `components/` — Artefacts ciblés (ADR, tech spec, API spec, schéma DB)
+- `components/` — Artefacts ciblés (ADR, tech spec, API spec, schéma DB, UI component spec)
 - `interactive/` — Décisions guidées (choix de stack, investigation bug)
 - `workflows/` — Processus de développement complets (feature, code review)

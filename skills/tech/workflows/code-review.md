@@ -63,7 +63,18 @@ Valider qu'un changement de code est correct, sûr, lisible et conforme aux spec
 - [ ] Pas de modification de schema DB sans migration
 - [ ] Les migrations sont réversibles (rollback possible)
 
-### 8. Commits et historique
+### 8. UI/UX et cohérence visuelle (ref: `product/prd/design-system-guidelines.md`)
+
+- [ ] **Zéro style ad hoc** : pas de couleurs hex en dur, pas de `text-xl font-bold` quand un token `h2` existe, pas de `p-3` quand le spacing scale dit `space-4`
+- [ ] Tokens de design respectés : palette `gray-*`/`brand-*`, spacing multiples de 4px, typo selon l'échelle, radius `sm/md/lg/xl`
+- [ ] Dark mode natif : aucun fond blanc, aucun texte noir, aucun `bg-gray-50` (c'est le light mode ancien)
+- [ ] Composants du design system réutilisés (Button, Input, Card, Badge, Alert, etc.) — pas de composants one-off
+- [ ] Les 5 états gérés : empty state (avec CTA), loading (skeleton, pas spinner plein page), erreur (inline), succès (toast ou alert), contenu normal
+- [ ] Hiérarchie visuelle cohérente avec `screens-and-flows.md`
+- [ ] Textes orientés utilisateur (pas de jargon technique dans l'UI)
+- [ ] Actions principales visuellement distinguées des secondaires (1 seul bouton `primary` par écran)
+
+### 9. Commits et historique
 
 - [ ] Messages de commit descriptifs (convention `type(EP-XX): description`)
 - [ ] Pas de commits "fix", "wip", "test" non squashés
@@ -121,3 +132,4 @@ Avant de demander une review, se poser ces 5 questions :
 
 - `feature-implementation` — la review est l'étape 7 de ce workflow
 - `bug-investigation` — si la review révèle un bug difficile à tracer
+- `ui-component-spec` — si la review révèle un composant UI à spécifier ou refactoriser

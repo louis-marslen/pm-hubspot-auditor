@@ -32,15 +32,25 @@ product/
 └── research/     ← Insights utilisateurs, benchmarks, hypothèses
 ```
 
-### Epics disponibles (phase NOW)
+### Phase 1 — Livrée
 
 | ID | PRD | Epic | Statut |
 |---|---|---|---|
-| EP-00 | [prd-00-compte-utilisateur.md](prd/prd-00-compte-utilisateur.md) | [ep00-compte-utilisateur.md](epics/ep00-compte-utilisateur.md) | ✅ Prêt dev |
-| EP-01 | [prd-01-connexion-hubspot.md](prd/prd-01-connexion-hubspot.md) | [ep01-connexion-hubspot.md](epics/ep01-connexion-hubspot.md) | ✅ Prêt dev |
-| EP-02 | [prd-02-audit-proprietes.md](prd/prd-02-audit-proprietes.md) | [ep02-audit-proprietes.md](epics/ep02-audit-proprietes.md) | ✅ Prêt dev |
-| EP-03 | [prd-03-audit-workflows.md](prd/prd-03-audit-workflows.md) | [ep03-audit-workflows.md](epics/ep03-audit-workflows.md) | ✅ Prêt dev |
-| EP-04 | [prd-04-tableau-de-bord.md](prd/prd-04-tableau-de-bord.md) | [ep04-tableau-de-bord.md](epics/ep04-tableau-de-bord.md) | ✅ Prêt dev |
+| EP-00 | [prd-00-compte-utilisateur.md](prd/prd-00-compte-utilisateur.md) | [ep00-compte-utilisateur.md](epics/ep00-compte-utilisateur.md) | ✅ Livré |
+| EP-01 | [prd-01-connexion-hubspot.md](prd/prd-01-connexion-hubspot.md) | [ep01-connexion-hubspot.md](epics/ep01-connexion-hubspot.md) | ✅ Livré |
+| EP-02 | [prd-02-audit-proprietes.md](prd/prd-02-audit-proprietes.md) | [ep02-audit-proprietes.md](epics/ep02-audit-proprietes.md) | ✅ Livré |
+| EP-03 | [prd-03-audit-workflows.md](prd/prd-03-audit-workflows.md) | [ep03-audit-workflows.md](epics/ep03-audit-workflows.md) | ✅ Livré |
+| EP-04 | [prd-04-tableau-de-bord.md](prd/prd-04-tableau-de-bord.md) | [ep04-tableau-de-bord.md](epics/ep04-tableau-de-bord.md) | ✅ Livré |
+
+### Phase 2 — NOW
+
+| ID | PRD | Epic | Statut |
+|---|---|---|---|
+| EP-UX | [prd-ux-design-system.md](prd/prd-ux-design-system.md) | À créer | À spécifier |
+| EP-05 | À créer | À créer | Idée |
+| EP-06 | À créer | À créer | Idée |
+| EP-07 | À créer | À créer | Idée |
+| EP-08 | À créer | À créer | Idée |
 
 ---
 
