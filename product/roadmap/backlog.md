@@ -32,7 +32,7 @@ Tous les epics identifiés avec leur scoring RICE indicatif et leur statut.
 | EP-13 | Mode multi-workspace | 10 | 3 | 70% | 2 | 10.5 | LATER | Idée |
 | EP-14 | Recommandations enrichies (IA) | 30 | 3 | 40% | 3 | 12 | LATER | Idée |
 | EP-15 | Modèle de pricing & paywall | 50 | 3 | 60% | 1 | 90 | LATER | Idée |
-| EP-16 | Seuils d'audit configurables | 30 | 2 | 50% | 1.5 | 20 | LATER | Idée |
+| EP-16 | Profil business & audit contextuel | 40 | 3 | 50% | 2 | 30 | LATER | Idée |
 
 > ⚠️ La priorisation NOW suit l'ordre : couverture d'audit complète d'abord (EP-05→11), puis packaging/distribution (EP-07, EP-08). Les scores RICE sur les epics LATER sont indicatifs.
 
