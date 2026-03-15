@@ -19,20 +19,34 @@ Tous les epics identifiés avec leur scoring RICE indicatif et leur statut.
 | EP-02 | Audit des propriétés | 50 | 3 | 80% | 1 | 120 | LIVRÉ | ✅ Livré |
 | EP-03 | Audit des workflows | 50 | 3 | 80% | 1 | 120 | LIVRÉ | ✅ Livré |
 | EP-04 | Tableau de bord & score de santé | 50 | 3 | 90% | 0.5 | 270 | LIVRÉ | ✅ Livré |
-| EP-UX | Design System & Rattrapage UX/UI | 50 | 3 | 80% | 1.5 | 80 | NOW | À spécifier |
+| EP-UX | Design System & Rattrapage UX/UI | 50 | 3 | 80% | 1.5 | 80 | LIVRÉ | ✅ Livré |
+| EP-05 | Audit des contacts & doublons | 40 | 3 | 70% | 1.5 | 56 | NOW | Spécifié |
+| EP-05b | Audit des companies | 35 | 2 | 70% | 1 | 49 | NOW | Spécifié |
+| EP-06 | Audit des deals & pipelines | 40 | 2 | 70% | 1.5 | 37 | NOW | À spécifier |
+| EP-09 | Audit utilisateurs & équipes | 30 | 2 | 60% | 1 | 36 | NOW | À spécifier |
+| EP-10 | Audit des intégrations | 20 | 2 | 50% | 1.5 | 13 | NOW | À spécifier |
+| EP-11 | Audit du reporting | 25 | 1 | 60% | 1 | 15 | NOW | À spécifier |
 | EP-07 | Export du rapport (PDF) | 30 | 2 | 90% | 0.5 | 108 | NOW | À spécifier |
 | EP-08 | Onboarding self-service | 50 | 3 | 70% | 1 | 105 | NOW | À spécifier |
-| EP-05 | Audit des contacts & doublons | 40 | 3 | 70% | 1.5 | 56 | NOW | À spécifier |
-| EP-06 | Audit des deals & pipelines | 40 | 2 | 70% | 1.5 | 37 | NOW | À spécifier |
-| EP-09 | Audit utilisateurs & équipes | 30 | 2 | 60% | 1 | 36 | LATER | Idée |
-| EP-11 | Audit du reporting | 25 | 1 | 60% | 1 | 15 | LATER | Idée |
-| EP-10 | Audit des intégrations | 20 | 2 | 50% | 1.5 | 13 | LATER | Idée |
-| EP-14 | Recommandations enrichies (IA) | 30 | 3 | 40% | 3 | 12 | LATER | Idée |
 | EP-12 | Historique & comparaison d'audits | 20 | 2 | 60% | 2 | 12 | LATER | Idée |
 | EP-13 | Mode multi-workspace | 10 | 3 | 70% | 2 | 10.5 | LATER | Idée |
+| EP-14 | Recommandations enrichies (IA) | 30 | 3 | 40% | 3 | 12 | LATER | Idée |
 | EP-15 | Modèle de pricing & paywall | 50 | 3 | 60% | 1 | 90 | LATER | Idée |
 
-> ⚠️ Les scores RICE sur les epics LATER sont indicatifs — à recalibrer quand la phase NOW (phase 2) sera mieux connue.
+> ⚠️ La priorisation NOW suit l'ordre : couverture d'audit complète d'abord (EP-05→11), puis packaging/distribution (EP-07, EP-08). Les scores RICE sur les epics LATER sont indicatifs.
+
+---
+
+## Ce qui a été livré en Phase 2 — NOW
+
+### EP-UX — Design System & Rattrapage UX/UI
+- **Design tokens** : palette gray (13 niveaux, gris bleutés), palette brand (orange, 6 niveaux), typographie Geist Sans, spacing, radius, ombres
+- **Dark mode complet** : fond `gray-950`, fond élevé `gray-900`, surfaces `gray-850/gray-800`
+- **13 composants UI** : Button, Input, Alert, Badge, Card, Modal, Toast, Topbar, Skeleton, ProgressBar, EmptyState, Breadcrumb, Tabs, Dropdown
+- **Composants domaine extraits** : ScoreCircle (arc SVG animé), SeverityBadge, WorkspaceCard, RuleCard
+- **Topbar contextuelle** : 3 variantes (connectée avec menu utilisateur dropdown, non-auth, publique)
+- **Retrofit de tous les écrans** : auth (login, register, forgot/reset password, confirm), dashboard, audit results, settings, rapport public
+- **Page settings unifiée** : profil, gestion workspaces, danger zone avec modale (remplace `/account/delete`)
 
 ---
 

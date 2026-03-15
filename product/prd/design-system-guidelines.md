@@ -1,7 +1,7 @@
 # Design System Guidelines — HubSpot Auditor
 
 **Epic associé :** EP-UX
-**Dernière mise à jour :** 2026-03-14
+**Dernière mise à jour :** 2026-03-15
 **Auteur :** Product Design
 
 Direction esthétique : **dark mode par défaut, moderne et épuré**. Références : Linear, Vercel, Raycast — interfaces denses mais lisibles, contrastes nets, pas de décoration superflue.
@@ -305,7 +305,7 @@ Cercle SVG avec arc de progression.
 
 ### 2.9 — Progress Bar (taux)
 
-Pour les règles de type taux (P7-P14).
+Pour les règles de type taux (C-01, C-03, C-05, CO-01, P13, P14).
 
 ```
 ━━━━━━━━━━━━━━━━━━━━░░░░░░░░░░  72%

@@ -42,15 +42,19 @@ product/
 | EP-03 | [prd-03-audit-workflows.md](prd/prd-03-audit-workflows.md) | [ep03-audit-workflows.md](epics/ep03-audit-workflows.md) | ✅ Livré |
 | EP-04 | [prd-04-tableau-de-bord.md](prd/prd-04-tableau-de-bord.md) | [ep04-tableau-de-bord.md](epics/ep04-tableau-de-bord.md) | ✅ Livré |
 
-### Phase 2 — NOW
+### Phase 2 — NOW (en cours)
 
 | ID | PRD | Epic | Statut |
 |---|---|---|---|
-| EP-UX | [prd-ux-design-system.md](prd/prd-ux-design-system.md) | À créer | À spécifier |
-| EP-05 | À créer | À créer | Idée |
-| EP-06 | À créer | À créer | Idée |
-| EP-07 | À créer | À créer | Idée |
-| EP-08 | À créer | À créer | Idée |
+| EP-UX | [prd-ux-design-system.md](prd/prd-ux-design-system.md) | — | ✅ Livré |
+| EP-05 | [prd-05-audit-contacts.md](prd/prd-05-audit-contacts.md) | [ep05-audit-contacts.md](epics/ep05-audit-contacts.md) | Spécifié |
+| EP-05b | [prd-05b-audit-companies.md](prd/prd-05b-audit-companies.md) | [ep05b-audit-companies.md](epics/ep05b-audit-companies.md) | Spécifié |
+| EP-06 | À créer | À créer | À spécifier |
+| EP-09 | À créer | À créer | À spécifier |
+| EP-10 | À créer | À créer | À spécifier |
+| EP-11 | À créer | À créer | À spécifier |
+| EP-07 | À créer | À créer | À spécifier |
+| EP-08 | À créer | À créer | À spécifier |
 
 ---
 

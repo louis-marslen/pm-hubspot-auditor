@@ -2,7 +2,7 @@
 
 **Statut :** Proposition de design
 **Epic associé :** EP-UX
-**Dernière mise à jour :** 2026-03-14
+**Dernière mise à jour :** 2026-03-15
 **Auteur :** Product Design
 
 ---
@@ -542,7 +542,7 @@ Card distincte avec :
 
 #### Sections de règles (pattern répété)
 
-Chaque domaine (Propriétés, Contacts, Deals, Companies, Workflows) est une section :
+Chaque domaine actif (Propriétés, Contacts, Companies, Workflows — et à terme Deals) est une section. Un domaine inactif (0 élément) n'apparaît pas dans la navigation :
 
 **Header de section :**
 ```
@@ -595,7 +595,53 @@ Chaque domaine (Propriétés, Contacts, Deals, Companies, Workflows) est une sec
 - Les avertissements et infos sont repliés
 - Les règles sans problème sont repliées et non cliquables
 
-#### Règles de type "taux" (P7, P8, P9, P11, P12, P13, P14)
+#### Règles de type "cluster de doublons" (C-06, C-07, C-08, CO-02, CO-03)
+
+Pour les règles qui détectent des doublons, afficher une **liste de clusters** triée par taille décroissante dans la rule card :
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  🔴 CRITIQUE   C-06   Doublons email exact          8 clusters ▴│
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Impact business :                                               │
+│  Les doublons email faussent les métriques marketing…            │
+│                                                                  │
+│  ┌────────────────────────────────────────────────────────────┐  │
+│  │  📧 john.doe@acme.com                        3 contacts   │  │
+│  │  ┌──────────┬──────────────────┬──────────────┬─────────┐ │  │
+│  │  │ Hub ID   │ Nom              │ Email orig.  │ Créé le │ │  │
+│  │  ├──────────┼──────────────────┼──────────────┼─────────┤ │  │
+│  │  │ 12345    │ John Doe         │ john.doe@... │ 2024-01 │ │  │
+│  │  │ 67890    │ John Doe         │ John.Doe@... │ 2024-06 │ │  │
+│  │  │ 11111    │ J. Doe           │ john.doe+w@..│ 2025-02 │ │  │
+│  │  └──────────┴──────────────────┴──────────────┴─────────┘ │  │
+│  └────────────────────────────────────────────────────────────┘  │
+│                                                                  │
+│  ┌────────────────────────────────────────────────────────────┐  │
+│  │  📧 jane.smith@example.com                    2 contacts   │  │
+│  │  ...                                                       │  │
+│  └────────────────────────────────────────────────────────────┘  │
+│                                                                  │
+│  Affichage 1-20 sur 8 clusters    [← Précédent] [Suivant →]    │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+Pour les clusters companies (CO-02, CO-03), chaque membre affiche en plus le **nombre de contacts et deals associés** (aide à décider quelle fiche conserver) :
+
+```
+│  │  🏢 acme.com                                  3 companies  │  │
+│  │  ┌──────────┬──────────────┬──────────┬──────────┬────────┐ │  │
+│  │  │ Hub ID   │ Nom          │ Domain   │ Contacts │ Deals  │ │  │
+│  │  ├──────────┼──────────────┼──────────┼──────────┼────────┤ │  │
+│  │  │ 12345    │ Acme SAS     │ acme.com │ 45       │ 12     │ │  │
+│  │  │ 67890    │ ACME         │ acme.com │ 3        │ 0      │ │  │
+│  │  │ 11111    │ Acme Inc.    │ Acme.com │ 0        │ 0      │ │  │
+│  │  └──────────┴──────────────┴──────────┴──────────┴────────┘ │  │
+```
+
+#### Règles de type "taux" (C-01, C-03, C-05, CO-01, P13, P14)
 
 Pour les règles qui mesurent un taux (ex. "87% des contacts ont un email"), afficher une **barre de progression** dans la rule card :
 
@@ -607,6 +653,76 @@ Pour les règles qui mesurent un taux (ex. "87% des contacts ont un email"), aff
 ```
 
 La barre est colorée selon que le taux est au-dessus ou en-dessous du seuil.
+
+#### Section Contacts (EP-05)
+
+La section Contacts apparaît dans la navigation intra-page entre "Propriétés" et "Deals".
+
+**Header de section :**
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  Contacts                                                82/100 │
+│  12 règles analysées · 2 340 contacts · 1 critique · 3 avert.   │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+**Organisation des règles dans la section :**
+
+| Bloc | Règles | Affichage |
+|---|---|---|
+| Doublons | C-06, C-07, C-08 | Pattern "clusters" (voir ci-dessus), triés par taille décroissante |
+| Qualité | C-09, C-10, C-11, C-12 | Listes paginées standard (Hub ID, nom, valeur problématique) |
+| Cohérence lifecycle | C-01, C-03, C-05 (taux), C-02 (comptage), C-04a-d (exemples) | Barres de progression pour les taux, previews 5 exemples pour lifecycle |
+
+**Conditions d'affichage :**
+- Si 0 contact dans le workspace : l'onglet "Contacts" n'apparaît pas dans la navigation
+- Si 0 company (B2C) : les règles C-05 et C-07 affichent "Non applicable — aucune company détectée"
+
+#### Section Companies (EP-05b)
+
+La section Companies apparaît dans la navigation intra-page entre "Deals" et "Workflows".
+
+**Header de section :**
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  Companies                                              75/100  │
+│  8 règles analysées · 890 companies · 2 critiques · 1 avert.    │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+**Organisation des règles dans la section :**
+
+| Bloc | Règles | Affichage |
+|---|---|---|
+| Doublons | CO-02, CO-03 | Pattern "clusters" avec colonnes contacts/deals associés par membre |
+| Qualité | CO-01 (taux), CO-04 à CO-08 | Barre de progression pour CO-01, listes paginées pour CO-04 à CO-08 |
+
+**Conditions d'affichage :**
+- Si 0 company dans le workspace : l'onglet "Companies" n'apparaît pas dans la navigation, mention dans les métadonnées
+
+#### Mise à jour du Hero — Sous-scores (post EP-05 + EP-05b)
+
+Après EP-05 et EP-05b, le Hero affiche jusqu'à 4 sous-scores :
+
+```
+│  Propriétés: 68/100    Contacts: 82/100    Companies: 75/100    Workflows: 76/100  │
+```
+
+Si un domaine est inactif (ex. 0 company), son sous-score n'est pas affiché.
+
+#### Mise à jour de la progression d'audit (section 5.5)
+
+Après EP-05 et EP-05b, les étapes de progression incluent :
+
+```
+              ✓ Connexion au workspace
+              ✓ Récupération des propriétés
+              ✓ Analyse des contacts (2 340)…
+              ◌ Analyse des companies (890)…
+              ○ Analyse des deals
+              ○ Analyse des workflows
+              ○ Génération du rapport
+```
 
 ---
 

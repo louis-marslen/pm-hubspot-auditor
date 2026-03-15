@@ -1,7 +1,5 @@
 # Prompt d'implémentation — EP-UX : Design System & Rattrapage UI/UX
 
-> Copier-coller ce prompt dans une session Claude en mode Dev.
-
 ---
 
 ## Contexte
