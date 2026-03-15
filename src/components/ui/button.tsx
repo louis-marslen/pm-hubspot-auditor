@@ -3,28 +3,46 @@
 import { ButtonHTMLAttributes, forwardRef } from "react";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "danger";
+  variant?: "primary" | "secondary" | "ghost" | "danger";
+  size?: "sm" | "md" | "lg";
   loading?: boolean;
 }
 
 const variantClasses = {
   primary:
-    "bg-orange-500 text-white hover:bg-orange-600 focus:ring-orange-500",
+    "bg-brand-500 text-white hover:bg-brand-400 active:bg-brand-600 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950",
   secondary:
-    "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-gray-500",
-  danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
+    "bg-gray-800 text-gray-100 border border-gray-700 hover:bg-gray-700 hover:border-gray-600 active:bg-gray-800 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950",
+  ghost:
+    "bg-transparent text-gray-300 hover:text-gray-100 hover:bg-gray-800 active:bg-gray-850 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950",
+  danger:
+    "bg-transparent text-red-400 border border-red-500/30 hover:bg-red-500 hover:text-white active:bg-red-600 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950",
+};
+
+const sizeClasses = {
+  sm: "h-8 px-3 text-xs rounded-md",
+  md: "h-9 px-4 text-sm rounded-md",
+  lg: "h-10 px-5 text-sm font-medium rounded-md",
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
-    { children, variant = "primary", loading = false, disabled, className = "", ...props },
+    {
+      children,
+      variant = "primary",
+      size = "md",
+      loading = false,
+      disabled,
+      className = "",
+      ...props
+    },
     ref
   ) => {
     return (
       <button
         ref={ref}
         disabled={disabled || loading}
-        className={`inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${variantClasses[variant]} ${className}`}
+        className={`inline-flex items-center justify-center font-medium transition-colors duration-150 ease-out focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
         {...props}
       >
         {loading ? (
@@ -48,7 +66,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
               />
             </svg>
-            Chargement…
+            <span className="text-gray-400">{children}</span>
           </>
         ) : (
           children

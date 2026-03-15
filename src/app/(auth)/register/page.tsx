@@ -4,18 +4,18 @@ export const metadata = { title: "Créer un compte — HubSpot Auditor" };
 
 export default function RegisterPage() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Créer un compte</h1>
-          <p className="mt-2 text-sm text-gray-600">
-            Commencez à auditer votre workspace HubSpot
-          </p>
-        </div>
-        <div className="rounded-lg border bg-white p-8 shadow-sm">
-          <RegisterForm />
-        </div>
+    <>
+      <div className="mb-8 text-center">
+        <h1 className="text-2xl font-semibold text-gray-100">
+          Créez votre compte
+        </h1>
+        <p className="mt-2 text-sm text-gray-400">
+          Auditez votre workspace HubSpot en quelques minutes
+        </p>
       </div>
-    </div>
+      <div className="rounded-lg border border-gray-700 bg-gray-900 p-8">
+        <RegisterForm />
+      </div>
+    </>
   );
 }

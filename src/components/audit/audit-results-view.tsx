@@ -7,138 +7,125 @@ import {
 } from "@/lib/audit/types";
 import { BUSINESS_IMPACTS } from "@/lib/audit/business-impact";
 import { PaginatedList } from "@/components/audit/paginated-list";
+import { ScoreCircle, getScoreBg } from "@/components/ui/score-circle";
+import { SeverityBadge } from "@/components/ui/severity-badge";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { ProgressBar } from "@/components/ui/progress-bar";
+import { Button } from "@/components/ui/button";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { Tabs } from "@/components/ui/tabs";
+import { ChevronDown, CircleCheck, Share2, ArrowLeft, Sparkles, Copy } from "lucide-react";
+import Link from "next/link";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function ScoreCircle({ score, size = "lg" }: { score: number; size?: "lg" | "sm" }) {
-  const color =
-    score <= 49
-      ? "text-red-600 border-red-400"
-      : score <= 69
-      ? "text-orange-500 border-orange-400"
-      : score <= 89
-      ? "text-yellow-500 border-yellow-400"
-      : "text-green-600 border-green-400";
-
-  if (size === "sm") {
-    return (
-      <div className={`flex h-16 w-16 flex-col items-center justify-center rounded-full border-4 ${color}`}>
-        <span className="text-2xl font-bold">{score}</span>
-      </div>
-    );
-  }
-
-  return (
-    <div className={`flex h-28 w-28 flex-col items-center justify-center rounded-full border-4 ${color}`}>
-      <span className="text-4xl font-bold">{score}</span>
-      <span className="text-xs font-medium">/100</span>
-    </div>
-  );
-}
-
-function SeverityBadge({ severity }: { severity: "critique" | "avertissement" | "info" }) {
-  const styles = {
-    critique: "bg-red-100 text-red-700",
-    avertissement: "bg-orange-100 text-orange-700",
-    info: "bg-blue-100 text-blue-700",
-  };
-  const labels = { critique: "Critique", avertissement: "Avertissement", info: "Info" };
-  return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${styles[severity]}`}>
-      {labels[severity]}
-    </span>
-  );
-}
-
-function ChevronIcon({ open }: { open: boolean }) {
-  return (
-    <svg
-      className={`h-4 w-4 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`}
-      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-    </svg>
-  );
-}
-
-function RuleSection({
-  title, ruleKey, severity, isEmpty, children, defaultOpen = false,
+function RuleCard({
+  title, ruleKey, severity, isEmpty, count, children, defaultOpen = false,
+  rateResult,
 }: {
   title: string; ruleKey: string; severity: "critique" | "avertissement" | "info";
-  isEmpty: boolean; children: React.ReactNode; defaultOpen?: boolean;
+  isEmpty: boolean; count?: number; children: React.ReactNode; defaultOpen?: boolean;
+  rateResult?: RateResult;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const impact = BUSINESS_IMPACTS[ruleKey];
 
+  if (isEmpty) {
+    return (
+      <Card padding="compact">
+        <div className="flex items-center gap-3 px-5 py-4">
+          <CircleCheck className="h-4 w-4 text-green-400" />
+          <SeverityBadge severity="ok" />
+          <span className="text-caption text-gray-500 uppercase tracking-wide">{ruleKey.toUpperCase()}</span>
+          <span className="text-sm font-medium text-gray-300">{title}</span>
+          <span className="ml-auto text-xs text-gray-500">0 trouvé</span>
+        </div>
+      </Card>
+    );
+  }
+
   return (
-    <div className="rounded-lg border bg-white">
+    <Card padding="compact">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-5 py-4 text-left"
+        className="w-full flex items-center gap-3 px-5 py-4 text-left"
+        aria-expanded={open}
       >
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <SeverityBadge severity={severity} />
-            <span className="text-xs text-gray-400 uppercase tracking-wide">{ruleKey.toUpperCase()}</span>
-          </div>
-          <span className="font-semibold text-gray-900">{title}</span>
-          {isEmpty && (
-            <span className="ml-2 text-xs text-green-600 font-medium">✓ OK</span>
-          )}
-        </div>
-        <ChevronIcon open={open} />
+        <SeverityBadge severity={severity} />
+        <span className="text-caption text-gray-500 uppercase tracking-wide">{ruleKey.toUpperCase()}</span>
+        <span className="text-sm font-medium text-gray-200 flex-1">{title}</span>
+
+        {rateResult && (
+          <span className="text-sm tabular-nums font-medium text-gray-100 mr-2">
+            {Math.round(rateResult.rate * 100)}%
+          </span>
+        )}
+
+        {count !== undefined && count > 0 && (
+          <span className="text-xs text-gray-400">{count} trouvé{count !== 1 ? "s" : ""}</span>
+        )}
+
+        <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
 
+      {rateResult && !open && (
+        <div className="px-5 pb-3">
+          <ProgressBar
+            value={Math.round(rateResult.rate * 100)}
+            threshold={Math.round(rateResult.threshold * 100)}
+          />
+        </div>
+      )}
+
       {open && (
-        <div className="px-5 pb-5 border-t">
+        <div className="px-5 pb-5 border-t border-gray-700">
           <div className="pt-4">
+            {rateResult && (
+              <div className="mb-4">
+                <ProgressBar
+                  value={Math.round(rateResult.rate * 100)}
+                  threshold={Math.round(rateResult.threshold * 100)}
+                  className="mb-2"
+                />
+                <p className="text-xs text-gray-400">
+                  {rateResult.filledCount.toLocaleString("fr-FR")} / {rateResult.totalCount.toLocaleString("fr-FR")} — seuil : {Math.round(rateResult.threshold * 100)}%
+                </p>
+              </div>
+            )}
             {children}
           </div>
-          {!isEmpty && impact && (
-            <div className="mt-4 rounded-md bg-amber-50 border border-amber-200 p-3">
-              <p className="text-xs font-semibold text-amber-800 mb-1">Impact business</p>
-              <p className="text-xs text-amber-700">{impact.estimation}</p>
+          {impact && (
+            <div className="mt-4 rounded-md bg-[rgba(245,158,11,0.08)] border border-[rgba(245,158,11,0.15)] p-3">
+              <p className="text-xs font-semibold text-amber-300 mb-1">Impact business</p>
+              <p className="text-xs text-amber-200/80">{impact.estimation}</p>
             </div>
           )}
         </div>
       )}
-    </div>
-  );
-}
-
-function RateCard({ result, label }: { result: RateResult; label: string }) {
-  const pct = Math.round(result.rate * 100);
-  const color = result.triggered ? "text-red-600" : "text-green-600";
-  return (
-    <div className="flex items-center gap-4 text-sm">
-      <span className={`text-2xl font-bold ${color}`}>{pct}%</span>
-      <span className="text-gray-600">
-        {result.filledCount.toLocaleString("fr-FR")} / {result.totalCount.toLocaleString("fr-FR")} {label}
-      </span>
-      <span className="text-gray-400 text-xs">(seuil : {Math.round(result.threshold * 100)}%)</span>
-    </div>
+    </Card>
   );
 }
 
 function WorkflowIssueRow({ wf }: { wf: WorkflowIssue }) {
   return (
-    <div className="flex items-start justify-between gap-2 rounded-md border px-3 py-2 text-sm">
+    <div className="flex items-start justify-between gap-2 rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm">
       <div>
-        <span className="font-medium text-gray-900">{wf.name}</span>
+        <span className="font-medium text-gray-200">{wf.name}</span>
         {wf.isLegacy && (
-          <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500">Ancien format</span>
+          <Badge variant="neutre" className="ml-2">Ancien format</Badge>
         )}
         {wf.notAnalyzed && (
-          <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-600">Non analysé</span>
+          <Badge variant="critique" className="ml-2">Non analysé</Badge>
         )}
       </div>
-      <div className="flex items-center gap-2 flex-shrink-0 text-xs text-gray-400">
-        <span className={wf.status === "ACTIVE" ? "text-green-600 font-medium" : "text-gray-400"}>
+      <div className="flex items-center gap-2 flex-shrink-0 text-xs text-gray-500">
+        <Badge variant={wf.status === "ACTIVE" ? "succes" : "neutre"}>
           {wf.status === "ACTIVE" ? "Actif" : "Inactif"}
-        </span>
+        </Badge>
         {wf.errorRate !== null && (
-          <span className="text-red-600 font-medium">{wf.errorRate}% d&apos;erreurs</span>
+          <span className="text-red-400 font-medium">{wf.errorRate}% d&apos;erreurs</span>
         )}
       </div>
     </div>
@@ -168,374 +155,416 @@ export function AuditResultsView({
 }: AuditResultsViewProps) {
   const displayScore = globalScore ?? r.score;
   const displayLabel = globalScoreLabel ?? r.scoreLabel;
+  const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState("resume");
 
   function handleCopyLink() {
     const url = `${window.location.origin}/share/${shareToken}`;
-    navigator.clipboard.writeText(url).catch(() => {});
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {});
   }
 
   const totalCritiques = r.totalCritiques + (w?.totalCritiques ?? 0);
   const totalAvertissements = r.totalAvertissements + (w?.totalAvertissements ?? 0);
   const totalInfos = r.totalInfos + (w?.totalInfos ?? 0);
 
+  const dateStr = new Date(startedAt).toLocaleDateString("fr-FR", {
+    day: "numeric", month: "long", year: "numeric",
+  });
+
+  // Tab counts
+  const propCount = r.totalCritiques + r.totalAvertissements + r.totalInfos;
+  const workflowCount = w ? (w.totalCritiques + w.totalAvertissements + w.totalInfos) : 0;
+
+  const tabs = [
+    { id: "resume", label: "Résumé" },
+    { id: "properties", label: "Propriétés", count: propCount > 0 ? propCount : undefined },
+    { id: "contacts", label: "Contacts" },
+    { id: "companies", label: "Companies" },
+    { id: "deals", label: "Deals" },
+    ...(w?.hasWorkflows ? [{ id: "workflows", label: "Workflows", count: workflowCount > 0 ? workflowCount : undefined }] : []),
+  ];
+
+  function handleTabChange(id: string) {
+    setActiveTab(id);
+    const el = document.getElementById(`section-${id}`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
 
-      {/* En-tête : score global */}
-      <section className="rounded-lg border bg-white p-6 flex items-center gap-8">
-        <ScoreCircle score={displayScore} />
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">Score de santé : {displayLabel}</h1>
-          <div className="flex gap-4 text-sm mt-2">
-            <span className="text-red-600 font-medium">{totalCritiques} critique{totalCritiques !== 1 ? "s" : ""}</span>
-            <span className="text-orange-500 font-medium">{totalAvertissements} avertissement{totalAvertissements !== 1 ? "s" : ""}</span>
-            <span className="text-blue-600 font-medium">{totalInfos} info{totalInfos !== 1 ? "s" : ""}</span>
-          </div>
-          <p className="text-sm text-gray-500 mt-3">
-            {portalName && <><span className="font-medium">{portalName}</span> · </>}
-            {(r.objectCounts.contacts ?? 0).toLocaleString("fr-FR")} contacts ·{" "}
-            {(r.objectCounts.companies ?? 0).toLocaleString("fr-FR")} companies ·{" "}
-            {(r.objectCounts.deals ?? 0).toLocaleString("fr-FR")} deals
-          </p>
-          <p className="text-xs text-gray-400 mt-1">
-            Audit du {new Date(startedAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
-            {executionDurationMs != null && ` · ${Math.round(executionDurationMs / 1000)}s`}
-          </p>
-        </div>
+      {/* Breadcrumb */}
+      {!isPublic && (
+        <Breadcrumb items={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: portalName ?? "Workspace" },
+          { label: `Audit du ${dateStr}` },
+        ]} />
+      )}
 
-        {/* Score breakdown + lien public */}
-        <div className="flex flex-col items-end gap-3">
-          <div className="flex gap-4 text-center">
-            <div>
-              <ScoreCircle score={r.score} size="sm" />
-              <p className="text-xs text-gray-500 mt-1">Propriétés</p>
+      {/* Hero score */}
+      <Card
+        className={`${getScoreBg(displayScore)} border-gray-700`}
+        padding="standard"
+      >
+        <div className="flex items-center gap-8 flex-wrap">
+          <ScoreCircle score={displayScore} size="lg" />
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl font-semibold text-gray-100 mb-1">{displayLabel}</h1>
+            <div className="flex gap-3 text-sm mt-2 flex-wrap">
+              {totalCritiques > 0 && (
+                <span className="text-red-400 font-medium">{totalCritiques} critique{totalCritiques !== 1 ? "s" : ""}</span>
+              )}
+              {totalAvertissements > 0 && (
+                <span className="text-amber-400 font-medium">{totalAvertissements} avertissement{totalAvertissements !== 1 ? "s" : ""}</span>
+              )}
+              {totalInfos > 0 && (
+                <span className="text-blue-400 font-medium">{totalInfos} info{totalInfos !== 1 ? "s" : ""}</span>
+              )}
             </div>
-            {w?.hasWorkflows && w.score !== null && (
+            <p className="text-sm text-gray-400 mt-3">
+              {portalName && <><span className="font-medium text-gray-300">{portalName}</span> · </>}
+              {(r.objectCounts.contacts ?? 0).toLocaleString("fr-FR")} contacts ·{" "}
+              {(r.objectCounts.companies ?? 0).toLocaleString("fr-FR")} companies ·{" "}
+              {(r.objectCounts.deals ?? 0).toLocaleString("fr-FR")} deals
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              {dateStr}
+              {executionDurationMs != null && ` · ${Math.round(executionDurationMs / 1000)}s`}
+            </p>
+          </div>
+
+          <div className="flex flex-col items-end gap-4">
+            <div className="flex gap-4 text-center">
               <div>
-                <ScoreCircle score={w.score} size="sm" />
-                <p className="text-xs text-gray-500 mt-1">Workflows</p>
+                <ScoreCircle score={r.score} size="md" />
+                <p className="text-xs text-gray-500 mt-1">Propriétés</p>
               </div>
+              {w?.hasWorkflows && w.score !== null && (
+                <div>
+                  <ScoreCircle score={w.score} size="md" />
+                  <p className="text-xs text-gray-500 mt-1">Workflows</p>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {!isPublic && shareToken && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleCopyLink}
+                >
+                  {copied ? (
+                    <><CircleCheck className="h-4 w-4 mr-1.5" />Lien copié</>
+                  ) : (
+                    <><Share2 className="h-4 w-4 mr-1.5" />Partager le rapport</>
+                  )}
+                </Button>
+              )}
+              {!isPublic && (
+                <Link href="/dashboard">
+                  <Button variant="ghost" size="sm">
+                    <ArrowLeft className="h-4 w-4 mr-1.5" />Dashboard
+                  </Button>
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Sticky tabs navigation */}
+      <Tabs
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        sticky
+      />
+
+      {/* Executive summary */}
+      {llmSummary && (
+        <section id="section-resume">
+          <Card>
+            <div className="flex items-start gap-3">
+              <Sparkles className="h-5 w-5 text-brand-400 mt-0.5 shrink-0" />
+              <div>
+                <h2 className="text-[15px] font-semibold text-gray-100 mb-2">Résumé exécutif</h2>
+                <p className="text-sm text-gray-300 leading-relaxed">{llmSummary}</p>
+              </div>
+            </div>
+          </Card>
+        </section>
+      )}
+
+      {/* Workflows */}
+      {w !== undefined && w !== null && w.hasWorkflows && (
+        <section id="section-workflows" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-100">Workflows</h2>
+            {w.score !== null && (
+              <ScoreCircle score={w.score} size="sm" />
             )}
           </div>
-          {!isPublic && shareToken && (
-            <button
-              type="button"
-              onClick={handleCopyLink}
-              className="text-xs text-gray-500 hover:text-orange-600 underline transition-colors"
-            >
-              Copier le lien public
-            </button>
+
+          {w.notAnalyzed.length > 0 && (
+            <div className="rounded-lg bg-[rgba(245,158,11,0.08)] border border-[rgba(245,158,11,0.15)] px-4 py-3 text-sm text-amber-300">
+              {w.notAnalyzed.length} workflow{w.notAnalyzed.length > 1 ? "s" : ""} n&apos;ont pas pu être analysés.
+            </div>
           )}
+
+          <RuleCard title="Workflows actifs avec taux d'erreur > 10%" ruleKey="w1" severity="critique" isEmpty={w.w1.length === 0} count={w.w1.length} defaultOpen={w.w1.length > 0}>
+            <PaginatedList items={w.w1} renderItem={(wf: WorkflowIssue) => <WorkflowIssueRow key={wf.id} wf={wf} />} />
+          </RuleCard>
+
+          <RuleCard title="Workflows actifs sans actions configurées" ruleKey="w2" severity="critique" isEmpty={w.w2.length === 0} count={w.w2.length} defaultOpen={w.w2.length > 0}>
+            <PaginatedList items={w.w2} renderItem={(wf: WorkflowIssue) => <WorkflowIssueRow key={wf.id} wf={wf} />} />
+          </RuleCard>
+
+          <RuleCard title="Workflows actifs sans enrôlement récent (> 90j)" ruleKey="w3" severity="avertissement" isEmpty={w.w3.length === 0} count={w.w3.length}>
+            <PaginatedList items={w.w3} renderItem={(wf: WorkflowIssue) => <WorkflowIssueRow key={wf.id} wf={wf} />} />
+          </RuleCard>
+
+          <RuleCard title="Workflows inactifs depuis plus de 90 jours" ruleKey="w4" severity="avertissement" isEmpty={w.w4.length === 0} count={w.w4.length}>
+            <PaginatedList items={w.w4} renderItem={(wf: WorkflowIssue) => <WorkflowIssueRow key={wf.id} wf={wf} />} />
+          </RuleCard>
+
+          <RuleCard title="Workflows récemment désactivés" ruleKey="w5" severity="info" isEmpty={w.w5.length === 0} count={w.w5.length}>
+            <PaginatedList items={w.w5} renderItem={(wf: WorkflowIssue) => <WorkflowIssueRow key={wf.id} wf={wf} />} />
+          </RuleCard>
+
+          <RuleCard title="Workflows avec noms non descriptifs" ruleKey="w6" severity="info" isEmpty={w.w6.length === 0} count={w.w6.length}>
+            <PaginatedList items={w.w6} renderItem={(wf: WorkflowIssue) => <WorkflowIssueRow key={wf.id} wf={wf} />} />
+          </RuleCard>
+
+          <RuleCard title="Workflows sans dossier" ruleKey="w7" severity="info" isEmpty={w.w7.length === 0} count={w.w7.length}>
+            <PaginatedList items={w.w7} renderItem={(wf: WorkflowIssue) => <WorkflowIssueRow key={wf.id} wf={wf} />} />
+          </RuleCard>
+        </section>
+      )}
+
+      {/* Properties summary */}
+      <section id="section-properties" className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-100">Propriétés custom</h2>
+          <ScoreCircle score={r.score} size="sm" />
         </div>
-      </section>
 
-      {/* Résumé LLM */}
-      {(llmSummary || (!isPublic)) && (
-        <section className="rounded-lg border bg-white p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">Résumé exécutif</h2>
-          <p className="text-sm text-gray-700 leading-relaxed">
-            {llmSummary ?? "Le résumé exécutif n'a pas pu être généré."}
-          </p>
-        </section>
-      )}
-
-      {/* Section Workflows */}
-      {w !== undefined && w !== null && (
-        <section>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Workflows</h2>
-
-          {!w.hasWorkflows ? (
-            <div className="rounded-lg border bg-white p-5 text-sm text-gray-500 italic">
-              Aucun workflow détecté — domaine exclu du score global.
-            </div>
-          ) : (
-            <div className="space-y-4">
-
-              {w.notAnalyzed.length > 0 && (
-                <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
-                  {w.notAnalyzed.length} workflow{w.notAnalyzed.length > 1 ? "s" : ""} n&apos;ont pas pu être analysés.
-                </div>
-              )}
-
-              <RuleSection title="Workflows actifs avec taux d'erreur > 10%" ruleKey="w1" severity="critique" isEmpty={w.w1.length === 0} defaultOpen={w.w1.length > 0}>
-                <PaginatedList items={w.w1} renderItem={(wf: WorkflowIssue) => <WorkflowIssueRow key={wf.id} wf={wf} />} />
-              </RuleSection>
-
-              <RuleSection title="Workflows actifs sans actions configurées" ruleKey="w2" severity="critique" isEmpty={w.w2.length === 0} defaultOpen={w.w2.length > 0}>
-                <PaginatedList items={w.w2} renderItem={(wf: WorkflowIssue) => <WorkflowIssueRow key={wf.id} wf={wf} />} />
-              </RuleSection>
-
-              <RuleSection
-                title={`Workflows actifs sans enrôlement récent (> ${90}j)`}
-                ruleKey="w3" severity="avertissement" isEmpty={w.w3.length === 0}
-                defaultOpen={false}
-              >
-                <PaginatedList
-                  items={w.w3}
-                  renderItem={(wf: WorkflowIssue) => (
-                    <div key={wf.id} className="flex items-start justify-between gap-2 rounded-md border px-3 py-2 text-sm">
-                      <span className="font-medium text-gray-900">{wf.name}</span>
-                      <span className="text-xs text-orange-600 font-medium flex-shrink-0">
-                        {wf.lastEnrollmentAt === null ? "Jamais utilisé" : "Anciennement actif"}
-                      </span>
-                    </div>
-                  )}
-                />
-              </RuleSection>
-
-              <RuleSection title="Workflows inactifs depuis plus de 90 jours" ruleKey="w4" severity="avertissement" isEmpty={w.w4.length === 0} defaultOpen={false}>
-                <PaginatedList items={w.w4} renderItem={(wf: WorkflowIssue) => <WorkflowIssueRow key={wf.id} wf={wf} />} />
-              </RuleSection>
-
-              <RuleSection title="Workflows récemment désactivés" ruleKey="w5" severity="info" isEmpty={w.w5.length === 0} defaultOpen={false}>
-                <PaginatedList items={w.w5} renderItem={(wf: WorkflowIssue) => <WorkflowIssueRow key={wf.id} wf={wf} />} />
-              </RuleSection>
-
-              <RuleSection title="Workflows avec noms non descriptifs" ruleKey="w6" severity="info" isEmpty={w.w6.length === 0} defaultOpen={false}>
-                <PaginatedList items={w.w6} renderItem={(wf: WorkflowIssue) => <WorkflowIssueRow key={wf.id} wf={wf} />} />
-              </RuleSection>
-
-              <RuleSection
-                title={`Workflows sans dossier (${w.w7.length}/${w.totalWorkflows} — ${w.totalWorkflows > 0 ? Math.round((w.w7.length / w.totalWorkflows) * 100) : 0}% sans dossier)`}
-                ruleKey="w7" severity="info" isEmpty={w.w7.length === 0} defaultOpen={false}
-              >
-                <PaginatedList items={w.w7} renderItem={(wf: WorkflowIssue) => <WorkflowIssueRow key={wf.id} wf={wf} />} />
-              </RuleSection>
-
-            </div>
-          )}
-        </section>
-      )}
-
-      {/* Résumé propriétés custom */}
-      <section>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Propriétés custom analysées</h2>
         <div className="grid grid-cols-3 gap-4">
           {(["contacts", "companies", "deals"] as const).map((type) => (
-            <div key={type} className="rounded-lg border bg-white p-4 text-center">
-              <p className="text-2xl font-bold text-gray-900">{r.customPropertyCounts[type] ?? 0}</p>
-              <p className="text-sm text-gray-500 capitalize">{type}</p>
-              <p className="text-xs text-gray-400">propriétés custom</p>
-            </div>
+            <Card key={type} padding="compact" className="text-center">
+              <p className="text-2xl font-bold text-gray-100 tabular-nums">{r.customPropertyCounts[type] ?? 0}</p>
+              <p className="text-xs text-gray-500 capitalize">{type}</p>
+            </Card>
           ))}
         </div>
-      </section>
 
-      {/* Propriétés custom */}
-      <section>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Propriétés custom</h2>
-        <div className="space-y-4">
+        <RuleCard title="Propriétés vides depuis plus de 90 jours" ruleKey="p1" severity="critique" isEmpty={r.p1.length === 0} count={r.p1.length} defaultOpen={r.p1.length > 0}>
+          <PaginatedList
+            items={r.p1}
+            renderItem={(item: PropertyIssue) => (
+              <div key={item.name} className="flex items-start justify-between gap-2 rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm">
+                <div>
+                  <span className="font-medium text-gray-200">{item.label}</span>
+                  <span className="ml-2 text-xs text-gray-500">{item.name}</span>
+                  <span className="ml-2 text-xs text-gray-500">({item.objectType})</span>
+                </div>
+                <span className="text-xs text-gray-500 whitespace-nowrap">
+                  {item.createdAt ? new Date(item.createdAt).toLocaleDateString("fr-FR") : "—"}
+                </span>
+              </div>
+            )}
+          />
+        </RuleCard>
 
-          <RuleSection title="Propriétés vides depuis plus de 90 jours" ruleKey="p1" severity="critique" isEmpty={r.p1.length === 0} defaultOpen={r.p1.length > 0}>
-            <PaginatedList
-              items={r.p1}
-              renderItem={(item: PropertyIssue) => (
-                <div key={item.name} className="flex items-start justify-between gap-2 rounded-md border px-3 py-2 text-sm">
-                  <div>
-                    <span className="font-medium text-gray-900">{item.label}</span>
-                    <span className="ml-2 text-xs text-gray-400">{item.name}</span>
-                    <span className="ml-2 text-xs text-gray-400">({item.objectType})</span>
-                  </div>
-                  <span className="text-xs text-gray-400 whitespace-nowrap">
-                    Créé le {item.createdAt ? new Date(item.createdAt).toLocaleDateString("fr-FR") : "—"}
+        <RuleCard title="Propriétés sous-utilisées (fill rate < 5%)" ruleKey="p2" severity="avertissement" isEmpty={r.p2.length === 0} count={r.p2.length}>
+          <PaginatedList
+            items={r.p2}
+            renderItem={(item: PropertyIssue) => (
+              <div key={item.name} className="flex items-start justify-between gap-2 rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm">
+                <div>
+                  <span className="font-medium text-gray-200">{item.label}</span>
+                  <span className="ml-2 text-xs text-gray-500">{item.objectType}</span>
+                </div>
+                <span className="text-xs font-medium text-amber-400 whitespace-nowrap">
+                  {item.fillRate !== undefined ? `${Math.round(item.fillRate * 100)}%` : "—"}
+                  {item.filledCount !== undefined && item.totalCount !== undefined ? ` (${item.filledCount}/${item.totalCount})` : ""}
+                </span>
+              </div>
+            )}
+          />
+        </RuleCard>
+
+        <RuleCard title="Doublons de propriétés (labels similaires)" ruleKey="p3" severity="avertissement" isEmpty={r.p3.length === 0} count={r.p3.length}>
+          <PaginatedList
+            items={r.p3}
+            renderItem={(item: PropertyPair) => (
+              <div key={`${item.a.name}-${item.b.name}`} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-medium text-gray-200">{item.a.label}</span>
+                  <span className="text-gray-600">↔</span>
+                  <span className="font-medium text-gray-200">{item.b.label}</span>
+                  <span className="text-xs text-amber-400 font-medium ml-auto">
+                    {Math.round(item.similarity * 100)}% similaires
                   </span>
                 </div>
-              )}
-            />
-          </RuleSection>
+                <p className="text-xs text-gray-500 mt-1">{item.a.objectType}</p>
+              </div>
+            )}
+          />
+        </RuleCard>
 
-          <RuleSection title="Propriétés sous-utilisées (fill rate < 5%)" ruleKey="p2" severity="avertissement" isEmpty={r.p2.length === 0} defaultOpen={false}>
-            <PaginatedList
-              items={r.p2}
-              renderItem={(item: PropertyIssue) => (
-                <div key={item.name} className="flex items-start justify-between gap-2 rounded-md border px-3 py-2 text-sm">
-                  <div>
-                    <span className="font-medium text-gray-900">{item.label}</span>
-                    <span className="ml-2 text-xs text-gray-400">{item.objectType}</span>
-                  </div>
-                  <span className="text-xs font-medium text-orange-600 whitespace-nowrap">
-                    {item.fillRate !== undefined ? `${Math.round(item.fillRate * 100)}%` : "—"}
-                    {item.filledCount !== undefined && item.totalCount !== undefined
-                      ? ` (${item.filledCount}/${item.totalCount})`
-                      : ""}
-                  </span>
+        <RuleCard title="Propriétés sans description" ruleKey="p4" severity="info" isEmpty={r.p4.length === 0} count={r.p4.length}>
+          <PaginatedList
+            items={r.p4}
+            renderItem={(item: PropertyIssue) => (
+              <div key={item.name} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm flex items-center justify-between">
+                <span className="font-medium text-gray-200">{item.label}</span>
+                <span className="text-xs text-gray-500">{item.objectType}</span>
+              </div>
+            )}
+          />
+        </RuleCard>
+
+        <RuleCard title="Propriétés non organisées (groupe par défaut)" ruleKey="p5" severity="info" isEmpty={r.p5.length === 0} count={r.p5.length}>
+          <PaginatedList
+            items={r.p5}
+            renderItem={(item: PropertyIssue) => (
+              <div key={item.name} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm flex items-center justify-between">
+                <span className="font-medium text-gray-200">{item.label}</span>
+                <span className="text-xs text-gray-500">{item.objectType}</span>
+              </div>
+            )}
+          />
+        </RuleCard>
+
+        <RuleCard title="Types de données inadaptés" ruleKey="p6" severity="avertissement" isEmpty={r.p6.length === 0} count={r.p6.length}>
+          <PaginatedList
+            items={r.p6}
+            renderItem={(item: TypingIssue) => (
+              <div key={item.name} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-gray-200">{item.label}</span>
+                  <span className="text-xs text-amber-400">{item.currentType} → {item.suggestedType}</span>
                 </div>
-              )}
-            />
-          </RuleSection>
-
-          <RuleSection title="Doublons de propriétés (labels similaires)" ruleKey="p3" severity="avertissement" isEmpty={r.p3.length === 0} defaultOpen={false}>
-            <PaginatedList
-              items={r.p3}
-              renderItem={(item: PropertyPair) => (
-                <div key={`${item.a.name}-${item.b.name}`} className="rounded-md border px-3 py-2 text-sm">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-medium text-gray-900">{item.a.label}</span>
-                    <span className="text-gray-400">↔</span>
-                    <span className="font-medium text-gray-900">{item.b.label}</span>
-                    <span className="text-xs text-orange-600 font-medium ml-auto">
-                      {Math.round(item.similarity * 100)}% similaires
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-400 mt-1">{item.a.objectType}</p>
-                </div>
-              )}
-            />
-          </RuleSection>
-
-          <RuleSection title="Propriétés sans description" ruleKey="p4" severity="info" isEmpty={r.p4.length === 0} defaultOpen={false}>
-            <PaginatedList
-              items={r.p4}
-              renderItem={(item: PropertyIssue) => (
-                <div key={item.name} className="rounded-md border px-3 py-2 text-sm flex items-center justify-between">
-                  <span className="font-medium text-gray-900">{item.label}</span>
-                  <span className="text-xs text-gray-400">{item.objectType}</span>
-                </div>
-              )}
-            />
-          </RuleSection>
-
-          <RuleSection title="Propriétés non organisées (groupe par défaut)" ruleKey="p5" severity="info" isEmpty={r.p5.length === 0} defaultOpen={false}>
-            <PaginatedList
-              items={r.p5}
-              renderItem={(item: PropertyIssue) => (
-                <div key={item.name} className="rounded-md border px-3 py-2 text-sm flex items-center justify-between">
-                  <span className="font-medium text-gray-900">{item.label}</span>
-                  <span className="text-xs text-gray-400">{item.objectType}</span>
-                </div>
-              )}
-            />
-          </RuleSection>
-
-          <RuleSection title="Types de données inadaptés" ruleKey="p6" severity="avertissement" isEmpty={r.p6.length === 0} defaultOpen={false}>
-            <PaginatedList
-              items={r.p6}
-              renderItem={(item: TypingIssue) => (
-                <div key={item.name} className="rounded-md border px-3 py-2 text-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-gray-900">{item.label}</span>
-                    <span className="text-xs text-orange-600">{item.currentType} → {item.suggestedType}</span>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">{item.reason}</p>
-                </div>
-              )}
-            />
-          </RuleSection>
-
-        </div>
+                <p className="text-xs text-gray-500 mt-1">{item.reason}</p>
+              </div>
+            )}
+          />
+        </RuleCard>
       </section>
 
       {/* Contacts */}
-      <section>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Contacts</h2>
-        <div className="space-y-4">
+      <section id="section-contacts" className="space-y-4">
+        <h2 className="text-lg font-semibold text-gray-100">Contacts</h2>
 
-          <RuleSection title="Taux de contacts avec email renseigné" ruleKey="p7" severity="critique" isEmpty={!r.p7.triggered} defaultOpen={r.p7.triggered}>
-            <RateCard result={r.p7} label="contacts avec email" />
-          </RuleSection>
+        <RuleCard title="Taux de contacts avec email renseigné" ruleKey="p7" severity="critique" isEmpty={!r.p7.triggered} defaultOpen={r.p7.triggered} rateResult={r.p7}>
+          <span />
+        </RuleCard>
 
-          <RuleSection title="Contacts sans prénom ni nom" ruleKey="p8" severity="avertissement" isEmpty={r.p8.count === 0} defaultOpen={false}>
-            {r.p8.count > 0 && (
-              <p className="text-sm text-gray-700">
-                <span className="font-semibold text-orange-600">{r.p8.count.toLocaleString("fr-FR")}</span> contacts sans identité
-              </p>
-            )}
-          </RuleSection>
+        <RuleCard title="Contacts sans prénom ni nom" ruleKey="p8" severity="avertissement" isEmpty={r.p8.count === 0} count={r.p8.count}>
+          {r.p8.count > 0 && (
+            <p className="text-sm text-gray-300">
+              <span className="font-semibold text-amber-400">{r.p8.count.toLocaleString("fr-FR")}</span> contacts sans identité
+            </p>
+          )}
+        </RuleCard>
 
-          <RuleSection title="Taux de contacts avec lifecycle stage" ruleKey="p9" severity="avertissement" isEmpty={!r.p9.triggered} defaultOpen={false}>
-            <RateCard result={r.p9} label="contacts avec lifecycle" />
-          </RuleSection>
+        <RuleCard title="Taux de contacts avec lifecycle stage" ruleKey="p9" severity="avertissement" isEmpty={!r.p9.triggered} rateResult={r.p9}>
+          <span />
+        </RuleCard>
 
-          <RuleSection title="Contacts avec lifecycle incohérent" ruleKey="p10a" severity="avertissement" isEmpty={r.p10a.count === 0} defaultOpen={false}>
-            {r.p10a.count > 0 && (
-              <p className="text-sm text-gray-700">
-                <span className="font-semibold text-orange-600">{r.p10a.count.toLocaleString("fr-FR")}</span> contacts avec lifecycle renseigné mais pas &quot;customer&quot;
-              </p>
-            )}
-          </RuleSection>
+        <RuleCard title="Contacts avec lifecycle incohérent" ruleKey="p10a" severity="avertissement" isEmpty={r.p10a.count === 0} count={r.p10a.count}>
+          {r.p10a.count > 0 && (
+            <p className="text-sm text-gray-300">
+              <span className="font-semibold text-amber-400">{r.p10a.count.toLocaleString("fr-FR")}</span> contacts avec lifecycle renseigné mais pas &quot;customer&quot;
+            </p>
+          )}
+        </RuleCard>
 
-          <RuleSection title="Aucun MQL ni SQL avec des deals ouverts" ruleKey="p10c" severity="critique" isEmpty={!r.p10c.triggered} defaultOpen={r.p10c.triggered}>
-            {r.p10c.triggered && (
-              <p className="text-sm text-red-700 font-medium">Votre entonnoir de qualification n&apos;est pas tracé dans HubSpot.</p>
-            )}
-          </RuleSection>
-
-        </div>
+        <RuleCard title="Aucun MQL ni SQL avec des deals ouverts" ruleKey="p10c" severity="critique" isEmpty={!r.p10c.triggered} defaultOpen={r.p10c.triggered}>
+          {r.p10c.triggered && (
+            <p className="text-sm text-red-400 font-medium">Votre entonnoir de qualification n&apos;est pas tracé dans HubSpot.</p>
+          )}
+        </RuleCard>
       </section>
 
       {/* Companies */}
-      <section>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Companies</h2>
-        <div className="space-y-4">
+      <section id="section-companies" className="space-y-4">
+        <h2 className="text-lg font-semibold text-gray-100">Companies</h2>
 
-          <RuleSection title="Taux de contacts rattachés à une company" ruleKey="p11" severity="avertissement" isEmpty={r.p11 === null || !r.p11.triggered} defaultOpen={false}>
-            {r.p11 === null ? (
-              <p className="text-sm text-gray-500 italic">Règle non applicable — aucune company détectée (usage B2C possible).</p>
-            ) : (
-              <RateCard result={r.p11} label="contacts avec company" />
-            )}
-          </RuleSection>
+        <RuleCard title="Taux de contacts rattachés à une company" ruleKey="p11" severity="avertissement" isEmpty={r.p11 === null || !r.p11.triggered} rateResult={r.p11 ?? undefined}>
+          {r.p11 === null ? (
+            <p className="text-sm text-gray-500 italic">Règle non applicable — aucune company détectée (usage B2C possible).</p>
+          ) : <span />}
+        </RuleCard>
 
-          <RuleSection title="Taux de companies avec domaine renseigné" ruleKey="p12" severity="avertissement" isEmpty={!r.p12.triggered} defaultOpen={false}>
-            <RateCard result={r.p12} label="companies avec domaine" />
-          </RuleSection>
-
-        </div>
+        <RuleCard title="Taux de companies avec domaine renseigné" ruleKey="p12" severity="avertissement" isEmpty={!r.p12.triggered} rateResult={r.p12}>
+          <span />
+        </RuleCard>
       </section>
 
       {/* Deals */}
-      <section>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Deals</h2>
-        <div className="space-y-4">
+      <section id="section-deals" className="space-y-4">
+        <h2 className="text-lg font-semibold text-gray-100">Deals</h2>
 
-          <RuleSection title="Taux de deals avec montant renseigné" ruleKey="p13" severity="critique" isEmpty={!r.p13.triggered} defaultOpen={r.p13.triggered}>
-            <RateCard result={r.p13} label="deals avec montant" />
-          </RuleSection>
+        <RuleCard title="Taux de deals avec montant renseigné" ruleKey="p13" severity="critique" isEmpty={!r.p13.triggered} defaultOpen={r.p13.triggered} rateResult={r.p13}>
+          <span />
+        </RuleCard>
 
-          <RuleSection title="Taux de deals avec date de clôture" ruleKey="p14" severity="critique" isEmpty={!r.p14.triggered} defaultOpen={r.p14.triggered}>
-            <RateCard result={r.p14} label="deals avec date de clôture" />
-          </RuleSection>
+        <RuleCard title="Taux de deals avec date de clôture" ruleKey="p14" severity="critique" isEmpty={!r.p14.triggered} defaultOpen={r.p14.triggered} rateResult={r.p14}>
+          <span />
+        </RuleCard>
 
-          <RuleSection title="Deals anciens (> 60 jours)" ruleKey="p15" severity="critique" isEmpty={r.p15.length === 0} defaultOpen={r.p15.length > 0}>
-            <PaginatedList
-              items={r.p15}
-              renderItem={(item: DealIssue) => (
-                <div key={item.id} className="rounded-md border px-3 py-2 text-sm flex items-center justify-between">
-                  <div>
-                    <span className="font-medium text-gray-900">{item.name}</span>
-                    <span className="ml-2 text-xs text-gray-400">{item.stage}</span>
-                  </div>
-                  <span className="text-xs text-red-600 font-medium">{item.ageInDays}j</span>
+        <RuleCard title="Deals anciens (> 60 jours)" ruleKey="p15" severity="critique" isEmpty={r.p15.length === 0} count={r.p15.length} defaultOpen={r.p15.length > 0}>
+          <PaginatedList
+            items={r.p15}
+            renderItem={(item: DealIssue) => (
+              <div key={item.id} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm flex items-center justify-between">
+                <div>
+                  <span className="font-medium text-gray-200">{item.name}</span>
+                  <span className="ml-2 text-xs text-gray-500">{item.stage}</span>
                 </div>
-              )}
-            />
-          </RuleSection>
+                <span className="text-xs text-red-400 font-medium">{item.ageInDays}j</span>
+              </div>
+            )}
+          />
+        </RuleCard>
 
-          <RuleSection title="Stages avec propriétés requises manquantes" ruleKey="p16" severity="avertissement" isEmpty={r.p16.length === 0} defaultOpen={false}>
-            <PaginatedList
-              items={r.p16}
-              renderItem={(item: PipelineStageIssue) => (
-                <div key={`${item.pipeline}-${item.stage}`} className="rounded-md border px-3 py-2 text-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-gray-900">{item.pipeline} → {item.stage}</span>
-                    <span className="text-xs text-orange-600">{item.deals.length} deal{item.deals.length !== 1 ? "s" : ""}</span>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Propriétés manquantes : {item.missingProperties.join(", ")}
-                  </p>
+        <RuleCard title="Stages avec propriétés requises manquantes" ruleKey="p16" severity="avertissement" isEmpty={r.p16.length === 0} count={r.p16.length}>
+          <PaginatedList
+            items={r.p16}
+            renderItem={(item: PipelineStageIssue) => (
+              <div key={`${item.pipeline}-${item.stage}`} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-gray-200">{item.pipeline} → {item.stage}</span>
+                  <span className="text-xs text-amber-400">{item.deals.length} deal{item.deals.length !== 1 ? "s" : ""}</span>
                 </div>
-              )}
-            />
-          </RuleSection>
-
-        </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Propriétés manquantes : {item.missingProperties.join(", ")}
+                </p>
+              </div>
+            )}
+          />
+        </RuleCard>
       </section>
 
       {/* Footer */}
-      <footer className="text-center text-xs text-gray-400 pb-6">
-        Généré par HubSpot Auditor
+      <footer className="text-center py-6 border-t border-gray-700">
+        <p className="text-xs text-gray-500 mb-3">Généré par HubSpot Auditor</p>
+        {!isPublic && (
+          <Link href="/dashboard">
+            <Button variant="ghost" size="sm">Relancer un audit</Button>
+          </Link>
+        )}
+        {isPublic && (
+          <Link href="/register">
+            <Button size="sm">Créer mon compte gratuitement</Button>
+          </Link>
+        )}
       </footer>
-
     </div>
   );
 }

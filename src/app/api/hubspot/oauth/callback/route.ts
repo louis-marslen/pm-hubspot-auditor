@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   const savedState = cookieStore.get("oauth_state")?.value;
 
   // Invalide le cookie immédiatement (usage unique)
-  const response = redirect("/workspaces?error=state_invalid");
+  const response = redirect("/dashboard?error=state_invalid");
   response.cookies.set("oauth_state", "", { maxAge: 0, path: "/" });
 
   // Validation du state anti-CSRF
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 
   // L'utilisateur a refusé l'accès sur HubSpot
   if (error === "access_denied" || !code) {
-    return redirect("/workspaces?error=access_denied");
+    return redirect("/dashboard?error=access_denied");
   }
 
   const supabase = await createClient();
@@ -72,14 +72,14 @@ export async function GET(request: NextRequest) {
 
     if (dbError) {
       console.error("Erreur upsert hubspot_connections:", dbError);
-      return redirect("/workspaces?error=db_error");
+      return redirect("/dashboard?error=db_error");
     }
 
-    const successResponse = redirect("/workspaces?connected=true");
+    const successResponse = redirect("/dashboard?connected=true");
     successResponse.cookies.set("oauth_state", "", { maxAge: 0, path: "/" });
     return successResponse;
   } catch (err) {
     console.error("Erreur callback OAuth HubSpot:", err);
-    return redirect("/workspaces?error=oauth_failed");
+    return redirect("/dashboard?error=oauth_failed");
   }
 }

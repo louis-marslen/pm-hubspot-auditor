@@ -1,4 +1,5 @@
 import { LoginForm } from "@/components/auth/login-form";
+import { Alert } from "@/components/ui/alert";
 
 export const metadata = { title: "Connexion — HubSpot Auditor" };
 
@@ -9,24 +10,25 @@ export default async function LoginPage({
 }) {
   const params = await searchParams;
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Connexion</h1>
-          <p className="mt-2 text-sm text-gray-600">
-            Accédez à votre espace HubSpot Auditor
-          </p>
-        </div>
-        <div className="rounded-lg border bg-white p-8 shadow-sm">
-          {params.reset === "success" && (
-            <div className="mb-4 rounded-md bg-green-50 border border-green-200 p-3 text-sm text-green-800">
-              Mot de passe mis à jour. Connectez-vous avec votre nouveau mot de
-              passe.
-            </div>
-          )}
-          <LoginForm />
-        </div>
+    <>
+      <div className="mb-8 text-center">
+        <h1 className="text-2xl font-semibold text-gray-100">
+          Connectez-vous à HubSpot Auditor
+        </h1>
+        <p className="mt-2 text-sm text-gray-400">
+          Accédez à votre espace d&apos;audit
+        </p>
       </div>
-    </div>
+      <div className="rounded-lg border border-gray-700 bg-gray-900 p-8">
+        {params.reset === "success" && (
+          <div className="mb-4">
+            <Alert type="success">
+              Mot de passe mis à jour. Connectez-vous avec votre nouveau mot de passe.
+            </Alert>
+          </div>
+        )}
+        <LoginForm />
+      </div>
+    </>
   );
 }

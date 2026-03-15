@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CircleCheck } from "lucide-react";
 
 interface PaginatedListProps<T> {
   items: T[];
@@ -22,8 +23,8 @@ export function PaginatedList<T>({
 
   if (items.length === 0) {
     return (
-      <div className="flex items-center gap-2 rounded-md bg-green-50 border border-green-200 px-4 py-2 text-sm text-green-700">
-        <span className="text-green-500">✓</span>
+      <div className="flex items-center gap-2 rounded-md bg-[rgba(34,197,94,0.08)] border border-[rgba(34,197,94,0.15)] px-4 py-2 text-sm text-green-300">
+        <CircleCheck className="h-4 w-4 text-green-400" />
         {emptyMessage}
       </div>
     );
@@ -41,14 +42,14 @@ export function PaginatedList<T>({
             <button
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               disabled={page === 0}
-              className="rounded border px-3 py-1 disabled:opacity-40 hover:bg-gray-50 transition-colors"
+              className="rounded-md border border-gray-700 bg-gray-800 px-3 py-1 text-gray-300 disabled:opacity-40 hover:bg-gray-700 transition-colors"
             >
               ← Précédent
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
               disabled={page === totalPages - 1}
-              className="rounded border px-3 py-1 disabled:opacity-40 hover:bg-gray-50 transition-colors"
+              className="rounded-md border border-gray-700 bg-gray-800 px-3 py-1 text-gray-300 disabled:opacity-40 hover:bg-gray-700 transition-colors"
             >
               Suivant →
             </button>

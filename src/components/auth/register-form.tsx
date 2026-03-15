@@ -3,20 +3,20 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { CircleCheck, Circle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
 
-function validatePassword(password: string): string[] {
-  const errors: string[] = [];
-  if (password.length < 8) errors.push("Au moins 8 caractères");
-  if (password.length > 128) errors.push("Maximum 128 caractères");
-  if (!/[A-Z]/.test(password)) errors.push("Au moins une lettre majuscule");
-  if (!/[0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password))
-    errors.push("Au moins un chiffre ou caractère spécial");
-  return errors;
-}
+const passwordRules = [
+  { test: (p: string) => p.length >= 8, label: "Au moins 8 caractères" },
+  { test: (p: string) => /[A-Z]/.test(p), label: "Au moins une majuscule" },
+  {
+    test: (p: string) => /[0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(p),
+    label: "Au moins un chiffre ou caractère spécial",
+  },
+];
 
 export function RegisterForm() {
   const router = useRouter();
@@ -25,26 +25,20 @@ export function RegisterForm() {
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<{
-    password?: string[];
-    confirm?: string;
-  }>({});
+  const [confirmError, setConfirmError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setConfirmError(null);
 
-    // Client-side validation
-    const passwordErrors = validatePassword(password);
-    if (passwordErrors.length > 0) {
-      setFieldErrors({ password: passwordErrors });
-      return;
-    }
+    const hasErrors = passwordRules.some((r) => !r.test(password));
+    if (hasErrors) return;
+
     if (password !== confirm) {
-      setFieldErrors({ confirm: "Les mots de passe ne correspondent pas." });
+      setConfirmError("Les mots de passe ne correspondent pas.");
       return;
     }
-    setFieldErrors({});
 
     setLoading(true);
     const supabase = createClient();
@@ -60,7 +54,10 @@ export function RegisterForm() {
     setLoading(false);
 
     if (error) {
-      if (error.message.toLowerCase().includes("already registered") || error.message.toLowerCase().includes("already exists")) {
+      if (
+        error.message.toLowerCase().includes("already registered") ||
+        error.message.toLowerCase().includes("already exists")
+      ) {
         setError("already_exists");
       } else {
         setError(error.message);
@@ -107,16 +104,28 @@ export function RegisterForm() {
           autoComplete="new-password"
           placeholder="••••••••"
         />
-        {fieldErrors.password && fieldErrors.password.length > 0 && (
-          <ul className="mt-1 space-y-0.5 text-sm text-red-600">
-            {fieldErrors.password.map((err) => (
-              <li key={err}>• {err}</li>
-            ))}
+        {password.length > 0 && (
+          <ul className="mt-2 space-y-1">
+            {passwordRules.map((rule) => {
+              const valid = rule.test(password);
+              return (
+                <li
+                  key={rule.label}
+                  className={`flex items-center gap-2 text-xs ${
+                    valid ? "text-green-400" : "text-gray-500"
+                  }`}
+                >
+                  {valid ? (
+                    <CircleCheck className="h-3.5 w-3.5" />
+                  ) : (
+                    <Circle className="h-3.5 w-3.5" />
+                  )}
+                  {rule.label}
+                </li>
+              );
+            })}
           </ul>
         )}
-        <p className="mt-1 text-xs text-gray-500">
-          Min. 8 caractères, 1 majuscule, 1 chiffre ou caractère spécial.
-        </p>
       </div>
 
       <Input
@@ -128,16 +137,16 @@ export function RegisterForm() {
         required
         autoComplete="new-password"
         placeholder="••••••••"
-        error={fieldErrors.confirm}
+        error={confirmError ?? undefined}
       />
 
       <Button type="submit" loading={loading} className="w-full">
         Créer mon compte
       </Button>
 
-      <p className="text-center text-sm text-gray-600">
+      <p className="text-center text-sm text-gray-400">
         Déjà un compte ?{" "}
-        <Link href="/login" className="font-medium text-orange-600 hover:text-orange-500">
+        <Link href="/login" className="font-medium text-brand-500 hover:text-brand-400 transition-colors">
           Se connecter
         </Link>
       </p>

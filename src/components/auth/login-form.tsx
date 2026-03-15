@@ -38,8 +38,7 @@ export function LoginForm() {
       if (error.message.toLowerCase().includes("email not confirmed")) {
         setEmailNotConfirmed(true);
       } else {
-        // Message générique — ne révèle pas si c'est l'email ou le mot de passe
-        setError("Email ou mot de passe incorrect.");
+        setError("Email ou mot de passe incorrect. Réessayez ou réinitialisez votre mot de passe.");
       }
       return;
     }
@@ -101,18 +100,18 @@ export function LoginForm() {
       />
 
       <div className="flex items-center justify-between">
-        <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+        <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
           <input
             type="checkbox"
             checked={remember}
             onChange={(e) => setRemember(e.target.checked)}
-            className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+            className="rounded border-gray-600 bg-gray-800 text-brand-500 focus:ring-brand-500"
           />
-          Se souvenir de moi (30 jours)
+          Se souvenir de moi
         </label>
         <Link
           href="/forgot-password"
-          className="text-sm font-medium text-orange-600 hover:text-orange-500"
+          className="text-sm font-medium text-brand-500 hover:text-brand-400 transition-colors"
         >
           Mot de passe oublié ?
         </Link>
@@ -122,9 +121,9 @@ export function LoginForm() {
         Se connecter
       </Button>
 
-      <p className="text-center text-sm text-gray-600">
+      <p className="text-center text-sm text-gray-400">
         Pas encore de compte ?{" "}
-        <Link href="/register" className="font-medium text-orange-600 hover:text-orange-500">
+        <Link href="/register" className="font-medium text-brand-500 hover:text-brand-400 transition-colors">
           Créer un compte
         </Link>
       </p>

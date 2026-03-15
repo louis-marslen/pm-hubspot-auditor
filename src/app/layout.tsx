@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { GeistSans } from "geist/font/sans";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -12,8 +13,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="fr">
-      <body className="min-h-screen bg-gray-50 antialiased">{children}</body>
+    <html lang="fr" className={GeistSans.variable}>
+      <body className="min-h-screen bg-gray-950 text-gray-200 font-sans antialiased">
+        {children}
+      </body>
     </html>
   );
 }

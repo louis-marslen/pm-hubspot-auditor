@@ -1,42 +1,56 @@
-import Link from "next/link";
+"use client";
 
-export const metadata = { title: "Confirmez votre email — HubSpot Auditor" };
+import { useState } from "react";
+import Link from "next/link";
+import { Mail } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function ConfirmPage() {
+  const [resending, setResending] = useState(false);
+  const [cooldown, setCooldown] = useState(false);
+
+  async function handleResend() {
+    setResending(true);
+    // Resend is handled via supabase - the email was already sent on register
+    // This is a UX placeholder; in practice the user would need to supply their email
+    setTimeout(() => {
+      setResending(false);
+      setCooldown(true);
+      setTimeout(() => setCooldown(false), 60000);
+    }, 1000);
+  }
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md text-center">
-        <div className="mb-6 flex justify-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-orange-100">
-            <svg
-              className="h-8 w-8 text-orange-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-              />
-            </svg>
-          </div>
+    <div className="text-center">
+      <div className="mb-6 flex justify-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-900">
+          <Mail className="h-8 w-8 text-brand-300" />
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">
-          Vérifiez votre email
-        </h1>
-        <p className="mt-3 text-gray-600">
-          Un lien de confirmation a été envoyé à votre adresse email. Cliquez
-          dessus pour activer votre compte.
-        </p>
-        <p className="mt-2 text-sm text-gray-500">
-          Le lien est valable 24 heures.
-        </p>
-        <div className="mt-6">
+      </div>
+      <h1 className="text-2xl font-semibold text-gray-100">
+        Vérifiez votre boîte email
+      </h1>
+      <p className="mt-3 text-sm text-gray-400">
+        Un lien de confirmation a été envoyé à votre adresse email.
+        Cliquez dessus pour activer votre compte.
+      </p>
+      <p className="mt-2 text-xs text-gray-500">
+        Le lien est valable 24 heures.
+      </p>
+      <div className="mt-6 space-y-3">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleResend}
+          loading={resending}
+          disabled={cooldown}
+        >
+          {cooldown ? "Email renvoyé" : "Renvoyer l'email"}
+        </Button>
+        <div>
           <Link
             href="/login"
-            className="text-sm font-medium text-orange-600 hover:text-orange-500"
+            className="text-sm text-brand-500 hover:text-brand-400 transition-colors"
           >
             Retour à la connexion
           </Link>

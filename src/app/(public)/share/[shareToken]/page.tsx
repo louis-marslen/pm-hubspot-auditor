@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AuditResults, WorkflowAuditResults } from "@/lib/audit/types";
 import { AuditResultsView } from "@/components/audit/audit-results-view";
+import Link from "next/link";
 
 interface SharedAuditRun {
   id: string;
@@ -36,24 +37,46 @@ export default async function SharePage({ params }: { params: Promise<{ shareTok
 
   const globalScore = audit.global_score ?? audit.results.score;
   const globalScoreLabel = getScoreLabel(globalScore);
+  const dateStr = new Date(audit.started_at).toLocaleDateString("fr-FR", {
+    day: "numeric", month: "long", year: "numeric",
+  });
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-10">
-      <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
-        Ce rapport est partagé en lecture seule. Les données HubSpot affichées ne sont pas modifiées par HubSpot Auditor.
-      </div>
+    <div className="min-h-screen bg-gray-950">
+      {/* Public topbar */}
+      <header className="h-14 bg-gray-900 border-b border-gray-700 px-6 flex items-center justify-between">
+        <span className="text-[15px] font-semibold text-gray-50">HubSpot Auditor</span>
+        <Link
+          href="/register"
+          className="text-sm text-brand-500 hover:text-brand-400 font-medium transition-colors"
+        >
+          Auditer mon workspace →
+        </Link>
+      </header>
 
-      <AuditResultsView
-        r={audit.results}
-        w={audit.workflow_results}
-        globalScore={globalScore}
-        globalScoreLabel={globalScoreLabel}
-        llmSummary={audit.llm_summary}
-        portalName={audit.portal_name}
-        startedAt={audit.started_at}
-        executionDurationMs={audit.execution_duration_ms}
-        isPublic={true}
-      />
-    </main>
+      <main className="mx-auto max-w-content px-6 py-8">
+        {/* Public banner */}
+        <div className="mb-6 rounded-lg bg-gray-900 border border-gray-700 px-5 py-4">
+          <p className="text-lg font-semibold text-gray-100">Rapport d&apos;audit HubSpot</p>
+          <p className="text-sm text-gray-400 mt-1">
+            {audit.portal_name && <>{audit.portal_name} · </>}
+            Généré le {dateStr}
+          </p>
+          <p className="text-xs text-gray-500 mt-2">Rapport en lecture seule</p>
+        </div>
+
+        <AuditResultsView
+          r={audit.results}
+          w={audit.workflow_results}
+          globalScore={globalScore}
+          globalScoreLabel={globalScoreLabel}
+          llmSummary={audit.llm_summary}
+          portalName={audit.portal_name}
+          startedAt={audit.started_at}
+          executionDurationMs={audit.execution_duration_ms}
+          isPublic={true}
+        />
+      </main>
+    </div>
   );
 }

@@ -1,8 +1,17 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState, useCallback, Suspense } from "react";
+import Link from "next/link";
+import { ScanSearch, Building2, Plus, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Alert } from "@/components/ui/alert";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ScoreCircle } from "@/components/ui/score-circle";
 
 interface Workspace {
   id: string;
@@ -23,46 +32,30 @@ interface AuditRun {
   portal_name: string | null;
 }
 
-function ScoreBadge({ score, status }: { score: number | null; status: string }) {
-  if (status === "running") {
-    return (
-      <span className="inline-flex items-center gap-1.5 text-xs text-gray-500">
-        <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-gray-400 border-r-transparent" />
-        En cours…
-      </span>
-    );
-  }
-  if (status === "failed") {
-    return <span className="text-xs text-red-600 font-medium">Échoué</span>;
-  }
-  if (score === null) return null;
-  const color =
-    score <= 40 ? "bg-red-100 text-red-700" :
-    score <= 70 ? "bg-orange-100 text-orange-700" :
-    score <= 90 ? "bg-yellow-100 text-yellow-700" :
-    "bg-green-100 text-green-700";
-  return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ${color}`}>
-      {score}/100
-    </span>
-  );
-}
-
-export default function DashboardPage() {
+function DashboardContent() {
   const router = useRouter();
-  const [userEmail, setUserEmail] = useState("");
+  const searchParams = useSearchParams();
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [recentAudits, setRecentAudits] = useState<AuditRun[]>([]);
   const [auditing, setAuditing] = useState<string | null>(null);
   const [auditError, setAuditError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const connected = searchParams.get("connected");
+  const error = searchParams.get("error");
+
+  const errorMessages: Record<string, string> = {
+    access_denied: "Vous avez refusé l'accès à HubSpot.",
+    state_invalid: "Session expirée ou invalide. Veuillez réessayer.",
+    oauth_failed: "La connexion HubSpot a échoué. Veuillez réessayer.",
+    db_error: "Erreur lors de la sauvegarde de la connexion.",
+  };
+
   useEffect(() => {
     const supabase = createClient();
     async function load() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
-      setUserEmail(user.email ?? "");
 
       const [{ data: wsList }, { data: auditList }] = await Promise.all([
         supabase
@@ -81,7 +74,6 @@ export default function DashboardPage() {
       const wss = (wsList ?? []) as Workspace[];
       setWorkspaces(wss);
 
-      // Enrichit les audits avec le nom du portal
       const wsMap = Object.fromEntries(wss.map((w) => [w.id, w.portal_name]));
       const audits = ((auditList ?? []) as Omit<AuditRun, "portal_name">[]).map((a) => ({
         ...a,
@@ -91,7 +83,7 @@ export default function DashboardPage() {
       setLoading(false);
     }
     load();
-  }, [router]);
+  }, [router, connected]);
 
   const handleAudit = useCallback(async (connectionId: string) => {
     setAuditing(connectionId);
@@ -116,169 +108,239 @@ export default function DashboardPage() {
     }
   }, [router]);
 
-  const handleSignOut = async () => {
-    await fetch("/api/auth/signout", { method: "POST" });
-    router.push("/login");
-  };
+  // Get last audit per workspace
+  const lastAuditByWs = new Map<string, AuditRun>();
+  for (const a of recentAudits) {
+    if (a.status === "completed" && !lastAuditByWs.has(a.connection_id)) {
+      lastAuditByWs.set(a.connection_id, a);
+    }
+  }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="inline-block h-6 w-6 animate-spin rounded-full border-4 border-orange-500 border-r-transparent" />
+      <div className="space-y-8">
+        <Skeleton className="h-8 w-48" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <Skeleton className="h-48 rounded-lg" />
+          <Skeleton className="h-48 rounded-lg" />
+        </div>
+        <Skeleton className="h-64 rounded-lg" />
+      </div>
+    );
+  }
+
+  // Empty state: no workspaces
+  if (workspaces.length === 0) {
+    return (
+      <div className="py-12">
+        <EmptyState
+          icon={ScanSearch}
+          title="Bienvenue sur HubSpot Auditor !"
+          description="Connectez votre workspace HubSpot pour obtenir un diagnostic complet de la qualité de vos données et automatisations."
+          action={
+            <div className="space-y-8">
+              <div className="flex items-center justify-center gap-8 text-sm text-gray-400">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-800 text-gray-300">1</div>
+                  <span>Connecter HubSpot</span>
+                </div>
+                <ArrowRight className="h-4 w-4 text-gray-600" />
+                <div className="flex flex-col items-center gap-2">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-800 text-gray-300">2</div>
+                  <span>Auditer</span>
+                </div>
+                <ArrowRight className="h-4 w-4 text-gray-600" />
+                <div className="flex flex-col items-center gap-2">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-800 text-gray-300">3</div>
+                  <span>Partager le rapport</span>
+                </div>
+              </div>
+              <a href="/api/hubspot/oauth/initiate">
+                <Button size="lg">Connecter mon workspace HubSpot</Button>
+              </a>
+            </div>
+          }
+        />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="border-b bg-white px-6 py-4">
-        <div className="mx-auto flex max-w-4xl items-center justify-between">
-          <h1 className="text-lg font-semibold text-gray-900">HubSpot Auditor</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">{userEmail}</span>
-            <button
-              onClick={handleSignOut}
-              className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              Déconnexion
-            </button>
-          </div>
-        </div>
-      </header>
+    <div className="space-y-10">
+      {/* OAuth feedback */}
+      {connected === "true" && (
+        <Alert type="success">Workspace HubSpot connecté avec succès.</Alert>
+      )}
+      {error && (
+        <Alert type="error">{errorMessages[error] ?? "Une erreur est survenue."}</Alert>
+      )}
+      {auditError && <Alert type="error">{auditError}</Alert>}
 
-      <main className="mx-auto max-w-4xl px-6 py-10 space-y-10">
+      {/* Workspaces */}
+      <section>
+        <h2 className="text-lg font-semibold text-gray-100 mb-5">Mes workspaces</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {workspaces.map((ws) => {
+            const isExpired = ws.token_expires_at && new Date(ws.token_expires_at) < new Date();
+            const lastAudit = lastAuditByWs.get(ws.id);
+            const isRunning = auditing === ws.id;
 
-        {auditError && (
-          <div className="rounded-md bg-red-50 border border-red-200 p-4 text-sm text-red-800">
-            {auditError}
-          </div>
-        )}
+            return (
+              <Card key={ws.id}>
+                <div className="flex items-center justify-between mb-3">
+                  <Badge variant={isExpired ? "critique" : "succes"}>
+                    {isExpired ? "Expiré" : "Actif"}
+                  </Badge>
+                  <span className="text-caption text-gray-500">Hub {ws.portal_id}</span>
+                </div>
 
-        {/* Workspaces */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Mes workspaces</h2>
-            <a
-              href="/api/hubspot/oauth/initiate"
-              className="rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-600 transition-colors"
-            >
-              + Connecter un workspace
-            </a>
-          </div>
+                <h3 className="text-[15px] font-semibold text-gray-100 mb-1">
+                  {ws.portal_name ?? `Portal ${ws.portal_id}`}
+                </h3>
+                {ws.hub_domain && (
+                  <p className="text-xs text-gray-500 mb-4">{ws.hub_domain}</p>
+                )}
 
-          {workspaces.length === 0 ? (
-            <div className="rounded-lg border border-dashed bg-white p-10 text-center">
-              <p className="text-gray-600 font-medium">Aucun workspace connecté</p>
-              <p className="mt-1 text-sm text-gray-500">Connectez votre compte HubSpot pour lancer votre premier audit.</p>
-              <a
-                href="/api/hubspot/oauth/initiate"
-                className="mt-4 inline-flex items-center rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-600 transition-colors"
-              >
-                Connecter HubSpot
-              </a>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {workspaces.map((ws) => {
-                const isExpired = ws.token_expires_at && new Date(ws.token_expires_at) < new Date();
-                return (
-                  <div key={ws.id} className="flex items-center justify-between rounded-lg border bg-white p-4 shadow-sm">
+                {lastAudit && lastAudit.score !== null && (
+                  <div className="flex items-center gap-3 mb-4 p-3 rounded-md bg-gray-800/50">
+                    <ScoreCircle score={lastAudit.score} size="sm" />
                     <div>
-                      <p className="font-medium text-gray-900">
-                        {ws.portal_name ?? `Portal ${ws.portal_id}`}
+                      <p className="text-sm font-medium text-gray-200">{lastAudit.score}/100</p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(lastAudit.started_at).toLocaleDateString("fr-FR", {
+                          day: "numeric", month: "short",
+                        })}
                       </p>
-                      <p className="text-sm text-gray-500">
-                        Hub ID : {ws.portal_id}
-                        {ws.hub_domain && ` · ${ws.hub_domain}`}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${isExpired ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
-                        {isExpired ? "Expiré" : "Actif"}
-                      </span>
-                      <button
-                        onClick={() => handleAudit(ws.id)}
-                        disabled={!!auditing || isExpired === true}
-                        className="rounded-md bg-orange-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        {auditing === ws.id ? (
-                          <span className="flex items-center gap-1.5">
-                            <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-white border-r-transparent" />
-                            Analyse…
-                          </span>
-                        ) : "Lancer un audit"}
-                      </button>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
+                )}
 
-        {/* Audits récents */}
+                {isExpired ? (
+                  <a href="/api/hubspot/oauth/initiate" className="block">
+                    <Button variant="secondary" className="w-full" size="sm">
+                      Reconnecter
+                    </Button>
+                  </a>
+                ) : (
+                  <Button
+                    onClick={() => handleAudit(ws.id)}
+                    disabled={!!auditing}
+                    loading={isRunning}
+                    className="w-full"
+                    size="sm"
+                  >
+                    {lastAudit ? "Relancer un audit" : "Lancer mon premier audit"}
+                  </Button>
+                )}
+              </Card>
+            );
+          })}
+
+          {/* Add workspace card */}
+          <Card variant="dashed" className="flex flex-col items-center justify-center min-h-[200px]">
+            <a
+              href="/api/hubspot/oauth/initiate"
+              className="flex flex-col items-center gap-3 text-gray-400 hover:text-gray-200 transition-colors"
+            >
+              <Plus className="h-8 w-8" />
+              <span className="text-sm font-medium">Connecter un workspace HubSpot</span>
+            </a>
+          </Card>
+        </div>
+      </section>
+
+      {/* Recent audits */}
+      {recentAudits.length > 0 && (
         <section>
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Audits récents</h2>
-
-          {recentAudits.length === 0 ? (
-            <div className="rounded-lg border border-dashed bg-white p-10 text-center">
-              <p className="text-gray-600">Aucun audit lancé pour l&apos;instant.</p>
-              <p className="mt-1 text-sm text-gray-500">Cliquez sur &quot;Lancer un audit&quot; depuis un workspace.</p>
-            </div>
-          ) : (
-            <div className="overflow-hidden rounded-lg border bg-white">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-gray-50 text-left">
-                    <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Workspace</th>
-                    <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Date</th>
-                    <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Score</th>
-                    <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Problèmes</th>
-                    <th className="px-4 py-3"></th>
+          <h2 className="text-lg font-semibold text-gray-100 mb-5">Historique des audits</h2>
+          <Card padding="compact" className="overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-700 bg-gray-850">
+                  <th className="px-4 py-3 text-left text-caption font-medium text-gray-400 uppercase tracking-wider">Workspace</th>
+                  <th className="px-4 py-3 text-left text-caption font-medium text-gray-400 uppercase tracking-wider">Date</th>
+                  <th className="px-4 py-3 text-left text-caption font-medium text-gray-400 uppercase tracking-wider">Score</th>
+                  <th className="px-4 py-3 text-left text-caption font-medium text-gray-400 uppercase tracking-wider">Problèmes</th>
+                  <th className="px-4 py-3"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-700">
+                {recentAudits.map((audit) => (
+                  <tr key={audit.id} className="hover:bg-gray-850 transition-colors">
+                    <td className="px-4 py-3 font-medium text-gray-200">
+                      {audit.portal_name ?? "—"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-400">
+                      {new Date(audit.started_at).toLocaleDateString("fr-FR", {
+                        day: "numeric", month: "short", year: "numeric",
+                      })}
+                    </td>
+                    <td className="px-4 py-3">
+                      {audit.status === "running" ? (
+                        <span className="inline-flex items-center gap-1.5 text-xs text-gray-500">
+                          <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-gray-500 border-r-transparent" />
+                          En cours…
+                        </span>
+                      ) : audit.status === "failed" ? (
+                        <Badge variant="critique">Échoué</Badge>
+                      ) : audit.score !== null ? (
+                        <Badge
+                          variant={
+                            audit.score <= 49 ? "critique" :
+                            audit.score <= 69 ? "avertissement" :
+                            "succes"
+                          }
+                        >
+                          {audit.score}/100
+                        </Badge>
+                      ) : null}
+                    </td>
+                    <td className="px-4 py-3 text-gray-400">
+                      {audit.status === "completed" ? (
+                        <span className="flex items-center gap-2">
+                          {audit.total_critiques > 0 && (
+                            <span className="text-red-400 font-medium">{audit.total_critiques}C</span>
+                          )}
+                          {audit.total_avertissements > 0 && (
+                            <span className="text-amber-400 font-medium">{audit.total_avertissements}A</span>
+                          )}
+                          {audit.total_critiques === 0 && audit.total_avertissements === 0 && "—"}
+                        </span>
+                      ) : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {audit.status === "completed" && (
+                        <Link
+                          href={`/audit/${audit.id}`}
+                          className="text-sm text-brand-500 hover:text-brand-400 font-medium transition-colors"
+                        >
+                          Voir →
+                        </Link>
+                      )}
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {recentAudits.map((audit) => (
-                    <tr key={audit.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 font-medium text-gray-900">
-                        {audit.portal_name ?? "—"}
-                      </td>
-                      <td className="px-4 py-3 text-gray-500">
-                        {new Date(audit.started_at).toLocaleDateString("fr-FR", {
-                          day: "numeric", month: "short", year: "numeric",
-                        })}
-                      </td>
-                      <td className="px-4 py-3">
-                        <ScoreBadge score={audit.score} status={audit.status} />
-                      </td>
-                      <td className="px-4 py-3 text-gray-500">
-                        {audit.status === "completed" ? (
-                          <span>
-                            <span className="text-red-600 font-medium">{audit.total_critiques}</span>
-                            <span className="text-gray-400 mx-1">·</span>
-                            <span className="text-orange-500 font-medium">{audit.total_avertissements}</span>
-                          </span>
-                        ) : "—"}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        {audit.status === "completed" && (
-                          <a
-                            href={`/audit/${audit.id}`}
-                            className="text-sm text-orange-600 hover:text-orange-800 font-medium"
-                          >
-                            Voir →
-                          </a>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                ))}
+              </tbody>
+            </table>
+          </Card>
         </section>
-
-      </main>
+      )}
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="space-y-8">
+        <Skeleton className="h-8 w-48" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <Skeleton className="h-48 rounded-lg" />
+          <Skeleton className="h-48 rounded-lg" />
+        </div>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   );
 }
