@@ -305,7 +305,7 @@ Cercle SVG avec arc de progression.
 
 ### 2.9 — Progress Bar (taux)
 
-Pour les règles de type taux (C-01, C-03, C-05, CO-01, P13, P14).
+Pour les règles de type taux (C-01, C-03, C-05, CO-01, D-01, D-02).
 
 ```
 ━━━━━━━━━━━━━━━━━━━━░░░░░░░░░░  72%

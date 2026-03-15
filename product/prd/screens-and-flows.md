@@ -700,26 +700,105 @@ La section Companies apparaît dans la navigation intra-page entre "Deals" et "W
 **Conditions d'affichage :**
 - Si 0 company dans le workspace : l'onglet "Companies" n'apparaît pas dans la navigation, mention dans les métadonnées
 
-#### Mise à jour du Hero — Sous-scores (post EP-05 + EP-05b)
+#### Section Deals (EP-06)
 
-Après EP-05 et EP-05b, le Hero affiche jusqu'à 4 sous-scores :
+La section Deals apparaît dans la navigation intra-page entre "Contacts" et "Companies".
+
+**Header de section :**
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  Deals & Pipelines                                       71/100  │
+│  15 règles analysées · 450 deals · 3 pipelines · 2 crit. · 4 av.│
+└──────────────────────────────────────────────────────────────────┘
+```
+
+**Organisation des règles dans la section :**
+
+| Bloc | Règles | Affichage |
+|---|---|---|
+| Complétude données | D-01, D-02 (taux), D-03 (liste), D-04 (regroupé pipeline>stage), D-11 (liste) | Barres de progression pour D-01/D-02, listes paginées pour les autres |
+| Deals bloqués | D-05 | Résultats regroupés par pipeline > stage > deals, triés par ancienneté décroissante |
+| Qualité associations | D-08, D-09, D-10 | Listes paginées standard |
+| Santé des pipelines | D-06, D-07, D-12, D-13, D-14, D-15 | Regroupé par pipeline, chaque pipeline affiche ses problèmes |
+
+**Pattern d'affichage — Deals bloqués (D-05) :**
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  🟡 AVERT.   D-05   Deals bloqués dans un stage      23 deals  ▴│
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Impact business :                                               │
+│  Des deals stagnants représentent un CA déclaré qui ne se        │
+│  concrétisera probablement pas…                                  │
+│                                                                  │
+│  📊 Pipeline "Sales B2B"                              18 deals   │
+│  ┌────────────────────────────────────────────────────────────┐  │
+│  │  Stage "Proposition"                          8 deals      │  │
+│  │  ┌──────────────┬───────────┬──────────┬──────────┬──────┐ │  │
+│  │  │ Deal         │ Stage dep.│ Jours    │ Owner    │ Amt  │ │  │
+│  │  ├──────────────┼───────────┼──────────┼──────────┼──────┤ │  │
+│  │  │ Acme Corp    │ 15 jan.   │ 59j      │ J. Dupont│ 45k€ │ │  │
+│  │  │ Beta SAS     │ 2 jan.    │ 72j      │ M. Martin│ 12k€ │ │  │
+│  │  └──────────────┴───────────┴──────────┴──────────┴──────┘ │  │
+│  └────────────────────────────────────────────────────────────┘  │
+│                                                                  │
+│  📊 Pipeline "Upsell"                                 5 deals   │
+│  ...                                                             │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+**Pattern d'affichage — Santé des pipelines (D-06, D-07, D-12-D-15) :**
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  Santé des pipelines                                             │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  📊 Pipeline "Sales B2B"                              3 problèmes│
+│  ┌──────────────────────────────────────────────────────────────┐│
+│  │ 🟡 D-12  Phases sautées          32% des deals  [Déplier ▾] ││
+│  │ 🟡 D-13  Entrées multiples       28% des deals  [Déplier ▾] ││
+│  │ 🔵 D-15  Stage "Qualification"   0 deal depuis 90j           ││
+│  └──────────────────────────────────────────────────────────────┘│
+│                                                                  │
+│  📊 Pipeline "Partenaires"                            1 problème │
+│  ┌──────────────────────────────────────────────────────────────┐│
+│  │ 🔵 D-06  Aucune activité         Dernier deal: oct. 2025    ││
+│  └──────────────────────────────────────────────────────────────┘│
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+Si le workspace n'a qu'un seul pipeline, le regroupement par pipeline est masqué (affichage direct des règles).
+
+**Conditions d'affichage :**
+- Si 0 deal dans le workspace : l'onglet "Deals" n'apparaît pas dans la navigation, mention dans les métadonnées
+- Si 0 company (B2C) : la règle D-10 affiche "Non applicable — aucune company détectée"
+
+#### Mise à jour du Hero — Sous-scores (post EP-05 + EP-05b + EP-06)
+
+Après EP-06, le Hero affiche jusqu'à 5 sous-scores :
 
 ```
-│  Propriétés: 68/100    Contacts: 82/100    Companies: 75/100    Workflows: 76/100  │
+│  Propriétés: 68/100    Contacts: 82/100    Deals: 71/100    Companies: 75/100    Workflows: 76/100  │
 ```
+
+Le score Deals est affiché entre Contacts et Companies dans l'ordre de la navigation intra-page.
 
 Si un domaine est inactif (ex. 0 company), son sous-score n'est pas affiché.
 
+**Note pondération :** le score global intègre le domaine Deals avec un coefficient 1.5 (les autres domaines ont un coefficient 1.0). Le label du score global ne mentionne pas la pondération — c'est un détail technique documenté dans le PRD.
+
 #### Mise à jour de la progression d'audit (section 5.5)
 
-Après EP-05 et EP-05b, les étapes de progression incluent :
+Après EP-06, les étapes de progression incluent :
 
 ```
               ✓ Connexion au workspace
               ✓ Récupération des propriétés
               ✓ Analyse des contacts (2 340)…
-              ◌ Analyse des companies (890)…
-              ○ Analyse des deals
+              ✓ Analyse des companies (890)…
+              ◌ Analyse des deals & pipelines (450 deals · 3 pipelines)…
               ○ Analyse des workflows
               ○ Génération du rapport
 ```

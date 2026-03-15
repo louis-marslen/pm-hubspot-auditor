@@ -22,7 +22,7 @@ Tous les epics identifiés avec leur scoring RICE indicatif et leur statut.
 | EP-UX | Design System & Rattrapage UX/UI | 50 | 3 | 80% | 1.5 | 80 | LIVRÉ | ✅ Livré |
 | EP-05 | Audit des contacts & doublons | 40 | 3 | 70% | 1.5 | 56 | NOW | Spécifié |
 | EP-05b | Audit des companies | 35 | 2 | 70% | 1 | 49 | NOW | Spécifié |
-| EP-06 | Audit des deals & pipelines | 40 | 2 | 70% | 1.5 | 37 | NOW | À spécifier |
+| EP-06 | Audit des deals & pipelines | 40 | 2 | 70% | 1.5 | 37 | NOW | Spécifié |
 | EP-09 | Audit utilisateurs & équipes | 30 | 2 | 60% | 1 | 36 | NOW | À spécifier |
 | EP-10 | Audit des intégrations | 20 | 2 | 50% | 1.5 | 13 | NOW | À spécifier |
 | EP-11 | Audit du reporting | 25 | 1 | 60% | 1 | 15 | NOW | À spécifier |
@@ -32,6 +32,7 @@ Tous les epics identifiés avec leur scoring RICE indicatif et leur statut.
 | EP-13 | Mode multi-workspace | 10 | 3 | 70% | 2 | 10.5 | LATER | Idée |
 | EP-14 | Recommandations enrichies (IA) | 30 | 3 | 40% | 3 | 12 | LATER | Idée |
 | EP-15 | Modèle de pricing & paywall | 50 | 3 | 60% | 1 | 90 | LATER | Idée |
+| EP-16 | Seuils d'audit configurables | 30 | 2 | 50% | 1.5 | 20 | LATER | Idée |
 
 > ⚠️ La priorisation NOW suit l'ordre : couverture d'audit complète d'abord (EP-05→11), puis packaging/distribution (EP-07, EP-08). Les scores RICE sur les epics LATER sont indicatifs.
 

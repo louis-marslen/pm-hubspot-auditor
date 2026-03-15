@@ -49,7 +49,7 @@ product/
 | EP-UX | [prd-ux-design-system.md](prd/prd-ux-design-system.md) | — | ✅ Livré |
 | EP-05 | [prd-05-audit-contacts.md](prd/prd-05-audit-contacts.md) | [ep05-audit-contacts.md](epics/ep05-audit-contacts.md) | Spécifié |
 | EP-05b | [prd-05b-audit-companies.md](prd/prd-05b-audit-companies.md) | [ep05b-audit-companies.md](epics/ep05b-audit-companies.md) | Spécifié |
-| EP-06 | À créer | À créer | À spécifier |
+| EP-06 | [prd-06-audit-deals.md](prd/prd-06-audit-deals.md) | [ep06-audit-deals.md](epics/ep06-audit-deals.md) | Spécifié |
 | EP-09 | À créer | À créer | À spécifier |
 | EP-10 | À créer | À créer | À spécifier |
 | EP-11 | À créer | À créer | À spécifier |
