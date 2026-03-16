@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { AuditResults, WorkflowAuditResults, ContactAuditResults, CompanyAuditResults } from "@/lib/audit/types";
+import { AuditResults, WorkflowAuditResults, ContactAuditResults, CompanyAuditResults, UserAuditResults } from "@/lib/audit/types";
 import { AuditResultsView } from "@/components/audit/audit-results-view";
 import Link from "next/link";
 
@@ -10,6 +10,7 @@ interface SharedAuditRun {
   workflow_results: WorkflowAuditResults | null;
   contact_results: ContactAuditResults | null;
   company_results: CompanyAuditResults | null;
+  user_results: UserAuditResults | null;
   global_score: number | null;
   llm_summary: string | null;
   portal_name: string | null;
@@ -30,7 +31,7 @@ export default async function SharePage({ params }: { params: Promise<{ shareTok
 
   const { data: audit } = await supabase
     .from("audit_runs")
-    .select("id, results, workflow_results, contact_results, company_results, global_score, llm_summary, portal_name, execution_duration_ms, started_at")
+    .select("id, results, workflow_results, contact_results, company_results, user_results, global_score, llm_summary, portal_name, execution_duration_ms, started_at")
     .eq("share_token", shareToken)
     .eq("status", "completed")
     .single<SharedAuditRun>();
@@ -72,6 +73,7 @@ export default async function SharePage({ params }: { params: Promise<{ shareTok
           w={audit.workflow_results}
           c={audit.contact_results}
           co={audit.company_results}
+          u={audit.user_results}
           globalScore={globalScore}
           globalScoreLabel={globalScoreLabel}
           llmSummary={audit.llm_summary}

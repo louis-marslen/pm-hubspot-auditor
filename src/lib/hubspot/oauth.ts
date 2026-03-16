@@ -12,6 +12,9 @@ const SCOPES = [
   "crm.schemas.companies.read",
   "crm.schemas.deals.read",
   "automation",
+  "settings.users.read",
+  "crm.objects.owners.read",
+  "account-info.security.read",
 ].join(" ");
 
 export interface TokenResponse {

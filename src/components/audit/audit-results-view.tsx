@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import {
-  AuditResults, WorkflowAuditResults, ContactAuditResults, CompanyAuditResults,
+  AuditResults, WorkflowAuditResults, ContactAuditResults, CompanyAuditResults, UserAuditResults,
   WorkflowIssue, PropertyIssue, PropertyPair, TypingIssue, DealIssue, PipelineStageIssue,
   RateResult, ContactIssue, DuplicateCluster, CompanyIssue, CompanyDuplicateCluster,
+  UserIssue, TeamIssue, RoleDistribution,
 } from "@/lib/audit/types";
 import { BUSINESS_IMPACTS } from "@/lib/audit/business-impact";
 import { PaginatedList } from "@/components/audit/paginated-list";
@@ -16,7 +17,7 @@ import { ProgressBar } from "@/components/ui/progress-bar";
 import { Button } from "@/components/ui/button";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { Tabs } from "@/components/ui/tabs";
-import { ChevronDown, CircleCheck, Share2, ArrowLeft, Sparkles } from "lucide-react";
+import { ChevronDown, CircleCheck, Share2, ArrowLeft, Sparkles, Info, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -260,6 +261,55 @@ function CompanyDuplicateClusterRow({ cluster }: { cluster: CompanyDuplicateClus
   );
 }
 
+function UserIssueRow({ user }: { user: UserIssue }) {
+  return (
+    <div className="flex items-start justify-between gap-2 rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm">
+      <div>
+        <span className="font-medium text-gray-200">{user.name}</span>
+        <span className="ml-2 text-xs text-gray-500">{user.email}</span>
+      </div>
+      <div className="flex items-center gap-2 flex-shrink-0 text-xs text-gray-500">
+        <Badge variant="neutre">{user.role}</Badge>
+        {user.teamName && <span>{user.teamName}</span>}
+        <span>{user.createdAt ? new Date(user.createdAt).toLocaleDateString("fr-FR") : "—"}</span>
+      </div>
+    </div>
+  );
+}
+
+function RecommendationCard({
+  title,
+  id,
+  children,
+}: {
+  title: string;
+  id: string;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="rounded-lg border-l-4 border-blue-500/30 bg-gray-800/40 border border-gray-700">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center gap-3 px-5 py-4 text-left"
+        aria-expanded={open}
+      >
+        <Info className="h-4 w-4 text-blue-400 shrink-0" />
+        <span className="text-xs text-gray-500 uppercase tracking-wide font-medium">{id}</span>
+        <span className="text-sm font-medium text-gray-200 flex-1">{title}</span>
+        <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="px-5 pb-5 border-t border-gray-700 pt-4">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Props ───────────────────────────────────────────────────────────────────
 
 interface AuditResultsViewProps {
@@ -267,6 +317,7 @@ interface AuditResultsViewProps {
   w?: WorkflowAuditResults | null;
   c?: ContactAuditResults | null;
   co?: CompanyAuditResults | null;
+  u?: UserAuditResults | null;
   globalScore?: number;
   globalScoreLabel?: string;
   llmSummary?: string | null;
@@ -280,7 +331,7 @@ interface AuditResultsViewProps {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function AuditResultsView({
-  r, w, c, co, globalScore, globalScoreLabel, llmSummary,
+  r, w, c, co, u, globalScore, globalScoreLabel, llmSummary,
   shareToken, isPublic, portalName, startedAt, executionDurationMs,
 }: AuditResultsViewProps) {
   const displayScore = globalScore ?? r.score;
@@ -296,9 +347,9 @@ export function AuditResultsView({
     }).catch(() => {});
   }
 
-  const totalCritiques = r.totalCritiques + (c?.totalCritiques ?? 0) + (co?.totalCritiques ?? 0) + (w?.totalCritiques ?? 0);
-  const totalAvertissements = r.totalAvertissements + (c?.totalAvertissements ?? 0) + (co?.totalAvertissements ?? 0) + (w?.totalAvertissements ?? 0);
-  const totalInfos = r.totalInfos + (c?.totalInfos ?? 0) + (co?.totalInfos ?? 0) + (w?.totalInfos ?? 0);
+  const totalCritiques = r.totalCritiques + (c?.totalCritiques ?? 0) + (co?.totalCritiques ?? 0) + (w?.totalCritiques ?? 0) + (u?.totalCritiques ?? 0);
+  const totalAvertissements = r.totalAvertissements + (c?.totalAvertissements ?? 0) + (co?.totalAvertissements ?? 0) + (w?.totalAvertissements ?? 0) + (u?.totalAvertissements ?? 0);
+  const totalInfos = r.totalInfos + (c?.totalInfos ?? 0) + (co?.totalInfos ?? 0) + (w?.totalInfos ?? 0) + (u?.totalInfos ?? 0);
 
   const dateStr = new Date(startedAt).toLocaleDateString("fr-FR", {
     day: "numeric", month: "long", year: "numeric",
@@ -310,6 +361,8 @@ export function AuditResultsView({
   const companyCount = co ? (co.totalCritiques + co.totalAvertissements + co.totalInfos) : 0;
   const workflowCount = w ? (w.totalCritiques + w.totalAvertissements + w.totalInfos) : 0;
 
+  const userCount = u?.hasUsers ? (u.totalCritiques + u.totalAvertissements + u.totalInfos) : 0;
+
   const tabs = [
     { id: "resume", label: "Résumé" },
     { id: "properties", label: "Propriétés", count: propCount > 0 ? propCount : undefined },
@@ -317,6 +370,7 @@ export function AuditResultsView({
     ...(co?.hasCompanies ? [{ id: "companies", label: "Companies", count: companyCount > 0 ? companyCount : undefined }] : []),
     { id: "deals", label: "Deals" },
     ...(w?.hasWorkflows ? [{ id: "workflows", label: "Workflows", count: workflowCount > 0 ? workflowCount : undefined }] : []),
+    ...(u?.hasUsers ? [{ id: "users", label: "Utilisateurs & Équipes", count: userCount > 0 ? userCount : undefined }] : []),
   ];
 
   function handleTabChange(id: string) {
@@ -391,6 +445,12 @@ export function AuditResultsView({
                 <div>
                   <ScoreCircle score={w.score} size="md" />
                   <p className="text-xs text-gray-500 mt-1">Workflows</p>
+                </div>
+              )}
+              {u?.hasUsers && !u.scopeError && (
+                <div>
+                  <ScoreCircle score={u.score} size="md" />
+                  <p className="text-xs text-gray-500 mt-1">Utilisateurs</p>
                 </div>
               )}
             </div>
@@ -841,6 +901,265 @@ export function AuditResultsView({
           <RuleCard title="Workflows sans dossier" ruleKey="w7" severity="info" isEmpty={w.w7.length === 0} count={w.w7.length}>
             <PaginatedList items={w.w7} renderItem={(wf: WorkflowIssue) => <WorkflowIssueRow key={wf.id} wf={wf} />} />
           </RuleCard>
+        </section>
+      )}
+
+      {/* Users & Teams (EP-09) */}
+      {u?.hasUsers && (
+        <section id="section-users" className="scroll-mt-16 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-100">Utilisateurs & Équipes</h2>
+            {!u.scopeError && <ScoreCircle score={u.score} size="sm" />}
+          </div>
+
+          {/* Scope error alert */}
+          {u.scopeError && (
+            <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-5 py-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-red-400 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-red-400">{u.scopeError}</p>
+                  <p className="text-xs text-red-400/70 mt-1">
+                    Rendez-vous dans Dashboard → Connexions HubSpot pour re-autoriser l&apos;application.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!u.scopeError && (
+            <>
+              {/* Stats summary */}
+              <div className="grid grid-cols-3 gap-4">
+                <Card padding="compact" className="text-center">
+                  <p className="text-2xl font-bold text-gray-100 tabular-nums">{u.totalUsers}</p>
+                  <p className="text-xs text-gray-500">utilisateurs</p>
+                </Card>
+                <Card padding="compact" className="text-center">
+                  <p className="text-2xl font-bold text-gray-100 tabular-nums">{u.totalTeams}</p>
+                  <p className="text-xs text-gray-500">équipes</p>
+                </Card>
+                <Card padding="compact" className="text-center">
+                  <p className="text-2xl font-bold text-gray-100 tabular-nums">{u.totalRoles}</p>
+                  <p className="text-xs text-gray-500">rôles distincts</p>
+                </Card>
+              </div>
+
+              {/* Bloc Sécurité */}
+              <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide pt-2">Sécurité</h3>
+
+              <RuleCard
+                title="Super Admins en excès"
+                ruleKey="u02"
+                severity="critique"
+                isEmpty={!u.u02.triggered}
+                count={u.u02.triggered ? 1 : 0}
+                defaultOpen={u.u02.triggered}
+              >
+                <div>
+                  <p className="text-sm text-gray-300 mb-2">
+                    <span className="font-semibold text-red-400">{u.u02.superAdminCount}</span> Super Admins
+                    sur <span className="font-medium text-gray-200">{u.u02.totalUsers}</span> utilisateurs
+                    ({Math.round(u.u02.rate * 100)}%)
+                  </p>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Seuil recommandé pour ce workspace : {u.u02.threshold}
+                  </p>
+                  {u.u02.superAdmins.length > 0 && (
+                    <PaginatedList
+                      items={u.u02.superAdmins}
+                      renderItem={(item: UserIssue) => <UserIssueRow key={item.userId} user={item} />}
+                    />
+                  )}
+                </div>
+              </RuleCard>
+
+              <RuleCard
+                title="Utilisateurs potentiellement inactifs"
+                ruleKey="u05"
+                severity="critique"
+                isEmpty={u.u05.inactiveUsers.length === 0}
+                count={u.u05.inactiveUsers.length}
+                defaultOpen={u.u05.inactiveUsers.length > 0}
+              >
+                <div>
+                  {!u.u05.isEnterprise && (
+                    <div className="rounded-md bg-amber-500/10 border border-amber-500/15 px-3 py-2 mb-3">
+                      <p className="text-xs text-amber-300/80">
+                        L&apos;historique de connexion n&apos;est disponible que sur les comptes HubSpot Enterprise.
+                        Cette détection se base sur l&apos;absence d&apos;objets CRM assignés — certains utilisateurs
+                        (ex: management, consultation seule) peuvent être actifs sans posséder d&apos;objets.
+                      </p>
+                    </div>
+                  )}
+                  <PaginatedList
+                    items={u.u05.inactiveUsers}
+                    renderItem={(item: UserIssue) => <UserIssueRow key={item.userId} user={item} />}
+                  />
+                </div>
+              </RuleCard>
+
+              {/* Bloc Gouvernance */}
+              <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide pt-2">Gouvernance</h3>
+
+              <RuleCard
+                title="Utilisateurs sans rôle assigné"
+                ruleKey="u03"
+                severity="avertissement"
+                isEmpty={u.u03.length === 0}
+                count={u.u03.length}
+              >
+                <PaginatedList
+                  items={u.u03}
+                  renderItem={(item: UserIssue) => <UserIssueRow key={item.userId} user={item} />}
+                />
+              </RuleCard>
+
+              <RuleCard
+                title="Absence de différenciation des rôles"
+                ruleKey="u04"
+                severity="avertissement"
+                isEmpty={!u.u04.triggered}
+                count={u.u04.triggered ? 1 : 0}
+              >
+                {u.u04.disabled ? (
+                  <p className="text-sm text-gray-500 italic">{u.u04.disabledReason}</p>
+                ) : (
+                  <div>
+                    {u.u04.triggered && (
+                      <p className="text-sm text-amber-400 font-medium mb-3">
+                        {Math.round(u.u04.dominantRate * 100)}% de vos utilisateurs partagent le même rôle.
+                      </p>
+                    )}
+                    {u.u04.distribution.length > 0 && (
+                      <div className="rounded-md border border-gray-700 overflow-hidden">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="bg-gray-800/50 text-gray-400 text-xs uppercase tracking-wide">
+                              <th className="text-left px-3 py-2 font-medium">Rôle</th>
+                              <th className="text-right px-3 py-2 font-medium">Utilisateurs</th>
+                              <th className="text-right px-3 py-2 font-medium">%</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-700">
+                            {u.u04.distribution.map((d: RoleDistribution, i: number) => (
+                              <tr key={d.roleId ?? "__null__"} className={i === 0 && u.u04.triggered ? "bg-amber-500/5" : ""}>
+                                <td className="px-3 py-2 text-gray-200 font-medium">
+                                  {d.roleName}
+                                  {i === 0 && u.u04.triggered && (
+                                    <Badge variant="critique" className="ml-2">Dominant</Badge>
+                                  )}
+                                </td>
+                                <td className="px-3 py-2 text-right text-gray-300 tabular-nums">{d.count}</td>
+                                <td className="px-3 py-2 text-right text-gray-400 tabular-nums">{Math.round(d.percentage * 100)}%</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </RuleCard>
+
+              {/* Bloc Équipes */}
+              <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide pt-2">Équipes</h3>
+
+              <RuleCard
+                title="Utilisateurs sans équipe"
+                ruleKey="u01"
+                severity="avertissement"
+                isEmpty={u.u01.length === 0}
+                count={u.u01.length}
+              >
+                <PaginatedList
+                  items={u.u01}
+                  renderItem={(item: UserIssue) => <UserIssueRow key={item.userId} user={item} />}
+                />
+              </RuleCard>
+
+              <RuleCard
+                title="Équipes vides"
+                ruleKey="u06"
+                severity="info"
+                isEmpty={u.u06.length === 0}
+                count={u.u06.length}
+              >
+                <PaginatedList
+                  items={u.u06}
+                  renderItem={(item: TeamIssue) => (
+                    <div key={item.teamId} className="flex items-center justify-between rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm">
+                      <span className="font-medium text-gray-200">{item.name}</span>
+                      <span className="text-xs text-gray-500">ID: {item.teamId}</span>
+                    </div>
+                  )}
+                />
+              </RuleCard>
+
+              {/* Bloc Activité */}
+              <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide pt-2">Activité</h3>
+
+              <RuleCard
+                title="Owners sans objet CRM assigné"
+                ruleKey="u07"
+                severity="info"
+                isEmpty={u.u07.length === 0}
+                count={u.u07.length}
+              >
+                <PaginatedList
+                  items={u.u07}
+                  renderItem={(item: UserIssue) => <UserIssueRow key={item.userId} user={item} />}
+                />
+              </RuleCard>
+
+              {/* Recommandations complémentaires (non scorées) */}
+              <div className="mt-6 space-y-4">
+                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide">
+                  Recommandations — vérifications manuelles
+                </h3>
+
+                <RecommendationCard
+                  title="Vérifiez les permissions critiques de vos utilisateurs"
+                  id="R1"
+                >
+                  <p className="text-sm text-gray-300 leading-relaxed mb-2">
+                    L&apos;API HubSpot ne permet pas d&apos;auditer les permissions détaillées par rôle.
+                    Nous vous recommandons de vérifier manuellement dans <strong className="text-gray-200">Settings → Users &amp; Teams → Roles</strong> que les droits suivants sont restreints au strict nécessaire :
+                  </p>
+                  <ul className="list-disc list-inside text-sm text-gray-400 space-y-1 mb-3">
+                    <li><strong className="text-gray-300">Export de données</strong> : seuls les managers et admins devraient pouvoir exporter des contacts, deals ou companies</li>
+                    <li><strong className="text-gray-300">Import de données</strong> : limiter aux utilisateurs formés pour éviter les doublons et les erreurs de mapping</li>
+                    <li><strong className="text-gray-300">Suppression en masse (bulk delete)</strong> : restreindre aux admins uniquement — une suppression accidentelle peut être irréversible</li>
+                    <li><strong className="text-gray-300">Modification des propriétés et pipelines</strong> : limiter aux RevOps / admins pour éviter les dérives de configuration</li>
+                  </ul>
+                  <p className="text-xs text-gray-500">
+                    <strong className="text-gray-400">Bonne pratique :</strong> créez un rôle par profil métier (Commercial, Marketing, Support, Admin) avec les permissions minimales nécessaires.
+                  </p>
+                </RecommendationCard>
+
+                <RecommendationCard
+                  title="Vérifiez l'utilisation de vos licences HubSpot"
+                  id="R2"
+                >
+                  <p className="text-sm text-gray-300 leading-relaxed mb-2">
+                    Le nombre de sièges achetés vs attribués n&apos;est pas accessible via l&apos;API HubSpot.
+                    Nous vous recommandons de vérifier dans <strong className="text-gray-200">Settings → Account &amp; Billing → Seats</strong> :
+                  </p>
+                  <ul className="list-disc list-inside text-sm text-gray-400 space-y-1 mb-3">
+                    <li>Le nombre de sièges <strong className="text-gray-300">Core Seat</strong> achetés vs attribués</li>
+                    <li>Le nombre de sièges <strong className="text-gray-300">Sales Hub</strong> achetés vs attribués</li>
+                    <li>Le nombre de sièges <strong className="text-gray-300">Service Hub</strong> achetés vs attribués</li>
+                  </ul>
+                  <p className="text-xs text-gray-500">
+                    Si des sièges sont attribués à des utilisateurs identifiés comme inactifs (règle U-05) ou sans activité CRM (règle U-07), envisagez de les révoquer pour réduire votre facture.
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    <strong className="text-gray-400">Estimation :</strong> chaque siège Sales Hub inutilisé représente 90-150 €/mois selon votre plan.
+                  </p>
+                </RecommendationCard>
+              </div>
+            </>
+          )}
         </section>
       )}
 

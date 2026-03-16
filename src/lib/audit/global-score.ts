@@ -1,4 +1,4 @@
-import { AuditResults, WorkflowAuditResults, ContactAuditResults, CompanyAuditResults, GlobalAuditResults } from "@/lib/audit/types";
+import { AuditResults, WorkflowAuditResults, ContactAuditResults, CompanyAuditResults, UserAuditResults, GlobalAuditResults } from "@/lib/audit/types";
 
 /**
  * Retourne le scoreLabel selon la scale PRD-04.
@@ -12,10 +12,10 @@ function scoreLabelFromScore(score: number): string {
 }
 
 /**
- * Calcule le score global en combinant propriétés, contacts, companies et workflows.
+ * Calcule le score global en combinant propriétés, contacts, companies, workflows et utilisateurs.
  *
- * Redistribution EP-05b : pondération égale entre domaines actifs (jusqu'à 4).
- * - domaines actifs = [propriétés, contacts, companies, workflows].filter(score !== null)
+ * Redistribution EP-09 : pondération égale entre domaines actifs (jusqu'à 5).
+ * - domaines actifs = [propriétés, contacts, companies, workflows, utilisateurs].filter(score !== null)
  * - score_global = somme(scores) / nombre_domaines_actifs
  */
 export function calculateGlobalScore(
@@ -23,17 +23,20 @@ export function calculateGlobalScore(
   workflowResults: WorkflowAuditResults | null,
   contactResults?: ContactAuditResults | null,
   companyResults?: CompanyAuditResults | null,
+  userResults?: UserAuditResults | null,
 ): GlobalAuditResults {
   const propertyScore = propertyResults.score;
   const workflowScore = workflowResults?.score ?? null;
   const contactScore = contactResults?.score ?? null;
   const companyScore = companyResults?.score ?? null;
+  const userScore = (userResults?.hasUsers && !userResults?.scopeError) ? userResults.score : null;
 
   // Collecter les domaines actifs (score non-null)
   const activeScores: number[] = [propertyScore];
   if (contactScore !== null) activeScores.push(contactScore);
   if (companyScore !== null) activeScores.push(companyScore);
   if (workflowScore !== null) activeScores.push(workflowScore);
+  if (userScore !== null) activeScores.push(userScore);
 
   const weight = activeScores.length > 0 ? 1 / activeScores.length : 0;
   const globalScore = Math.round(
@@ -44,17 +47,20 @@ export function calculateGlobalScore(
   const workflowWeight = workflowScore !== null ? weight : 0;
   const contactWeight = contactScore !== null ? weight : 0;
   const companyWeight = companyScore !== null ? weight : 0;
+  const userWeight = userScore !== null ? weight : 0;
 
   return {
     propertyResults,
     workflowResults,
     contactResults: contactResults ?? null,
     companyResults: companyResults ?? null,
+    userResults: userResults ?? null,
     globalScore,
     globalScoreLabel: scoreLabelFromScore(globalScore),
     propertyWeight,
     workflowWeight,
     contactWeight,
     companyWeight,
+    userWeight,
   };
 }

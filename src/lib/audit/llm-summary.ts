@@ -9,7 +9,7 @@ export async function generateLlmSummary(global: GlobalAuditResults): Promise<st
   if (!process.env.OPENAI_API_KEY) return null;
 
   const model = process.env.OPENAI_MODEL ?? "gpt-4.1";
-  const { globalScore, propertyResults, workflowResults, contactResults, companyResults } = global;
+  const { globalScore, propertyResults, workflowResults, contactResults, companyResults, userResults } = global;
 
   // Recommandation calibrée selon le score
   let callToAction: string;
@@ -35,6 +35,10 @@ export async function generateLlmSummary(global: GlobalAuditResults): Promise<st
     ? `Companies : ${companyResults.totalCompanies} analysées, score ${companyResults.score}/100 (${companyResults.totalCritiques} critiques, ${companyResults.totalAvertissements} avertissements, ${companyResults.totalInfos} infos). Doublons domain : ${companyResults.co02.length} clusters, doublons nom : ${companyResults.co03.length} clusters, orphelines : ${companyResults.co04.length}.`
     : "Aucune company détectée — domaine exclu du score global.";
 
+  const userSummary = userResults?.hasUsers && !userResults.scopeError
+    ? `Utilisateurs & Équipes : ${userResults.totalUsers} utilisateurs, ${userResults.totalTeams} équipes, score ${userResults.score}/100 (${userResults.totalCritiques} critiques, ${userResults.totalAvertissements} avertissements, ${userResults.totalInfos} infos). Super Admins : ${userResults.u02.superAdminCount}/${userResults.u02.totalUsers}, inactifs : ${userResults.u05.inactiveUsers.length}, sans équipe : ${userResults.u01.length}.`
+    : "Utilisateurs & Équipes : domaine non analysé.";
+
   const prompt = `Tu es un expert HubSpot qui rédige un résumé exécutif d'audit CRM pour un dirigeant non technique.
 
 Données d'audit :
@@ -43,6 +47,7 @@ Données d'audit :
 - ${contactSummary}
 - ${companySummary}
 - ${wfSummary}
+- ${userSummary}
 - Contacts analysés : ${propertyResults.objectCounts.contacts ?? 0}, companies : ${propertyResults.objectCounts.companies ?? 0}, deals : ${propertyResults.objectCounts.deals ?? 0}
 
 Rédige un résumé exécutif en français, en 3 à 5 phrases maximum. Ton dirigeant, direct et factuel. Mentionne les principaux problèmes identifiés et termine par : "${callToAction}"`;

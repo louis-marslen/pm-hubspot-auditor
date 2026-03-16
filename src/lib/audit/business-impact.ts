@@ -269,6 +269,50 @@ export const BUSINESS_IMPACTS: Record<string, BusinessImpact> = {
     urgence: "faible",
   },
 
+  // Users U-01 à U-07 (EP-09)
+  u01: {
+    titre: "Utilisateurs invisibles dans les rapports d'équipe",
+    estimation:
+      "Des utilisateurs sans équipe sont exclus des vues par équipe, des rapports d'activité commerciale et des règles d'attribution automatique. Leur travail dans HubSpot n'apparaît nulle part dans le reporting d'équipe.",
+    urgence: "modérée",
+  },
+  u02: {
+    titre: "Surface d'attaque élargie par excès de Super Admins",
+    estimation:
+      "Chaque Super Admin peut exporter toutes les données, supprimer des objets en masse et modifier la configuration globale. Plus il y en a, plus le risque d'erreur humaine ou de fuite de données augmente.",
+    urgence: "élevée",
+  },
+  u03: {
+    titre: "Zone grise de gouvernance",
+    estimation:
+      "Des utilisateurs sans rôle explicite ont des permissions non maîtrisées. Impossible de savoir qui peut faire quoi — la gouvernance repose sur des hypothèses au lieu de règles configurées.",
+    urgence: "modérée",
+  },
+  u04: {
+    titre: "Principe du moindre privilège non respecté",
+    estimation:
+      "Si tous les utilisateurs ont le même rôle, des commerciaux ont probablement accès à des paramètres d'administration et des marketeurs peuvent modifier des pipelines de vente. Le risque d'erreur de configuration augmente avec chaque utilisateur.",
+    urgence: "modérée",
+  },
+  u05: {
+    titre: "Comptes fantômes — faille de sécurité",
+    estimation:
+      "Des comptes d'anciens employés ou prestataires encore actifs dans HubSpot représentent un risque direct de fuite de données. Chaque jour où ces comptes restent ouverts est un jour d'exposition.",
+    urgence: "élevée",
+  },
+  u06: {
+    titre: "Configuration orpheline",
+    estimation:
+      "Des équipes vides polluent les menus de filtrage et peuvent induire en erreur les utilisateurs. Elles sont le signe d'une réorganisation non finalisée.",
+    urgence: "faible",
+  },
+  u07: {
+    titre: "Licences potentiellement gaspillées",
+    estimation:
+      "Des comptes owner sans aucun objet CRM assigné (0 contacts, 0 deals, 0 companies) représentent des licences probablement payées mais non exploitées.",
+    urgence: "faible",
+  },
+
   // Workflows W1-W7
   w1: {
     titre: "Workflows actifs avec un fort taux d'erreur",

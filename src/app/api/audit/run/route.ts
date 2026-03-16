@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
   }
 
   // 4. Création de l'audit run en status 'running' avec progression initiale
-  const initialProgress = initProgress(["properties", "contacts", "companies", "workflows"]);
+  const initialProgress = initProgress(["properties", "contacts", "companies", "workflows", "users"]);
   const { data: auditRun, error: insertError } = await supabase
     .from("audit_runs")
     .insert({
@@ -106,7 +106,7 @@ async function runAuditInBackground(
     const global = await runFullAudit(accessToken, auditId);
 
     // Émettre progression LLM
-    const currentProgress = initProgress(["properties", "contacts", "companies", "workflows"]);
+    const currentProgress = initProgress(["properties", "contacts", "companies", "workflows", "users"]);
     // On recrée la progression "tout completed" + llm running
     const allCompleted = { ...currentProgress };
     for (const key of Object.keys(allCompleted.domains)) {
@@ -136,17 +136,20 @@ async function runAuditInBackground(
       global.propertyResults.totalCritiques +
       (global.contactResults?.totalCritiques ?? 0) +
       (global.companyResults?.totalCritiques ?? 0) +
-      (global.workflowResults?.totalCritiques ?? 0);
+      (global.workflowResults?.totalCritiques ?? 0) +
+      (global.userResults?.totalCritiques ?? 0);
     const totalAvertissements =
       global.propertyResults.totalAvertissements +
       (global.contactResults?.totalAvertissements ?? 0) +
       (global.companyResults?.totalAvertissements ?? 0) +
-      (global.workflowResults?.totalAvertissements ?? 0);
+      (global.workflowResults?.totalAvertissements ?? 0) +
+      (global.userResults?.totalAvertissements ?? 0);
     const totalInfos =
       global.propertyResults.totalInfos +
       (global.contactResults?.totalInfos ?? 0) +
       (global.companyResults?.totalInfos ?? 0) +
-      (global.workflowResults?.totalInfos ?? 0);
+      (global.workflowResults?.totalInfos ?? 0) +
+      (global.userResults?.totalInfos ?? 0);
 
     await supabase
       .from("audit_runs")
@@ -156,12 +159,14 @@ async function runAuditInBackground(
         workflow_results: global.workflowResults,
         contact_results: global.contactResults,
         company_results: global.companyResults,
+        user_results: global.userResults,
         llm_summary: llmSummary,
         score: global.propertyResults.score,
         property_score: global.propertyResults.score,
         workflow_score: global.workflowResults?.score ?? null,
         contact_score: global.contactResults?.score ?? null,
         company_score: global.companyResults?.score ?? null,
+        user_score: global.userResults?.score ?? null,
         global_score: global.globalScore,
         total_critiques: totalCritiques,
         total_avertissements: totalAvertissements,

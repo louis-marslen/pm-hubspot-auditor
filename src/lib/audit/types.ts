@@ -54,12 +54,127 @@ export interface GlobalAuditResults {
   workflowResults: WorkflowAuditResults | null;
   contactResults: ContactAuditResults | null;
   companyResults: CompanyAuditResults | null;
+  userResults: UserAuditResults | null;
   globalScore: number;
   globalScoreLabel: string;
   propertyWeight: number;
   workflowWeight: number;
   contactWeight: number;
   companyWeight: number;
+  userWeight: number;
+}
+
+// ─── Users & Teams domain (EP-09) ─────────────────────────────────────────
+
+export interface UserIssue {
+  userId: string;
+  email: string;
+  name: string;
+  role: string;
+  teamName: string | null;
+  createdAt: string | null;
+}
+
+export interface TeamIssue {
+  teamId: string;
+  name: string;
+}
+
+export interface RoleDistribution {
+  roleId: string | null;
+  roleName: string;
+  count: number;
+  percentage: number;
+}
+
+/** Raw HubSpot user from Settings API */
+export interface HubSpotUser {
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  roleId: string | null;
+  roleIds?: string[];
+  superAdmin: boolean;
+  primaryTeamId: string | null;
+  secondaryTeamIds?: string[];
+  createdAt?: string;
+}
+
+/** Raw HubSpot team from Settings API */
+export interface HubSpotTeam {
+  id: string;
+  name: string;
+  userIds?: string[];
+  secondaryUserIds?: string[];
+}
+
+/** Raw HubSpot role from Settings API */
+export interface HubSpotRole {
+  id: string;
+  name: string;
+}
+
+/** Raw HubSpot owner from Owners API */
+export interface HubSpotOwner {
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  createdAt: string;
+  updatedAt?: string;
+  archived: boolean;
+}
+
+/** Login activity from Enterprise Account Info API */
+export interface LoginActivity {
+  id: string;
+  email: string;
+  loginAt: string;
+  loginSucceeded: boolean;
+}
+
+export interface UserAuditResults {
+  totalUsers: number;
+  totalTeams: number;
+  totalRoles: number;
+  hasUsers: boolean;
+  isEnterprise: boolean;
+
+  // Règles scorées
+  u01: UserIssue[];                 // Sans équipe — avertissement (1 par user)
+  u02: {                            // Super Admins en excès — critique (1 unique)
+    triggered: boolean;
+    superAdminCount: number;
+    totalUsers: number;
+    rate: number;
+    threshold: string;
+    superAdmins: UserIssue[];
+  };
+  u03: UserIssue[];                 // Sans rôle — avertissement (1 par user)
+  u04: {                            // Pas de différenciation — avertissement (1 unique)
+    triggered: boolean;
+    disabled: boolean;
+    disabledReason: string | null;
+    dominantRate: number;
+    distribution: RoleDistribution[];
+  };
+  u05: {                            // Inactifs — critique (1 par user)
+    isEnterprise: boolean;
+    inactiveUsers: UserIssue[];
+    lastLoginDates: Record<string, string | null>;
+  };
+  u06: TeamIssue[];                 // Équipes vides — info (1 par équipe)
+  u07: UserIssue[];                 // Owner sans objet CRM — info (1 par owner)
+
+  score: number;
+  scoreLabel: string;
+  totalCritiques: number;
+  totalAvertissements: number;
+  totalInfos: number;
+
+  /** Error if scope missing — domain partially or fully unavailable */
+  scopeError: string | null;
 }
 
 // ─── Contacts domain (EP-05) ───────────────────────────────────────────────

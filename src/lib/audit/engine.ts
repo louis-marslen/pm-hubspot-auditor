@@ -3,6 +3,7 @@ import { AuditResults, WorkflowAuditResults, GlobalAuditResults, AuditProgress }
 import { runWorkflowRules } from "@/lib/audit/rules/workflows";
 import { runContactAudit } from "@/lib/audit/contact-engine";
 import { runCompanyAudit } from "@/lib/audit/company-engine";
+import { runUserAudit } from "@/lib/audit/user-engine";
 import { calculateGlobalScore } from "@/lib/audit/global-score";
 import {
   initProgress,
@@ -188,7 +189,7 @@ export async function runFullAudit(
   auditId?: string,
 ): Promise<GlobalAuditResults> {
   // Domaines dans l'ordre d'affichage du tracker
-  const DOMAIN_KEYS = ["properties", "contacts", "companies", "workflows"];
+  const DOMAIN_KEYS = ["properties", "contacts", "companies", "workflows", "users"];
 
   let progress: AuditProgress | null = auditId
     ? initProgress(DOMAIN_KEYS)
@@ -267,5 +268,25 @@ export async function runFullAudit(
     }
   }
 
-  return calculateGlobalScore(propertyResults, workflowResults, contactResults, companyResults);
+  // ── Utilisateurs & Équipes (EP-09) ─────────────────────────────────────
+  let userResults: Awaited<ReturnType<typeof runUserAudit>> = null;
+
+  try {
+    await emit((p) => updateDomainStep(p, "users", "fetching"));
+    userResults = await runUserAudit(accessToken);
+    if (userResults === null) {
+      // < 2 utilisateurs — domaine exclu
+      await emit((p) => {
+        const updated = updateDomainStep(p, "users", "fetching", 0);
+        return completeDomain(updated, "users");
+      });
+    } else {
+      await emit((p) => completeDomain(p, "users"));
+    }
+  } catch (err) {
+    await emit((p) => failDomain(p, "users", err instanceof Error ? err.message : "Erreur inconnue"));
+    userResults = null;
+  }
+
+  return calculateGlobalScore(propertyResults, workflowResults, contactResults, companyResults, userResults);
 }
