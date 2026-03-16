@@ -215,80 +215,94 @@ export async function runFullAudit(
     throw err;
   }
 
-  // ── Workflows ───────────────────────────────────────────────────────────
-  let workflowResults: WorkflowAuditResults | null = null;
-  try {
-    await emit((p) => updateDomainStep(p, "workflows", "fetching"));
-    workflowResults = await runWorkflowAudit(accessToken);
-    await emit((p) => completeDomain(p, "workflows"));
-  } catch (err) {
-    await emit((p) => failDomain(p, "workflows", err instanceof Error ? err.message : "Erreur inconnue"));
-    // Workflow errors are non-fatal — continue with null
-    workflowResults = null;
-  }
-
-  // ── Contacts ────────────────────────────────────────────────────────────
+  // ── Domaines parallèles (workflows, contacts, companies, users) ─────────
+  // Après Properties, les 4 autres domaines sont indépendants.
+  // On les lance en parallèle pour réduire le temps total d'audit.
   const totalContacts = propertyResults.objectCounts.contacts ?? 0;
   const totalCompanies = propertyResults.objectCounts.companies ?? 0;
-  let contactResults: ReturnType<typeof runContactAudit> extends Promise<infer T> ? T : never = null;
 
-  if (totalContacts === 0) {
-    // Domaine exclu — marquer completed avec itemCount 0
-    await emit((p) => {
-      const updated = updateDomainStep(p, "contacts", "fetching", 0);
-      return completeDomain(updated, "contacts");
-    });
-  } else {
+  // Workflow task
+  async function runWorkflowsTask(): Promise<WorkflowAuditResults | null> {
+    try {
+      await emit((p) => updateDomainStep(p, "workflows", "fetching"));
+      const results = await runWorkflowAudit(accessToken);
+      await emit((p) => completeDomain(p, "workflows"));
+      return results;
+    } catch (err) {
+      await emit((p) => failDomain(p, "workflows", err instanceof Error ? err.message : "Erreur inconnue"));
+      return null;
+    }
+  }
+
+  // Contacts task
+  async function runContactsTask() {
+    if (totalContacts === 0) {
+      await emit((p) => {
+        const updated = updateDomainStep(p, "contacts", "fetching", 0);
+        return completeDomain(updated, "contacts");
+      });
+      return null;
+    }
     try {
       await emit((p) => updateDomainStep(p, "contacts", "fetching", totalContacts));
-      contactResults = await runContactAudit(accessToken, totalContacts, totalCompanies);
+      const results = await runContactAudit(accessToken, totalContacts, totalCompanies);
       await emit((p) => completeDomain(p, "contacts"));
+      return results;
     } catch (err) {
       await emit((p) => failDomain(p, "contacts", err instanceof Error ? err.message : "Erreur inconnue"));
-      contactResults = null;
+      return null;
     }
   }
 
-  // ── Companies ───────────────────────────────────────────────────────────
-  let companyResults: ReturnType<typeof runCompanyAudit> extends Promise<infer T> ? T : never = null;
-
-  if (totalCompanies === 0) {
-    await emit((p) => {
-      const updated = updateDomainStep(p, "companies", "fetching", 0);
-      return completeDomain(updated, "companies");
-    });
-  } else {
+  // Companies task
+  async function runCompaniesTask() {
+    if (totalCompanies === 0) {
+      await emit((p) => {
+        const updated = updateDomainStep(p, "companies", "fetching", 0);
+        return completeDomain(updated, "companies");
+      });
+      return null;
+    }
     try {
       await emit((p) => updateDomainStep(p, "companies", "fetching", totalCompanies));
-      companyResults = await runCompanyAudit(accessToken, totalCompanies);
+      const results = await runCompanyAudit(accessToken, totalCompanies);
       await emit((p) => completeDomain(p, "companies"));
+      return results;
     } catch (err) {
       await emit((p) => failDomain(p, "companies", err instanceof Error ? err.message : "Erreur inconnue"));
-      companyResults = null;
+      return null;
     }
   }
 
-  // ── Utilisateurs & Équipes (EP-09) ─────────────────────────────────────
-  let userResults: Awaited<ReturnType<typeof runUserAudit>> = null;
-
-  try {
-    await emit((p) => updateDomainStep(p, "users", "fetching"));
-    userResults = await runUserAudit(accessToken);
-    if (userResults === null) {
-      // < 2 utilisateurs — domaine exclu
-      await emit((p) => {
-        const updated = updateDomainStep(p, "users", "fetching", 0);
-        return completeDomain(updated, "users");
-      });
-    } else {
-      await emit((p) => updateDomainStep(p, "users", "analyzing", userResults.totalUsers));
+  // Users task
+  async function runUsersTask(): Promise<Awaited<ReturnType<typeof runUserAudit>>> {
+    try {
+      await emit((p) => updateDomainStep(p, "users", "fetching"));
+      const results = await runUserAudit(accessToken);
+      if (results === null) {
+        await emit((p) => {
+          const updated = updateDomainStep(p, "users", "fetching", 0);
+          return completeDomain(updated, "users");
+        });
+        return null;
+      }
+      await emit((p) => updateDomainStep(p, "users", "analyzing", results.totalUsers));
       await emit((p) => updateDomainStep(p, "users", "scoring"));
       await emit((p) => completeDomain(p, "users"));
+      return results;
+    } catch (err) {
+      await emit((p) => failDomain(p, "users", err instanceof Error ? err.message : "Erreur inconnue"));
+      return null;
     }
-  } catch (err) {
-    await emit((p) => failDomain(p, "users", err instanceof Error ? err.message : "Erreur inconnue"));
-    userResults = null;
   }
+
+  // Lancement parallèle des 4 domaines
+  const [workflowResults, contactResults, companyResults, userResults] = await Promise.all([
+    runWorkflowsTask(),
+    runContactsTask(),
+    runCompaniesTask(),
+    runUsersTask(),
+  ]);
 
   return calculateGlobalScore(propertyResults, workflowResults, contactResults, companyResults, userResults);
 }
