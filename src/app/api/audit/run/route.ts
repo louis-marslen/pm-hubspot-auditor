@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { getValidAccessToken } from "@/lib/hubspot/tokens";
 import { runFullAudit } from "@/lib/audit/engine";
 import { generateLlmSummary } from "@/lib/audit/llm-summary";
+import { initProgress, persistProgress } from "@/lib/audit/progress";
 
 // Audit complet (propriétés + workflows + LLM) peut dépasser 30s — nécessite Vercel Pro
 export const maxDuration = 300;
@@ -40,15 +42,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Connexion introuvable" }, { status: 404 });
   }
 
-  // 4. Création de l'audit run en status 'running'
+  // 4. Création de l'audit run en status 'running' avec progression initiale
+  const initialProgress = initProgress(["properties", "contacts", "companies", "workflows"]);
   const { data: auditRun, error: insertError } = await supabase
     .from("audit_runs")
     .insert({
       connection_id: connectionId,
       user_id: user.id,
       status: "running",
+      portal_id: connection.portal_id ?? null,
+      portal_name: connection.portal_name ?? null,
+      audit_progress: initialProgress,
     })
-    .select("id")
+    .select("id, share_token")
     .single();
 
   if (insertError || !auditRun) {
@@ -56,13 +62,13 @@ export async function POST(req: NextRequest) {
   }
 
   const auditId = auditRun.id;
-  const startedAt = Date.now();
+  const shareToken = auditRun.share_token ?? null;
 
   // 5. Obtention du token valide
   let accessToken: string;
   try {
     accessToken = await getValidAccessToken(connection);
-  } catch (err) {
+  } catch {
     await supabase
       .from("audit_runs")
       .update({ status: "failed", error: "Impossible de rafraîchir le token HubSpot" })
@@ -70,10 +76,59 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Erreur d'authentification HubSpot" }, { status: 500 });
   }
 
-  // 6. Exécution de l'audit complet
+  // 6. Lancer l'audit en arrière-plan (fire-and-forget)
+  // Le client admin est utilisé car la réponse HTTP sera envoyée avant la fin
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  runAuditInBackground(accessToken, auditId, adminSupabase, connection);
+
+  // 7. Retour immédiat — le frontend navigue vers /audit/{auditId}
+  return NextResponse.json({ auditId, shareToken });
+}
+
+/**
+ * Exécute l'audit complet en arrière-plan et met à jour la base une fois terminé.
+ * Utilise le client admin Supabase (service role) pour écrire sans cookies.
+ */
+async function runAuditInBackground(
+  accessToken: string,
+  auditId: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any,
+  connection: { portal_id?: string | null; portal_name?: string | null },
+) {
+  const startedAt = Date.now();
+
   try {
-    const global = await runFullAudit(accessToken);
+    const global = await runFullAudit(accessToken, auditId);
+
+    // Émettre progression LLM
+    const currentProgress = initProgress(["properties", "contacts", "companies", "workflows"]);
+    // On recrée la progression "tout completed" + llm running
+    const allCompleted = { ...currentProgress };
+    for (const key of Object.keys(allCompleted.domains)) {
+      allCompleted.domains[key] = {
+        status: "completed",
+        currentStep: null,
+        completedSteps: ["fetching", "analyzing", "scoring"],
+        itemCount: allCompleted.domains[key].itemCount,
+        error: null,
+      };
+    }
+    allCompleted.llmSummary = { status: "running" };
+    allCompleted.globalProgress = Object.keys(allCompleted.domains).length * 3 / (Object.keys(allCompleted.domains).length * 3 + 1);
+    await persistProgress(auditId, allCompleted);
+
     const llmSummary = await generateLlmSummary(global);
+
+    // Progression LLM terminée
+    allCompleted.llmSummary = { status: "completed" };
+    allCompleted.globalProgress = 1;
+    await persistProgress(auditId, allCompleted);
+
     const executionDurationMs = Date.now() - startedAt;
 
     // Totaux combinés pour les 4 domaines
@@ -93,7 +148,7 @@ export async function POST(req: NextRequest) {
       (global.companyResults?.totalInfos ?? 0) +
       (global.workflowResults?.totalInfos ?? 0);
 
-    const { data: updated } = await supabase
+    await supabase
       .from("audit_runs")
       .update({
         status: "completed",
@@ -116,19 +171,13 @@ export async function POST(req: NextRequest) {
         execution_duration_ms: executionDurationMs,
         completed_at: new Date().toISOString(),
       })
-      .eq("id", auditId)
-      .select("share_token")
-      .single();
-
-    const shareToken = updated?.share_token ?? null;
-
-    return NextResponse.json({ auditId, shareToken });
+      .eq("id", auditId);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Erreur inconnue";
+    console.error(`[audit] background audit failed for ${auditId}:`, message);
     await supabase
       .from("audit_runs")
       .update({ status: "failed", error: message })
       .eq("id", auditId);
-    return NextResponse.json({ error: "L'audit a échoué", detail: message }, { status: 500 });
   }
 }
