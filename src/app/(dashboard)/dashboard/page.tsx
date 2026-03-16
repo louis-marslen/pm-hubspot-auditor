@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { ScanSearch, Building2, Plus, ArrowRight } from "lucide-react";
+import { AuditDomainSelector } from "@/components/audit/audit-domain-selector";
+import type { AuditDomainId } from "@/lib/audit/types";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +43,7 @@ function DashboardContent() {
   const [auditing, setAuditing] = useState<string | null>(null);
   const [auditError, setAuditError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectorConnectionId, setSelectorConnectionId] = useState<string | null>(null);
 
   const connected = searchParams.get("connected");
   const error = searchParams.get("error");
@@ -86,14 +89,21 @@ function DashboardContent() {
     load();
   }, [router, connected]);
 
-  const handleAudit = useCallback(async (connectionId: string) => {
-    setAuditing(connectionId);
+  const handleOpenSelector = useCallback((connectionId: string) => {
+    setSelectorConnectionId(connectionId);
+    setAuditError(null);
+  }, []);
+
+  const handleLaunchAudit = useCallback(async (selectedDomains: AuditDomainId[]) => {
+    if (!selectorConnectionId) return;
+    setAuditing(selectorConnectionId);
+    setSelectorConnectionId(null);
     setAuditError(null);
     try {
       const res = await fetch("/api/audit/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ connectionId }),
+        body: JSON.stringify({ connectionId: selectorConnectionId, selectedDomains }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -107,7 +117,7 @@ function DashboardContent() {
     } finally {
       setAuditing(null);
     }
-  }, [router]);
+  }, [router, selectorConnectionId]);
 
   // Get last audit per workspace
   const lastAuditByWs = new Map<string, AuditRun>();
@@ -224,7 +234,7 @@ function DashboardContent() {
                   </a>
                 ) : (
                   <Button
-                    onClick={() => handleAudit(ws.id)}
+                    onClick={() => handleOpenSelector(ws.id)}
                     disabled={!!auditing}
                     loading={isRunning}
                     className="w-full"
@@ -249,6 +259,14 @@ function DashboardContent() {
           </Card>
         </div>
       </section>
+
+      {/* Domain selection modal */}
+      <AuditDomainSelector
+        isOpen={!!selectorConnectionId}
+        onClose={() => setSelectorConnectionId(null)}
+        onLaunch={handleLaunchAudit}
+        loading={!!auditing}
+      />
 
       {/* Recent audits */}
       {recentAudits.length > 0 && (
