@@ -11,6 +11,8 @@ Guider le PM à travers la création d'un PRD (Product Requirements Document) st
 
 Ce n'est pas une spec waterfall — c'est un document vivant qui évolue au fil de la livraison.
 
+> **Ordre de création :** L'epic (périmètre, user stories, critères d'acceptance) doit être rédigé AVANT le PRD. Le PRD enrichit l'epic avec le contexte business (problème, personas, métriques, design) et produit le prompt d'implémentation. Voir la Phase 7 pour le détail.
+
 ---
 
 ## Structure standard d'un PRD
@@ -169,10 +171,12 @@ Nous construisons [description haut niveau de la solution].
 
 ### Phase 7 : User stories & requirements (90 à 120 min)
 
-1. **Hypothèse d'epic** — "Nous croyons que [construire X] pour [persona] permettra d'atteindre [résultat] car [hypothèse]. Nous mesurerons le succès via [métrique]."
-2. **Découper l'epic en user stories** — Utiliser le skill `decoupeur-epics`
-3. **Rédiger les user stories** — Utiliser le skill `user-story` (format + critères d'acceptance)
-4. **Documenter les contraintes & cas limites**
+> **Prérequis :** L'epic doit exister dans `product/epics/` AVANT de rédiger cette phase. Si l'epic n'existe pas encore, le créer d'abord en utilisant le skill `decoupeur-epics` pour le découpage et le skill `user-story` pour les stories. Le PRD importe ensuite les stories depuis l'epic — il ne les crée pas.
+
+1. **Vérifier que l'epic existe** — Lire le fichier `product/epics/ep-XX-slug.md` correspondant. S'il n'existe pas, le créer maintenant (hypothèse, périmètre, user stories, critères d'acceptance, dépendances).
+2. **Importer les user stories depuis l'epic** — Reprendre les stories de l'epic dans le PRD, en les enrichissant si nécessaire du contexte business et des preuves de la Phase 2
+3. **Documenter les contraintes & cas limites** — Compléter avec les edge cases identifiés pendant le travail du PRD
+4. **Vérifier la cohérence** — Les stories du PRD et de l'epic doivent être alignées. Si le PRD révèle des stories manquantes, les ajouter dans l'epic ET dans le PRD.
 
 ---
 
@@ -364,3 +368,4 @@ Jour 4 (optionnel) :
 | Out of scope non documenté | Créep de scope | Explicitement documenter ce qu'on ne construit PAS |
 | PRD écrit sans mettre à jour les docs design | Le dev implémente sans spec d'écran, l'UI diverge | Toujours exécuter la Phase 9 — un PRD sans mise à jour des refs design n'est pas terminé |
 | PRD sans prompt d'implémentation | Le dev doit interpréter le PRD lui-même, perd du temps, oublie des choses | Toujours exécuter la Phase 10 — le prompt dans `product/prompts/` est le livrable final du PM |
+| PRD rédigé avant l'epic | Les user stories sont créées dans le PRD au lieu d'être importées depuis l'epic — l'epic devient un sous-produit du PRD | Toujours créer l'epic d'abord (`product/epics/`), puis le PRD importe et enrichit les stories |

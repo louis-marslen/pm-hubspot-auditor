@@ -55,6 +55,7 @@ product/
 | EP-11 | À créer | À créer | À spécifier |
 | EP-07 | À créer | À créer | À spécifier |
 | EP-08 | À créer | À créer | À spécifier |
+| EP-UX-02 | [prd-progression-audit.md](prd/prd-progression-audit.md) | [ep-ux-02-progression-audit.md](epics/ep-ux-02-progression-audit.md) | Spécifié |
 
 ---
 

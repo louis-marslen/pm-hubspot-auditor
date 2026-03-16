@@ -791,17 +791,18 @@ Si un domaine est inactif (ex. 0 company), son sous-score n'est pas affiché.
 
 #### Mise à jour de la progression d'audit (section 5.5)
 
-Après EP-06, les étapes de progression incluent :
+Après EP-06, le tracker de progression (voir section 5.5 et [prd-progression-audit.md](prd-progression-audit.md)) inclut un 5e domaine :
 
-```
-              ✓ Connexion au workspace
-              ✓ Récupération des propriétés
-              ✓ Analyse des contacts (2 340)…
-              ✓ Analyse des companies (890)…
-              ◌ Analyse des deals & pipelines (450 deals · 3 pipelines)…
-              ○ Analyse des workflows
-              ○ Génération du rapport
-```
+| # | Domaine | Label |
+|---|---|---|
+| 1 | Propriétés | Propriétés |
+| 2 | Contacts | Contacts |
+| 3 | Deals & Pipelines | Deals & Pipelines |
+| 4 | Companies | Companies |
+| 5 | Workflows | Workflows |
+| — | Résumé LLM | Génération du résumé exécutif |
+
+Chaque domaine affiche ses 3 sous-étapes (récupération → analyse → scoring) avec le comptage d'éléments.
 
 ---
 
@@ -973,37 +974,76 @@ Affiché quand il n'y a pas de données. Toujours inclure :
 
 ### 5.5 — In-progress state (spécifique à l'audit)
 
-L'audit prend 30-300 secondes. C'est le moment le plus critique pour le rétention.
+> **Spécification de référence :** [`prd-progression-audit.md`](prd-progression-audit.md) (EP-UX-02)
+> Cette section est un résumé. Le PRD fait foi pour les détails d'implémentation.
+
+L'audit prend 30-300 secondes. C'est le moment le plus critique pour la rétention.
+
+**Comportement :**
+
+1. **Clic "Lancer un audit"** → navigation immédiate vers `/audit/{auditId}` (pas d'attente sur le dashboard)
+2. **Page d'audit (état running)** → tracker de progression affiché (pas le rapport)
+3. **Audit terminé** → le tracker disparaît, le rapport complet apparaît d'un coup
+
+**Tracker de progression :**
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
+┌────────────────────────────────────────────────────────────────────┐
+│  Topbar                                                           │
+├────────────────────────────────────────────────────────────────────┤
+│  Breadcrumb : Dashboard > Portal Name > Audit en cours…           │
+├────────────────────────────────────────────────────────────────────┤
 │                                                                    │
-│                    ┌──────────────────────┐                        │
-│                    │                      │                        │
-│                    │    Animation ou      │                        │
-│                    │    illustration      │                        │
-│                    │                      │                        │
-│                    └──────────────────────┘                        │
+│                 ┌─────────────────────────────────────┐            │
+│                 │                                     │            │
+│                 │  Audit en cours — Portal Name       │            │
+│                 │                                     │            │
+│                 │  ✓  Propriétés                ✓ OK  │            │
+│                 │     ✓ Récupération (148)            │            │
+│                 │     ✓ Analyse des propriétés        │            │
+│                 │     ✓ Scoring et recommandations    │            │
+│                 │                                     │            │
+│                 │  ◌  Contacts               En cours │            │
+│                 │     ✓ Récupération (2 340)          │            │
+│                 │     ◌ Analyse des contacts…         │            │
+│                 │     ○ Scoring et recommandations    │            │
+│                 │                                     │            │
+│                 │  ○  Companies              En attente│            │
+│                 │     ○ Récupération                  │            │
+│                 │     ○ Analyse                       │            │
+│                 │     ○ Scoring et recommandations    │            │
+│                 │                                     │            │
+│                 │  ○  Workflows              En attente│            │
+│                 │     ○ Récupération                  │            │
+│                 │     ○ Analyse                       │            │
+│                 │     ○ Scoring et recommandations    │            │
+│                 │                                     │            │
+│                 │  ────────────────────────────────   │            │
+│                 │  ○  Génération du résumé   ✨       │            │
+│                 │                                     │            │
+│                 │  ━━━━━━━━━━━━━━━░░░░░░░░░░  40%    │            │
+│                 │                                     │            │
+│                 └─────────────────────────────────────┘            │
 │                                                                    │
-│              Audit en cours de Portal Name…                        │
-│                                                                    │
-│              ✓ Connexion au workspace                              │
-│              ✓ Récupération des propriétés                         │
-│              ◌ Analyse des contacts (2 340)…                       │
-│              ○ Analyse des deals                                   │
-│              ○ Analyse des workflows                               │
-│              ○ Génération du rapport                               │
-│                                                                    │
-│              ━━━━━━━━━━━━━━━━━░░░░░░░  65%                        │
-│                                                                    │
-│              Temps estimé restant : ~30s                           │
-│                                                                    │
-└──────────────────────────────────────────────────────────────────┘
+└────────────────────────────────────────────────────────────────────┘
 ```
 
-Afficher l'avancement **étape par étape** avec des checkmarks donne un sentiment de progrès et réduit l'anxiété. Le pourcentage et le temps estimé sont optionnels mais recommandés.
+**Spécifications visuelles :** Card `gray-900`, bordure `gray-700`, `radius-lg`, max-width `640px`, centrée. Sous-étapes indentées sous chaque domaine. Icônes Lucide par domaine (`list-tree`, `users`, `building`, `workflow`, `sparkles`).
 
-> **Note technique :** Cela nécessite que l'API renvoie des événements de progression (SSE ou polling). Si cette complexité est trop élevée pour la v1, un fallback acceptable est une animation avec des textes qui changent toutes les 10 secondes ("Analyse des propriétés…", "Analyse des workflows…") même sans refléter la progression réelle.
+**Sous-étapes par domaine (3 pour chaque) :**
+1. Récupération des données (+ comptage affiché quand terminé)
+2. Analyse en cours
+3. Scoring et recommandations
+
+**États des étapes :** ○ en attente (`gray-500`) / ◌ en cours (`brand-500`, pulse) / ✓ terminé (`#22c55e`) / ✗ erreur (`#ef4444`)
+
+**Barre de progression :** `brand-500` sur track `gray-800`, hauteur 6px, pourcentage = sous-étapes terminées / total.
+
+**Transition tracker → rapport :** toutes les étapes passent en ✓ (1s) → barre à 100% → fade-out du tracker (200ms) → rapport complet affiché.
+
+**Principe fondamental :** le rapport n'est **jamais** affiché partiellement. Aucun score, aucun résultat n'est visible avant que l'audit soit entièrement terminé. Le tracker est la seule surface visible pendant l'exécution.
+
+**Communication :** polling `GET /api/audit/{auditId}/status` toutes les 3s. Progression persistée en base (survie au rafraîchissement).
 
 ---
 
