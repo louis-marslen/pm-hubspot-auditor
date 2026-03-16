@@ -1,3 +1,21 @@
+// ─── Audit Progress (EP-UX-02) ────────────────────────────────────────────
+
+export interface DomainProgress {
+  status: "pending" | "running" | "completed" | "error";
+  currentStep: "fetching" | "analyzing" | "scoring" | null;
+  completedSteps: string[];
+  itemCount: number | null;
+  error: string | null;
+}
+
+export interface AuditProgress {
+  domains: Record<string, DomainProgress>;
+  llmSummary: { status: "pending" | "running" | "completed" | "error"; error?: string };
+  globalProgress: number;
+}
+
+// ─── Workflows domain ─────────────────────────────────────────────────────
+
 export interface WorkflowIssue {
   id: string;
   name: string;
