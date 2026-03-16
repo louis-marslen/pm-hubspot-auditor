@@ -459,6 +459,12 @@ export function AuditResultsView({
                   <p className="text-xs text-gray-500 mt-1">Companies</p>
                 </div>
               )}
+              {d?.hasDeals && (
+                <div>
+                  <ScoreCircle score={d.score} size="md" />
+                  <p className="text-xs text-gray-500 mt-1">Deals</p>
+                </div>
+              )}
               {w?.hasWorkflows && w.score !== null && (
                 <div>
                   <ScoreCircle score={w.score} size="md" />
