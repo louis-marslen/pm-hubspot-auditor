@@ -219,6 +219,56 @@ export const BUSINESS_IMPACTS: Record<string, BusinessImpact> = {
     urgence: "faible",
   },
 
+  // Companies CO-01 à CO-08 (EP-05b)
+  co01: {
+    titre: "Companies sans identité web",
+    estimation:
+      "Des entreprises sans domaine ne peuvent pas être dédupliquées automatiquement, ni enrichies via les outils d'enrichissement HubSpot. L'identification et le suivi des comptes sont compromis.",
+    urgence: "critique",
+  },
+  co02: {
+    titre: "Base entreprises polluée par des doublons",
+    estimation:
+      "Des companies en doublon fragmentent le CA par client, créent des incohérences dans les rapports account-based et empêchent de calculer un chiffre d'affaires fiable par client.",
+    urgence: "critique",
+  },
+  co03: {
+    titre: "Risque de doublons entreprises non détectés",
+    estimation:
+      "Des companies avec des noms similaires mais des domains différents peuvent représenter la même entité — historique commercial fragmenté, deals attribués à la mauvaise fiche.",
+    urgence: "modérée",
+  },
+  co04: {
+    titre: "Companies orphelines sans valeur commerciale",
+    estimation:
+      "Des fiches entreprises sans aucun contact associé depuis plus de 90 jours n'ont aucune valeur commerciale directe et polluent la base.",
+    urgence: "modérée",
+  },
+  co05: {
+    titre: "Companies sans propriétaire assigné",
+    estimation:
+      "Des companies sans owner, sans industrie ou sans dimensionnement rendent impossible la segmentation par taille, secteur ou territoire. Les rapports stratégiques sont faussés.",
+    urgence: "faible",
+  },
+  co06: {
+    titre: "Companies sans industrie renseignée",
+    estimation:
+      "Des companies sans industrie rendent impossible la segmentation sectorielle et les analyses de marché par vertical.",
+    urgence: "faible",
+  },
+  co07: {
+    titre: "Companies sans dimensionnement",
+    estimation:
+      "Des companies sans effectif ni chiffre d'affaires renseigné empêchent la segmentation par taille d'entreprise (PME, ETI, Grand compte).",
+    urgence: "faible",
+  },
+  co08: {
+    titre: "Companies fantômes dans la base",
+    estimation:
+      "Des companies inactives depuis plus d'un an gonflent la base et faussent les métriques de couverture marché.",
+    urgence: "faible",
+  },
+
   // Workflows W1-W7
   w1: {
     titre: "Workflows actifs avec un fort taux d'erreur",

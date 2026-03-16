@@ -35,11 +35,13 @@ export interface GlobalAuditResults {
   propertyResults: AuditResults;
   workflowResults: WorkflowAuditResults | null;
   contactResults: ContactAuditResults | null;
+  companyResults: CompanyAuditResults | null;
   globalScore: number;
   globalScoreLabel: string;
   propertyWeight: number;
   workflowWeight: number;
   contactWeight: number;
+  companyWeight: number;
 }
 
 // ─── Contacts domain (EP-05) ───────────────────────────────────────────────
@@ -89,6 +91,57 @@ export interface ContactAuditResults {
   c10: ContactIssue[];       // Contact stale > 365j — info (1 par contact)
   c11: ContactIssue[];       // Sans owner — info (1 par contact)
   c12: ContactIssue[];       // Sans source — info (1 par contact)
+
+  score: number;
+  scoreLabel: string;
+  totalCritiques: number;
+  totalAvertissements: number;
+  totalInfos: number;
+}
+
+// ─── Companies domain (EP-05b) ────────────────────────────────────────────
+
+export interface CompanyIssue {
+  id: string;           // Hub ID de la company
+  name: string;         // nom de la company (ou "Sans nom")
+  domain: string | null;
+  industry: string | null;
+  numberOfEmployees: string | null;
+  annualRevenue: string | null;
+  ownerId: string | null;
+  lastModifiedDate: string | null;
+  createdAt: string;
+  contactCount: number;  // nombre de contacts associés
+  dealCount: number;     // nombre de deals associés
+}
+
+export interface CompanyDuplicateCluster {
+  criterion: "domain" | "name";
+  normalizedValue: string;   // valeur normalisée servant de clé de regroupement
+  members: CompanyIssue[];
+  size: number;
+}
+
+export interface CompanyAuditResults {
+  totalCompanies: number;
+  hasCompanies: boolean;
+
+  // CO-01 : Taux domain < 70% — critique
+  co01: RateResult;
+  // CO-02 : Doublons domain exact — critique (1 par cluster)
+  co02: CompanyDuplicateCluster[];
+  // CO-03 : Doublons nom entreprise (Levenshtein > 85%) — avertissement (1 par cluster)
+  co03: CompanyDuplicateCluster[];
+  // CO-04 : Company sans contact (> 90j) — avertissement (1 par company)
+  co04: CompanyIssue[];
+  // CO-05 : Company sans owner — info (1 par company)
+  co05: CompanyIssue[];
+  // CO-06 : Company sans industrie — info (1 par company)
+  co06: CompanyIssue[];
+  // CO-07 : Company sans dimensionnement — info (1 par company)
+  co07: CompanyIssue[];
+  // CO-08 : Company stale > 365j — info (1 par company)
+  co08: CompanyIssue[];
 
   score: number;
   scoreLabel: string;
@@ -157,8 +210,7 @@ export interface AuditResults {
   p5: PropertyIssue[];
   p6: TypingIssue[];
 
-  // Règles propriétés système (P7-P11 migrées vers ContactAuditResults en EP-05)
-  p12: RateResult;
+  // Règles propriétés système (P7-P11 → contacts EP-05, P12 → companies EP-05b)
   p13: RateResult;
   p14: RateResult;
   p15: DealIssue[];

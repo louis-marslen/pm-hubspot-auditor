@@ -47,25 +47,7 @@ async function countWithFilter(
 }
 
 // P7-P11 migrées vers src/lib/audit/rules/contacts.ts (EP-05 : C-01 à C-05)
-
-/**
- * P12 : Taux de companies avec domaine renseigné.
- * Seuil avertissement : < 80%
- */
-export async function runP12(
-  client: HubSpotClient,
-  totalCompanies: number
-): Promise<RateResult> {
-  const threshold = 0.8;
-  if (totalCompanies === 0) {
-    return { rate: 1, filledCount: 0, totalCount: 0, threshold, triggered: false };
-  }
-  const filledCount = await countWithFilter(client, "companies", [
-    { propertyName: "domain", operator: "HAS_PROPERTY" },
-  ]);
-  const rate = filledCount / totalCompanies;
-  return { rate, filledCount, totalCount: totalCompanies, threshold, triggered: rate < threshold };
-}
+// P12 migrée vers src/lib/audit/rules/companies.ts (EP-05b : CO-01)
 
 /**
  * P13 : Taux de deals avec montant renseigné.

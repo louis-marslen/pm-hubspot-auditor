@@ -2,6 +2,7 @@ import { HubSpotClient } from "@/lib/hubspot/api-client";
 import { AuditResults, WorkflowAuditResults, GlobalAuditResults } from "@/lib/audit/types";
 import { runWorkflowRules } from "@/lib/audit/rules/workflows";
 import { runContactAudit } from "@/lib/audit/contact-engine";
+import { runCompanyAudit } from "@/lib/audit/company-engine";
 import { calculateGlobalScore } from "@/lib/audit/global-score";
 import {
   getCustomProperties,
@@ -15,7 +16,6 @@ import {
 } from "@/lib/audit/rules/custom-properties";
 import {
   countTotal,
-  runP12,
   runP13,
   runP14,
   runP15,
@@ -127,8 +127,7 @@ export async function runAudit(accessToken: string): Promise<AuditResults> {
   // On utilise le total deals comme proxy (MVP : pas de filtre open/closed supplémentaire)
   const totalDealsOpen = totalDeals;
 
-  // 5. Règles système (P7-P11 migrées vers contacts en EP-05)
-  const p12 = await runP12(client, totalCompanies);
+  // 5. Règles système (P7-P11 migrées vers contacts EP-05, P12 migrée vers companies EP-05b)
   const [p13, p14] = await Promise.all([
     runP13(client, totalDealsOpen),
     runP14(client, totalDealsOpen),
@@ -143,7 +142,7 @@ export async function runAudit(accessToken: string): Promise<AuditResults> {
     objectCounts,
     customPropertyCounts,
     p1, p2, p3, p4, p5, p6,
-    p12, p13, p14, p15, p16,
+    p13, p14, p15, p16,
     score: 0,
     scoreLabel: "",
     totalCritiques: 0,
@@ -180,10 +179,11 @@ export async function runFullAudit(accessToken: string): Promise<GlobalAuditResu
     runWorkflowAudit(accessToken),
   ]);
 
-  // L'audit contacts utilise les counts déjà disponibles dans propertyResults
+  // Les audits contacts et companies utilisent les counts déjà disponibles dans propertyResults
   const totalContacts = propertyResults.objectCounts.contacts ?? 0;
   const totalCompanies = propertyResults.objectCounts.companies ?? 0;
   const contactResults = await runContactAudit(accessToken, totalContacts, totalCompanies);
+  const companyResults = await runCompanyAudit(accessToken, totalCompanies);
 
-  return calculateGlobalScore(propertyResults, workflowResults, contactResults);
+  return calculateGlobalScore(propertyResults, workflowResults, contactResults, companyResults);
 }

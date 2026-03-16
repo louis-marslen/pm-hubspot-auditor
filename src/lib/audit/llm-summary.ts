@@ -9,7 +9,7 @@ export async function generateLlmSummary(global: GlobalAuditResults): Promise<st
   if (!process.env.OPENAI_API_KEY) return null;
 
   const model = process.env.OPENAI_MODEL ?? "gpt-4.1";
-  const { globalScore, propertyResults, workflowResults, contactResults } = global;
+  const { globalScore, propertyResults, workflowResults, contactResults, companyResults } = global;
 
   // Recommandation calibrée selon le score
   let callToAction: string;
@@ -31,12 +31,17 @@ export async function generateLlmSummary(global: GlobalAuditResults): Promise<st
     ? `Contacts : ${contactResults.totalContacts} analysés, score ${contactResults.score}/100 (${contactResults.totalCritiques} critiques, ${contactResults.totalAvertissements} avertissements, ${contactResults.totalInfos} infos). Doublons email : ${contactResults.c06.length} clusters, doublons nom+company : ${contactResults.c07.length} clusters, doublons téléphone : ${contactResults.c08.length} clusters.`
     : "Aucun contact détecté — domaine exclu du score global.";
 
+  const companySummary = companyResults
+    ? `Companies : ${companyResults.totalCompanies} analysées, score ${companyResults.score}/100 (${companyResults.totalCritiques} critiques, ${companyResults.totalAvertissements} avertissements, ${companyResults.totalInfos} infos). Doublons domain : ${companyResults.co02.length} clusters, doublons nom : ${companyResults.co03.length} clusters, orphelines : ${companyResults.co04.length}.`
+    : "Aucune company détectée — domaine exclu du score global.";
+
   const prompt = `Tu es un expert HubSpot qui rédige un résumé exécutif d'audit CRM pour un dirigeant non technique.
 
 Données d'audit :
 - Score global : ${globalScore}/100 (${global.globalScoreLabel})
 - Propriétés : score ${propertyResults.score}/100, ${propertyResults.totalCritiques} critiques, ${propertyResults.totalAvertissements} avertissements, ${propertyResults.totalInfos} infos
 - ${contactSummary}
+- ${companySummary}
 - ${wfSummary}
 - Contacts analysés : ${propertyResults.objectCounts.contacts ?? 0}, companies : ${propertyResults.objectCounts.companies ?? 0}, deals : ${propertyResults.objectCounts.deals ?? 0}
 

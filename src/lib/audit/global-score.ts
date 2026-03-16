@@ -1,4 +1,4 @@
-import { AuditResults, WorkflowAuditResults, ContactAuditResults, GlobalAuditResults } from "@/lib/audit/types";
+import { AuditResults, WorkflowAuditResults, ContactAuditResults, CompanyAuditResults, GlobalAuditResults } from "@/lib/audit/types";
 
 /**
  * Retourne le scoreLabel selon la scale PRD-04.
@@ -12,24 +12,27 @@ function scoreLabelFromScore(score: number): string {
 }
 
 /**
- * Calcule le score global en combinant propriétés, contacts et workflows.
+ * Calcule le score global en combinant propriétés, contacts, companies et workflows.
  *
- * Redistribution EP-05 : pondération égale entre domaines actifs.
- * - domaines actifs = [propriétés, contacts, workflows].filter(score !== null)
+ * Redistribution EP-05b : pondération égale entre domaines actifs (jusqu'à 4).
+ * - domaines actifs = [propriétés, contacts, companies, workflows].filter(score !== null)
  * - score_global = somme(scores) / nombre_domaines_actifs
  */
 export function calculateGlobalScore(
   propertyResults: AuditResults,
   workflowResults: WorkflowAuditResults | null,
   contactResults?: ContactAuditResults | null,
+  companyResults?: CompanyAuditResults | null,
 ): GlobalAuditResults {
   const propertyScore = propertyResults.score;
   const workflowScore = workflowResults?.score ?? null;
   const contactScore = contactResults?.score ?? null;
+  const companyScore = companyResults?.score ?? null;
 
   // Collecter les domaines actifs (score non-null)
   const activeScores: number[] = [propertyScore];
   if (contactScore !== null) activeScores.push(contactScore);
+  if (companyScore !== null) activeScores.push(companyScore);
   if (workflowScore !== null) activeScores.push(workflowScore);
 
   const weight = activeScores.length > 0 ? 1 / activeScores.length : 0;
@@ -40,15 +43,18 @@ export function calculateGlobalScore(
   const propertyWeight = weight;
   const workflowWeight = workflowScore !== null ? weight : 0;
   const contactWeight = contactScore !== null ? weight : 0;
+  const companyWeight = companyScore !== null ? weight : 0;
 
   return {
     propertyResults,
     workflowResults,
     contactResults: contactResults ?? null,
+    companyResults: companyResults ?? null,
     globalScore,
     globalScoreLabel: scoreLabelFromScore(globalScore),
     propertyWeight,
     workflowWeight,
     contactWeight,
+    companyWeight,
   };
 }

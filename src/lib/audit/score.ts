@@ -39,8 +39,7 @@ export function calculateScore(results: AuditResults): ScoreResult {
   infos += results.p5.length; // P5 : groupe par défaut
   avertissements += results.p6.length; // P6 : mauvais typage
 
-  // Propriétés système (P7-P11 migrées vers contact-score.ts en EP-05)
-  if (results.p12.triggered) avertissements += 1; // P12 : companies sans domaine
+  // Propriétés système (P7-P11 migrées vers contacts EP-05, P12 migrée vers companies EP-05b)
   if (results.p13.triggered) critiques += 1; // P13 : deals sans montant
   if (results.p14.triggered) critiques += 1; // P14 : deals sans date de clôture
   critiques += results.p15.length; // P15 : deals bloqués (1 par deal)

@@ -76,18 +76,21 @@ export async function POST(req: NextRequest) {
     const llmSummary = await generateLlmSummary(global);
     const executionDurationMs = Date.now() - startedAt;
 
-    // Totaux combinés pour les 3 domaines
+    // Totaux combinés pour les 4 domaines
     const totalCritiques =
       global.propertyResults.totalCritiques +
       (global.contactResults?.totalCritiques ?? 0) +
+      (global.companyResults?.totalCritiques ?? 0) +
       (global.workflowResults?.totalCritiques ?? 0);
     const totalAvertissements =
       global.propertyResults.totalAvertissements +
       (global.contactResults?.totalAvertissements ?? 0) +
+      (global.companyResults?.totalAvertissements ?? 0) +
       (global.workflowResults?.totalAvertissements ?? 0);
     const totalInfos =
       global.propertyResults.totalInfos +
       (global.contactResults?.totalInfos ?? 0) +
+      (global.companyResults?.totalInfos ?? 0) +
       (global.workflowResults?.totalInfos ?? 0);
 
     const { data: updated } = await supabase
@@ -97,11 +100,13 @@ export async function POST(req: NextRequest) {
         results: global.propertyResults,
         workflow_results: global.workflowResults,
         contact_results: global.contactResults,
+        company_results: global.companyResults,
         llm_summary: llmSummary,
         score: global.propertyResults.score,
         property_score: global.propertyResults.score,
         workflow_score: global.workflowResults?.score ?? null,
         contact_score: global.contactResults?.score ?? null,
+        company_score: global.companyResults?.score ?? null,
         global_score: global.globalScore,
         total_critiques: totalCritiques,
         total_avertissements: totalAvertissements,

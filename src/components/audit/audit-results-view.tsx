@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import {
-  AuditResults, WorkflowAuditResults, ContactAuditResults, WorkflowIssue,
-  PropertyIssue, PropertyPair, TypingIssue, DealIssue, PipelineStageIssue,
-  RateResult, ContactIssue, DuplicateCluster,
+  AuditResults, WorkflowAuditResults, ContactAuditResults, CompanyAuditResults,
+  WorkflowIssue, PropertyIssue, PropertyPair, TypingIssue, DealIssue, PipelineStageIssue,
+  RateResult, ContactIssue, DuplicateCluster, CompanyIssue, CompanyDuplicateCluster,
 } from "@/lib/audit/types";
 import { BUSINESS_IMPACTS } from "@/lib/audit/business-impact";
 import { PaginatedList } from "@/components/audit/paginated-list";
@@ -194,12 +194,79 @@ function DuplicateClusterRow({ cluster }: { cluster: DuplicateCluster }) {
   );
 }
 
+function CompanyIssueRow({ company }: { company: CompanyIssue }) {
+  return (
+    <div className="flex items-start justify-between gap-2 rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm">
+      <div>
+        <span className="font-medium text-gray-200">{company.name}</span>
+        {company.domain && (
+          <span className="ml-2 text-xs text-gray-500">{company.domain}</span>
+        )}
+      </div>
+      <div className="flex items-center gap-2 flex-shrink-0 text-xs text-gray-500">
+        {company.industry && (
+          <Badge variant="neutre">{company.industry}</Badge>
+        )}
+        {company.contactCount > 0 && (
+          <span>{company.contactCount} contact{company.contactCount !== 1 ? "s" : ""}</span>
+        )}
+        <span>{company.createdAt ? new Date(company.createdAt).toLocaleDateString("fr-FR") : "—"}</span>
+      </div>
+    </div>
+  );
+}
+
+function CompanyDuplicateClusterRow({ cluster }: { cluster: CompanyDuplicateCluster }) {
+  const [expanded, setExpanded] = useState(false);
+  const criterionLabels: Record<string, string> = {
+    domain: "Domain",
+    name: "Nom",
+  };
+
+  return (
+    <div className="rounded-md border border-gray-700 bg-gray-800/50 text-sm">
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left"
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <Badge variant="neutre">{criterionLabels[cluster.criterion]}</Badge>
+          <span className="font-medium text-gray-200 truncate">{cluster.normalizedValue}</span>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <span className="text-xs text-amber-400 font-medium">{cluster.size} companies</span>
+          <ChevronDown className={`h-3 w-3 text-gray-500 transition-transform ${expanded ? "rotate-180" : ""}`} />
+        </div>
+      </button>
+      {expanded && (
+        <div className="px-3 pb-2 space-y-1 border-t border-gray-700 pt-2">
+          {cluster.members.map((m) => (
+            <div key={m.id} className="flex items-center justify-between text-xs text-gray-400">
+              <span>
+                <span className="text-gray-300">{m.name}</span>
+                {m.domain && <span className="ml-2">{m.domain}</span>}
+              </span>
+              <span className="flex items-center gap-2">
+                {m.contactCount > 0 && <span>{m.contactCount} contact{m.contactCount !== 1 ? "s" : ""}</span>}
+                {m.dealCount > 0 && <span>{m.dealCount} deal{m.dealCount !== 1 ? "s" : ""}</span>}
+                <span>{m.createdAt ? new Date(m.createdAt).toLocaleDateString("fr-FR") : "—"}</span>
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Props ───────────────────────────────────────────────────────────────────
 
 interface AuditResultsViewProps {
   r: AuditResults;
   w?: WorkflowAuditResults | null;
   c?: ContactAuditResults | null;
+  co?: CompanyAuditResults | null;
   globalScore?: number;
   globalScoreLabel?: string;
   llmSummary?: string | null;
@@ -213,7 +280,7 @@ interface AuditResultsViewProps {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function AuditResultsView({
-  r, w, c, globalScore, globalScoreLabel, llmSummary,
+  r, w, c, co, globalScore, globalScoreLabel, llmSummary,
   shareToken, isPublic, portalName, startedAt, executionDurationMs,
 }: AuditResultsViewProps) {
   const displayScore = globalScore ?? r.score;
@@ -229,9 +296,9 @@ export function AuditResultsView({
     }).catch(() => {});
   }
 
-  const totalCritiques = r.totalCritiques + (c?.totalCritiques ?? 0) + (w?.totalCritiques ?? 0);
-  const totalAvertissements = r.totalAvertissements + (c?.totalAvertissements ?? 0) + (w?.totalAvertissements ?? 0);
-  const totalInfos = r.totalInfos + (c?.totalInfos ?? 0) + (w?.totalInfos ?? 0);
+  const totalCritiques = r.totalCritiques + (c?.totalCritiques ?? 0) + (co?.totalCritiques ?? 0) + (w?.totalCritiques ?? 0);
+  const totalAvertissements = r.totalAvertissements + (c?.totalAvertissements ?? 0) + (co?.totalAvertissements ?? 0) + (w?.totalAvertissements ?? 0);
+  const totalInfos = r.totalInfos + (c?.totalInfos ?? 0) + (co?.totalInfos ?? 0) + (w?.totalInfos ?? 0);
 
   const dateStr = new Date(startedAt).toLocaleDateString("fr-FR", {
     day: "numeric", month: "long", year: "numeric",
@@ -240,13 +307,14 @@ export function AuditResultsView({
   // Tab counts
   const propCount = r.totalCritiques + r.totalAvertissements + r.totalInfos;
   const contactCount = c ? (c.totalCritiques + c.totalAvertissements + c.totalInfos) : 0;
+  const companyCount = co ? (co.totalCritiques + co.totalAvertissements + co.totalInfos) : 0;
   const workflowCount = w ? (w.totalCritiques + w.totalAvertissements + w.totalInfos) : 0;
 
   const tabs = [
     { id: "resume", label: "Résumé" },
     { id: "properties", label: "Propriétés", count: propCount > 0 ? propCount : undefined },
     ...(c?.hasContacts ? [{ id: "contacts", label: "Contacts", count: contactCount > 0 ? contactCount : undefined }] : []),
-    { id: "companies", label: "Companies" },
+    ...(co?.hasCompanies ? [{ id: "companies", label: "Companies", count: companyCount > 0 ? companyCount : undefined }] : []),
     { id: "deals", label: "Deals" },
     ...(w?.hasWorkflows ? [{ id: "workflows", label: "Workflows", count: workflowCount > 0 ? workflowCount : undefined }] : []),
   ];
@@ -311,6 +379,12 @@ export function AuditResultsView({
                 <div>
                   <ScoreCircle score={c.score} size="md" />
                   <p className="text-xs text-gray-500 mt-1">Contacts</p>
+                </div>
+              )}
+              {co?.hasCompanies && (
+                <div>
+                  <ScoreCircle score={co.score} size="md" />
+                  <p className="text-xs text-gray-500 mt-1">Companies</p>
                 </div>
               )}
               {w?.hasWorkflows && w.score !== null && (
@@ -651,14 +725,79 @@ export function AuditResultsView({
         </section>
       )}
 
-      {/* Companies */}
-      <section id="section-companies" className="space-y-4">
-        <h2 className="text-lg font-semibold text-gray-100">Companies</h2>
+      {/* Companies (EP-05b) */}
+      {co?.hasCompanies && (
+        <section id="section-companies" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-100">Companies</h2>
+            <ScoreCircle score={co.score} size="sm" />
+          </div>
 
-        <RuleCard title="Taux de companies avec domaine renseigné" ruleKey="p12" severity="avertissement" isEmpty={!r.p12.triggered} rateResult={r.p12}>
-          <span />
-        </RuleCard>
-      </section>
+          <Card padding="compact" className="text-center">
+            <p className="text-2xl font-bold text-gray-100 tabular-nums">{co.totalCompanies.toLocaleString("fr-FR")}</p>
+            <p className="text-xs text-gray-500">companies analysées</p>
+          </Card>
+
+          {/* Bloc doublons */}
+          <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide pt-2">Doublons</h3>
+
+          <RuleCard title="Doublons domain (exact après normalisation)" ruleKey="co02" severity="critique" isEmpty={co.co02.length === 0} count={co.co02.length} defaultOpen={co.co02.length > 0}>
+            <PaginatedList
+              items={co.co02}
+              renderItem={(cluster: CompanyDuplicateCluster) => <CompanyDuplicateClusterRow key={cluster.normalizedValue} cluster={cluster} />}
+            />
+          </RuleCard>
+
+          <RuleCard title="Doublons nom entreprise (similarité > 85%)" ruleKey="co03" severity="avertissement" isEmpty={co.co03.length === 0} count={co.co03.length}>
+            <PaginatedList
+              items={co.co03}
+              renderItem={(cluster: CompanyDuplicateCluster) => <CompanyDuplicateClusterRow key={`${cluster.normalizedValue}-${cluster.members[0]?.id}`} cluster={cluster} />}
+            />
+          </RuleCard>
+
+          {/* Bloc qualité */}
+          <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide pt-2">Qualité des données</h3>
+
+          <RuleCard title="Taux de companies avec domaine renseigné" ruleKey="co01" severity="critique" isEmpty={!co.co01.triggered} defaultOpen={co.co01.triggered} rateResult={co.co01}>
+            <span />
+          </RuleCard>
+
+          <RuleCard title="Companies sans contact (> 90 jours)" ruleKey="co04" severity="avertissement" isEmpty={co.co04.length === 0} count={co.co04.length}>
+            <PaginatedList
+              items={co.co04}
+              renderItem={(item: CompanyIssue) => <CompanyIssueRow key={item.id} company={item} />}
+            />
+          </RuleCard>
+
+          <RuleCard title="Companies sans propriétaire assigné" ruleKey="co05" severity="info" isEmpty={co.co05.length === 0} count={co.co05.length}>
+            <PaginatedList
+              items={co.co05}
+              renderItem={(item: CompanyIssue) => <CompanyIssueRow key={item.id} company={item} />}
+            />
+          </RuleCard>
+
+          <RuleCard title="Companies sans industrie" ruleKey="co06" severity="info" isEmpty={co.co06.length === 0} count={co.co06.length}>
+            <PaginatedList
+              items={co.co06}
+              renderItem={(item: CompanyIssue) => <CompanyIssueRow key={item.id} company={item} />}
+            />
+          </RuleCard>
+
+          <RuleCard title="Companies sans dimensionnement (effectif + CA)" ruleKey="co07" severity="info" isEmpty={co.co07.length === 0} count={co.co07.length}>
+            <PaginatedList
+              items={co.co07}
+              renderItem={(item: CompanyIssue) => <CompanyIssueRow key={item.id} company={item} />}
+            />
+          </RuleCard>
+
+          <RuleCard title="Companies inactives depuis plus d'un an" ruleKey="co08" severity="info" isEmpty={co.co08.length === 0} count={co.co08.length}>
+            <PaginatedList
+              items={co.co08}
+              renderItem={(item: CompanyIssue) => <CompanyIssueRow key={item.id} company={item} />}
+            />
+          </RuleCard>
+        </section>
+      )}
 
       {/* Deals */}
       <section id="section-deals" className="space-y-4">
