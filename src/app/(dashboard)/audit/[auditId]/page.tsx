@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { AuditResults, WorkflowAuditResults, ContactAuditResults, CompanyAuditResults, UserAuditResults } from "@/lib/audit/types";
+import { AuditResults, WorkflowAuditResults, ContactAuditResults, CompanyAuditResults, UserAuditResults, type AuditDomainSelection } from "@/lib/audit/types";
 import { AuditResultsView } from "@/components/audit/audit-results-view";
 import { AuditPageClient } from "./audit-page-client";
 import { Card } from "@/components/ui/card";
@@ -24,6 +24,7 @@ interface AuditRun {
   error: string | null;
   started_at: string;
   completed_at: string | null;
+  audit_domains: AuditDomainSelection | null;
 }
 
 export default async function AuditPage({ params }: { params: Promise<{ auditId: string }> }) {
@@ -37,7 +38,7 @@ export default async function AuditPage({ params }: { params: Promise<{ auditId:
 
   const { data: audit } = await supabase
     .from("audit_runs")
-    .select("id, status, results, workflow_results, contact_results, company_results, user_results, global_score, llm_summary, share_token, portal_name, execution_duration_ms, error, started_at, completed_at")
+    .select("id, status, results, workflow_results, contact_results, company_results, user_results, global_score, llm_summary, share_token, portal_name, execution_duration_ms, error, started_at, completed_at, audit_domains")
     .eq("id", auditId)
     .eq("user_id", user.id)
     .single<AuditRun>();
@@ -89,6 +90,7 @@ export default async function AuditPage({ params }: { params: Promise<{ auditId:
           portalName={audit.portal_name}
           startedAt={audit.started_at}
           executionDurationMs={audit.execution_duration_ms}
+          auditDomains={audit.audit_domains}
         />
       )}
     </>

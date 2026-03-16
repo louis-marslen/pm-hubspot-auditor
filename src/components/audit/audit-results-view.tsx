@@ -6,6 +6,7 @@ import {
   WorkflowIssue, PropertyIssue, PropertyPair, TypingIssue, DealIssue, PipelineStageIssue,
   RateResult, ContactIssue, DuplicateCluster, CompanyIssue, CompanyDuplicateCluster,
   UserIssue, TeamIssue, RoleDistribution,
+  AUDIT_DOMAINS, type AuditDomainSelection,
 } from "@/lib/audit/types";
 import { BUSINESS_IMPACTS } from "@/lib/audit/business-impact";
 import { PaginatedList } from "@/components/audit/paginated-list";
@@ -326,13 +327,14 @@ interface AuditResultsViewProps {
   portalName?: string | null;
   startedAt: string;
   executionDurationMs?: number | null;
+  auditDomains?: AuditDomainSelection | null;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function AuditResultsView({
   r, w, c, co, u, globalScore, globalScoreLabel, llmSummary,
-  shareToken, isPublic, portalName, startedAt, executionDurationMs,
+  shareToken, isPublic, portalName, startedAt, executionDurationMs, auditDomains,
 }: AuditResultsViewProps) {
   const displayScore = globalScore ?? r.score;
   const displayLabel = globalScoreLabel ?? r.scoreLabel;
@@ -363,14 +365,27 @@ export function AuditResultsView({
 
   const userCount = u?.hasUsers ? (u.totalCritiques + u.totalAvertissements + u.totalInfos) : 0;
 
+  // Determine if a domain was audited (selected or full audit)
+  const isDomainAudited = (domainId: string) => !auditDomains || auditDomains.selected.includes(domainId as never);
+
+  // Scope banner data
+  const isPartialAudit = !!auditDomains;
+  const allImplemented = AUDIT_DOMAINS.filter((d) => d.implemented);
+  const auditedLabels = isPartialAudit
+    ? auditDomains.selected.map((id) => AUDIT_DOMAINS.find((d) => d.id === id)?.label ?? id)
+    : [];
+  const nonAuditedLabels = isPartialAudit
+    ? allImplemented.filter((d) => !auditDomains.selected.includes(d.id)).map((d) => d.label)
+    : [];
+
   const tabs = [
     { id: "resume", label: "Résumé" },
     { id: "properties", label: "Propriétés", count: propCount > 0 ? propCount : undefined },
-    ...(c?.hasContacts ? [{ id: "contacts", label: "Contacts", count: contactCount > 0 ? contactCount : undefined }] : []),
-    ...(co?.hasCompanies ? [{ id: "companies", label: "Companies", count: companyCount > 0 ? companyCount : undefined }] : []),
-    { id: "deals", label: "Deals" },
-    ...(w?.hasWorkflows ? [{ id: "workflows", label: "Workflows", count: workflowCount > 0 ? workflowCount : undefined }] : []),
-    ...(u?.hasUsers ? [{ id: "users", label: "Utilisateurs & Équipes", count: userCount > 0 ? userCount : undefined }] : []),
+    ...(isDomainAudited("contacts") && c?.hasContacts ? [{ id: "contacts", label: "Contacts", count: contactCount > 0 ? contactCount : undefined }] : []),
+    ...(isDomainAudited("companies") && co?.hasCompanies ? [{ id: "companies", label: "Companies", count: companyCount > 0 ? companyCount : undefined }] : []),
+    ...(isDomainAudited("deals") ? [{ id: "deals", label: "Deals" }] : []),
+    ...(isDomainAudited("workflows") && w?.hasWorkflows ? [{ id: "workflows", label: "Workflows", count: workflowCount > 0 ? workflowCount : undefined }] : []),
+    ...(isDomainAudited("users") && u?.hasUsers ? [{ id: "users", label: "Utilisateurs & Équipes", count: userCount > 0 ? userCount : undefined }] : []),
   ];
 
   function handleTabChange(id: string) {
@@ -479,6 +494,25 @@ export function AuditResultsView({
           </div>
         </div>
       </Card>
+
+      {/* Scope banner for partial audits */}
+      {isPartialAudit && (
+        <div className="rounded-lg bg-gray-850 border border-gray-700 px-5 py-4">
+          <div className="flex items-start gap-3">
+            <Info className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
+            <div className="text-sm">
+              <p className="text-gray-300">
+                Cet audit couvre {auditDomains!.selected.length} domaine{auditDomains!.selected.length !== 1 ? "s" : ""} sur {allImplemented.length} disponibles : {auditedLabels.join(", ")}.
+              </p>
+              {nonAuditedLabels.length > 0 && (
+                <p className="text-gray-500 mt-1">
+                  Domaines non inclus : {nonAuditedLabels.join(", ")}.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Sticky tabs navigation */}
       <Tabs

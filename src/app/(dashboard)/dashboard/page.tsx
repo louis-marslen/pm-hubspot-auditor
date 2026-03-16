@@ -23,6 +23,11 @@ interface Workspace {
   token_expires_at: string | null;
 }
 
+interface AuditDomainSelectionRaw {
+  selected: string[];
+  available: string[];
+}
+
 interface AuditRun {
   id: string;
   status: string;
@@ -33,6 +38,7 @@ interface AuditRun {
   started_at: string;
   connection_id: string;
   portal_name: string | null;
+  audit_domains: AuditDomainSelectionRaw | null;
 }
 
 function DashboardContent() {
@@ -69,7 +75,7 @@ function DashboardContent() {
           .order("connected_at", { ascending: false }),
         supabase
           .from("audit_runs")
-          .select("id, status, score, global_score, total_critiques, total_avertissements, started_at, connection_id")
+          .select("id, status, score, global_score, total_critiques, total_avertissements, started_at, connection_id, audit_domains")
           .eq("user_id", user.id)
           .order("started_at", { ascending: false })
           .limit(10),
@@ -280,6 +286,7 @@ function DashboardContent() {
                   <th className="px-4 py-3 text-left text-caption font-medium text-gray-400 uppercase tracking-wider">Date</th>
                   <th className="px-4 py-3 text-left text-caption font-medium text-gray-400 uppercase tracking-wider">Score</th>
                   <th className="px-4 py-3 text-left text-caption font-medium text-gray-400 uppercase tracking-wider">Problèmes</th>
+                  <th className="px-4 py-3 text-left text-caption font-medium text-gray-400 uppercase tracking-wider">Périmètre</th>
                   <th className="px-4 py-3"></th>
                 </tr>
               </thead>
@@ -326,6 +333,13 @@ function DashboardContent() {
                           {audit.total_critiques === 0 && audit.total_avertissements === 0 && "—"}
                         </span>
                       ) : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-500 text-xs">
+                      {audit.audit_domains ? (
+                        <span title={audit.audit_domains.selected.join(", ")}>
+                          {audit.audit_domains.selected.length}/{audit.audit_domains.available.length} domaines
+                        </span>
+                      ) : null}
                     </td>
                     <td className="px-4 py-3 text-right">
                       {(audit.status === "completed" || audit.status === "running") && (
