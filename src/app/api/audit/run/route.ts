@@ -5,6 +5,7 @@ import { getValidAccessToken } from "@/lib/hubspot/tokens";
 import { runFullAudit } from "@/lib/audit/engine";
 import { generateLlmSummary } from "@/lib/audit/llm-summary";
 import { initProgress, persistProgress } from "@/lib/audit/progress";
+import { AUDIT_DOMAINS, type AuditDomainId, type AuditDomainSelection } from "@/lib/audit/types";
 
 // Audit complet (propriétés + workflows + LLM) peut dépasser 30s — nécessite Vercel Pro
 export const maxDuration = 300;
@@ -22,10 +23,24 @@ export async function POST(req: NextRequest) {
 
   // 2. Lecture du body
   let connectionId: string;
+  let selectedDomains: AuditDomainId[] | undefined;
   try {
     const body = await req.json();
     connectionId = body.connectionId;
     if (!connectionId) throw new Error("connectionId manquant");
+
+    // Validation des domaines sélectionnés
+    if (body.selectedDomains && Array.isArray(body.selectedDomains) && body.selectedDomains.length > 0) {
+      const validIds = new Set(AUDIT_DOMAINS.map((d) => d.id));
+      const implementedIds = new Set(AUDIT_DOMAINS.filter((d) => d.implemented).map((d) => d.id));
+      const filtered = (body.selectedDomains as string[]).filter((id) => validIds.has(id as AuditDomainId) && implementedIds.has(id as AuditDomainId)) as AuditDomainId[];
+
+      // properties est obligatoire
+      if (!filtered.includes("properties")) {
+        filtered.unshift("properties");
+      }
+      selectedDomains = filtered;
+    }
   } catch {
     return NextResponse.json({ error: "Requête invalide" }, { status: 400 });
   }
@@ -43,7 +58,19 @@ export async function POST(req: NextRequest) {
   }
 
   // 4. Création de l'audit run en status 'running' avec progression initiale
-  const initialProgress = initProgress(["properties", "contacts", "companies", "workflows", "users"]);
+  const domainsToInit = selectedDomains ?? ["properties", "contacts", "companies", "workflows", "users"];
+  const initialProgress = initProgress(domainsToInit);
+
+  // Construire la sélection persistée (null si tous les domaines = rétrocompatibilité)
+  const allImplemented = AUDIT_DOMAINS.filter((d) => d.implemented).map((d) => d.id);
+  const isFullAudit = !selectedDomains || selectedDomains.length === allImplemented.length;
+  const auditDomainsPayload: AuditDomainSelection | null = isFullAudit
+    ? null
+    : {
+        selected: selectedDomains!,
+        available: allImplemented,
+      };
+
   const { data: auditRun, error: insertError } = await supabase
     .from("audit_runs")
     .insert({
@@ -53,6 +80,7 @@ export async function POST(req: NextRequest) {
       portal_id: connection.portal_id ?? null,
       portal_name: connection.portal_name ?? null,
       audit_progress: initialProgress,
+      audit_domains: auditDomainsPayload,
     })
     .select("id, share_token")
     .single();
@@ -83,7 +111,7 @@ export async function POST(req: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
-  runAuditInBackground(accessToken, auditId, adminSupabase, connection);
+  runAuditInBackground(accessToken, auditId, adminSupabase, connection, selectedDomains);
 
   // 7. Retour immédiat — le frontend navigue vers /audit/{auditId}
   return NextResponse.json({ auditId, shareToken });
@@ -99,14 +127,16 @@ async function runAuditInBackground(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: any,
   connection: { portal_id?: string | null; portal_name?: string | null },
+  selectedDomains?: AuditDomainId[],
 ) {
   const startedAt = Date.now();
+  const domainsToInit = selectedDomains ?? ["properties", "contacts", "companies", "workflows", "users"];
 
   try {
-    const global = await runFullAudit(accessToken, auditId);
+    const global = await runFullAudit(accessToken, auditId, selectedDomains);
 
     // Émettre progression LLM
-    const currentProgress = initProgress(["properties", "contacts", "companies", "workflows", "users"]);
+    const currentProgress = initProgress(domainsToInit);
     // On recrée la progression "tout completed" + llm running
     const allCompleted = { ...currentProgress };
     for (const key of Object.keys(allCompleted.domains)) {

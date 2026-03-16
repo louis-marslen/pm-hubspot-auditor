@@ -1,5 +1,5 @@
 import { HubSpotClient } from "@/lib/hubspot/api-client";
-import { AuditResults, WorkflowAuditResults, GlobalAuditResults, AuditProgress } from "@/lib/audit/types";
+import { AuditResults, WorkflowAuditResults, GlobalAuditResults, AuditProgress, AuditDomainId } from "@/lib/audit/types";
 import { runWorkflowRules } from "@/lib/audit/rules/workflows";
 import { runContactAudit } from "@/lib/audit/contact-engine";
 import { runCompanyAudit } from "@/lib/audit/company-engine";
@@ -187,9 +187,14 @@ export async function runWorkflowAudit(accessToken: string): Promise<WorkflowAud
 export async function runFullAudit(
   accessToken: string,
   auditId?: string,
+  selectedDomains?: AuditDomainId[],
 ): Promise<GlobalAuditResults> {
   // Domaines dans l'ordre d'affichage du tracker
-  const DOMAIN_KEYS = ["properties", "contacts", "companies", "workflows", "users"];
+  // Si selectedDomains est fourni, filtrer ; sinon tous les domaines
+  const ALL_DOMAIN_KEYS = ["properties", "contacts", "companies", "workflows", "users"];
+  const DOMAIN_KEYS = selectedDomains
+    ? ALL_DOMAIN_KEYS.filter((d) => selectedDomains.includes(d as AuditDomainId))
+    : ALL_DOMAIN_KEYS;
 
   let progress: AuditProgress | null = auditId
     ? initProgress(DOMAIN_KEYS)
@@ -296,12 +301,14 @@ export async function runFullAudit(
     }
   }
 
-  // Lancement parallèle des 4 domaines
+  // Lancement parallèle des domaines sélectionnés
+  const shouldRun = (domain: string) => DOMAIN_KEYS.includes(domain);
+
   const [workflowResults, contactResults, companyResults, userResults] = await Promise.all([
-    runWorkflowsTask(),
-    runContactsTask(),
-    runCompaniesTask(),
-    runUsersTask(),
+    shouldRun("workflows") ? runWorkflowsTask() : Promise.resolve(null),
+    shouldRun("contacts") ? runContactsTask() : Promise.resolve(null),
+    shouldRun("companies") ? runCompaniesTask() : Promise.resolve(null),
+    shouldRun("users") ? runUsersTask() : Promise.resolve(null),
   ]);
 
   return calculateGlobalScore(propertyResults, workflowResults, contactResults, companyResults, userResults);
