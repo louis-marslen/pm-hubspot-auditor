@@ -1,6 +1,7 @@
 import { HubSpotClient } from "@/lib/hubspot/api-client";
 import { AuditResults, WorkflowAuditResults, GlobalAuditResults } from "@/lib/audit/types";
 import { runWorkflowRules } from "@/lib/audit/rules/workflows";
+import { runContactAudit } from "@/lib/audit/contact-engine";
 import { calculateGlobalScore } from "@/lib/audit/global-score";
 import {
   getCustomProperties,
@@ -14,14 +15,6 @@ import {
 } from "@/lib/audit/rules/custom-properties";
 import {
   countTotal,
-  runP7,
-  runP8,
-  runP9,
-  runP10a,
-  runP10b,
-  runP10c,
-  runP10d,
-  runP11,
   runP12,
   runP13,
   runP14,
@@ -134,22 +127,8 @@ export async function runAudit(accessToken: string): Promise<AuditResults> {
   // On utilise le total deals comme proxy (MVP : pas de filtre open/closed supplémentaire)
   const totalDealsOpen = totalDeals;
 
-  // 5. Règles système en petits groupes parallèles pour respecter le rate limit HubSpot
-  const [p7, p8, p9] = await Promise.all([
-    runP7(client, totalContacts),
-    runP8(client),
-    runP9(client, totalContacts),
-  ]);
-  const [p10a, p10b, p10c, p10d] = await Promise.all([
-    runP10a(client),
-    runP10b(client),
-    runP10c(client),
-    runP10d(client),
-  ]);
-  const [p11, p12] = await Promise.all([
-    runP11(client, totalContacts, totalCompanies),
-    runP12(client, totalCompanies),
-  ]);
+  // 5. Règles système (P7-P11 migrées vers contacts en EP-05)
+  const p12 = await runP12(client, totalCompanies);
   const [p13, p14] = await Promise.all([
     runP13(client, totalDealsOpen),
     runP14(client, totalDealsOpen),
@@ -164,8 +143,7 @@ export async function runAudit(accessToken: string): Promise<AuditResults> {
     objectCounts,
     customPropertyCounts,
     p1, p2, p3, p4, p5, p6,
-    p7, p8, p9, p10a, p10b, p10c, p10d,
-    p11, p12, p13, p14, p15, p16,
+    p12, p13, p14, p15, p16,
     score: 0,
     scoreLabel: "",
     totalCritiques: 0,
@@ -202,5 +180,10 @@ export async function runFullAudit(accessToken: string): Promise<GlobalAuditResu
     runWorkflowAudit(accessToken),
   ]);
 
-  return calculateGlobalScore(propertyResults, workflowResults);
+  // L'audit contacts utilise les counts déjà disponibles dans propertyResults
+  const totalContacts = propertyResults.objectCounts.contacts ?? 0;
+  const totalCompanies = propertyResults.objectCounts.companies ?? 0;
+  const contactResults = await runContactAudit(accessToken, totalContacts, totalCompanies);
+
+  return calculateGlobalScore(propertyResults, workflowResults, contactResults);
 }

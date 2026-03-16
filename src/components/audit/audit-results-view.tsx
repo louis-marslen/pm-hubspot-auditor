@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import {
-  AuditResults, WorkflowAuditResults, WorkflowIssue,
-  PropertyIssue, PropertyPair, TypingIssue, DealIssue, PipelineStageIssue, RateResult,
+  AuditResults, WorkflowAuditResults, ContactAuditResults, WorkflowIssue,
+  PropertyIssue, PropertyPair, TypingIssue, DealIssue, PipelineStageIssue,
+  RateResult, ContactIssue, DuplicateCluster,
 } from "@/lib/audit/types";
 import { BUSINESS_IMPACTS } from "@/lib/audit/business-impact";
 import { PaginatedList } from "@/components/audit/paginated-list";
@@ -15,7 +16,7 @@ import { ProgressBar } from "@/components/ui/progress-bar";
 import { Button } from "@/components/ui/button";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { Tabs } from "@/components/ui/tabs";
-import { ChevronDown, CircleCheck, Share2, ArrowLeft, Sparkles, Copy } from "lucide-react";
+import { ChevronDown, CircleCheck, Share2, ArrowLeft, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -132,11 +133,73 @@ function WorkflowIssueRow({ wf }: { wf: WorkflowIssue }) {
   );
 }
 
+function ContactIssueRow({ contact }: { contact: ContactIssue }) {
+  return (
+    <div className="flex items-start justify-between gap-2 rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm">
+      <div>
+        <span className="font-medium text-gray-200">{contact.name}</span>
+        {contact.email && (
+          <span className="ml-2 text-xs text-gray-500">{contact.email}</span>
+        )}
+      </div>
+      <div className="flex items-center gap-2 flex-shrink-0 text-xs text-gray-500">
+        {contact.lifecycleStage && (
+          <Badge variant="neutre">{contact.lifecycleStage}</Badge>
+        )}
+        <span>{contact.createdAt ? new Date(contact.createdAt).toLocaleDateString("fr-FR") : "—"}</span>
+      </div>
+    </div>
+  );
+}
+
+function DuplicateClusterRow({ cluster }: { cluster: DuplicateCluster }) {
+  const [expanded, setExpanded] = useState(false);
+  const criterionLabels: Record<string, string> = {
+    email: "Email",
+    name_company: "Nom + Company",
+    phone: "Téléphone",
+  };
+
+  return (
+    <div className="rounded-md border border-gray-700 bg-gray-800/50 text-sm">
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left"
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <Badge variant="neutre">{criterionLabels[cluster.criterion]}</Badge>
+          <span className="font-medium text-gray-200 truncate">{cluster.normalizedValue}</span>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <span className="text-xs text-amber-400 font-medium">{cluster.size} contacts</span>
+          <ChevronDown className={`h-3 w-3 text-gray-500 transition-transform ${expanded ? "rotate-180" : ""}`} />
+        </div>
+      </button>
+      {expanded && (
+        <div className="px-3 pb-2 space-y-1 border-t border-gray-700 pt-2">
+          {cluster.members.map((m) => (
+            <div key={m.id} className="flex items-center justify-between text-xs text-gray-400">
+              <span>
+                <span className="text-gray-300">{m.name}</span>
+                {m.email && <span className="ml-2">{m.email}</span>}
+                {m.phone && <span className="ml-2">{m.phone}</span>}
+              </span>
+              <span>{m.createdAt ? new Date(m.createdAt).toLocaleDateString("fr-FR") : "—"}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Props ───────────────────────────────────────────────────────────────────
 
 interface AuditResultsViewProps {
   r: AuditResults;
   w?: WorkflowAuditResults | null;
+  c?: ContactAuditResults | null;
   globalScore?: number;
   globalScoreLabel?: string;
   llmSummary?: string | null;
@@ -150,7 +213,7 @@ interface AuditResultsViewProps {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function AuditResultsView({
-  r, w, globalScore, globalScoreLabel, llmSummary,
+  r, w, c, globalScore, globalScoreLabel, llmSummary,
   shareToken, isPublic, portalName, startedAt, executionDurationMs,
 }: AuditResultsViewProps) {
   const displayScore = globalScore ?? r.score;
@@ -166,9 +229,9 @@ export function AuditResultsView({
     }).catch(() => {});
   }
 
-  const totalCritiques = r.totalCritiques + (w?.totalCritiques ?? 0);
-  const totalAvertissements = r.totalAvertissements + (w?.totalAvertissements ?? 0);
-  const totalInfos = r.totalInfos + (w?.totalInfos ?? 0);
+  const totalCritiques = r.totalCritiques + (c?.totalCritiques ?? 0) + (w?.totalCritiques ?? 0);
+  const totalAvertissements = r.totalAvertissements + (c?.totalAvertissements ?? 0) + (w?.totalAvertissements ?? 0);
+  const totalInfos = r.totalInfos + (c?.totalInfos ?? 0) + (w?.totalInfos ?? 0);
 
   const dateStr = new Date(startedAt).toLocaleDateString("fr-FR", {
     day: "numeric", month: "long", year: "numeric",
@@ -176,12 +239,13 @@ export function AuditResultsView({
 
   // Tab counts
   const propCount = r.totalCritiques + r.totalAvertissements + r.totalInfos;
+  const contactCount = c ? (c.totalCritiques + c.totalAvertissements + c.totalInfos) : 0;
   const workflowCount = w ? (w.totalCritiques + w.totalAvertissements + w.totalInfos) : 0;
 
   const tabs = [
     { id: "resume", label: "Résumé" },
     { id: "properties", label: "Propriétés", count: propCount > 0 ? propCount : undefined },
-    { id: "contacts", label: "Contacts" },
+    ...(c?.hasContacts ? [{ id: "contacts", label: "Contacts", count: contactCount > 0 ? contactCount : undefined }] : []),
     { id: "companies", label: "Companies" },
     { id: "deals", label: "Deals" },
     ...(w?.hasWorkflows ? [{ id: "workflows", label: "Workflows", count: workflowCount > 0 ? workflowCount : undefined }] : []),
@@ -243,6 +307,12 @@ export function AuditResultsView({
                 <ScoreCircle score={r.score} size="md" />
                 <p className="text-xs text-gray-500 mt-1">Propriétés</p>
               </div>
+              {c?.hasContacts && (
+                <div>
+                  <ScoreCircle score={c.score} size="md" />
+                  <p className="text-xs text-gray-500 mt-1">Contacts</p>
+                </div>
+              )}
               {w?.hasWorkflows && w.score !== null && (
                 <div>
                   <ScoreCircle score={w.score} size="md" />
@@ -345,7 +415,7 @@ export function AuditResultsView({
         </section>
       )}
 
-      {/* Properties summary */}
+      {/* Properties */}
       <section id="section-properties" className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-100">Propriétés custom</h2>
@@ -456,50 +526,134 @@ export function AuditResultsView({
         </RuleCard>
       </section>
 
-      {/* Contacts */}
-      <section id="section-contacts" className="space-y-4">
-        <h2 className="text-lg font-semibold text-gray-100">Contacts</h2>
+      {/* Contacts (EP-05) */}
+      {c?.hasContacts && (
+        <section id="section-contacts" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-100">Contacts</h2>
+            <ScoreCircle score={c.score} size="sm" />
+          </div>
 
-        <RuleCard title="Taux de contacts avec email renseigné" ruleKey="p7" severity="critique" isEmpty={!r.p7.triggered} defaultOpen={r.p7.triggered} rateResult={r.p7}>
-          <span />
-        </RuleCard>
+          <Card padding="compact" className="text-center">
+            <p className="text-2xl font-bold text-gray-100 tabular-nums">{c.totalContacts.toLocaleString("fr-FR")}</p>
+            <p className="text-xs text-gray-500">contacts analysés</p>
+          </Card>
 
-        <RuleCard title="Contacts sans prénom ni nom" ruleKey="p8" severity="avertissement" isEmpty={r.p8.count === 0} count={r.p8.count}>
-          {r.p8.count > 0 && (
-            <p className="text-sm text-gray-300">
-              <span className="font-semibold text-amber-400">{r.p8.count.toLocaleString("fr-FR")}</span> contacts sans identité
-            </p>
-          )}
-        </RuleCard>
+          {/* Bloc doublons */}
+          <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide pt-2">Doublons</h3>
 
-        <RuleCard title="Taux de contacts avec lifecycle stage" ruleKey="p9" severity="avertissement" isEmpty={!r.p9.triggered} rateResult={r.p9}>
-          <span />
-        </RuleCard>
+          <RuleCard title="Doublons email (exact après normalisation)" ruleKey="c06" severity="critique" isEmpty={c.c06.length === 0} count={c.c06.length} defaultOpen={c.c06.length > 0}>
+            <PaginatedList
+              items={c.c06}
+              renderItem={(cluster: DuplicateCluster) => <DuplicateClusterRow key={cluster.normalizedValue} cluster={cluster} />}
+            />
+          </RuleCard>
 
-        <RuleCard title="Contacts avec lifecycle incohérent" ruleKey="p10a" severity="avertissement" isEmpty={r.p10a.count === 0} count={r.p10a.count}>
-          {r.p10a.count > 0 && (
-            <p className="text-sm text-gray-300">
-              <span className="font-semibold text-amber-400">{r.p10a.count.toLocaleString("fr-FR")}</span> contacts avec lifecycle renseigné mais pas &quot;customer&quot;
-            </p>
-          )}
-        </RuleCard>
+          <RuleCard title="Doublons nom + company (similarité > 85%)" ruleKey="c07" severity="avertissement" isEmpty={c.c07.length === 0} count={c.c07.length}>
+            <PaginatedList
+              items={c.c07}
+              renderItem={(cluster: DuplicateCluster) => <DuplicateClusterRow key={`${cluster.normalizedValue}-${cluster.members[0]?.id}`} cluster={cluster} />}
+            />
+          </RuleCard>
 
-        <RuleCard title="Aucun MQL ni SQL avec des deals ouverts" ruleKey="p10c" severity="critique" isEmpty={!r.p10c.triggered} defaultOpen={r.p10c.triggered}>
-          {r.p10c.triggered && (
-            <p className="text-sm text-red-400 font-medium">Votre entonnoir de qualification n&apos;est pas tracé dans HubSpot.</p>
-          )}
-        </RuleCard>
-      </section>
+          <RuleCard title="Doublons téléphone (après normalisation)" ruleKey="c08" severity="avertissement" isEmpty={c.c08.length === 0} count={c.c08.length}>
+            <PaginatedList
+              items={c.c08}
+              renderItem={(cluster: DuplicateCluster) => <DuplicateClusterRow key={cluster.normalizedValue} cluster={cluster} />}
+            />
+          </RuleCard>
+
+          {/* Bloc qualité */}
+          <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide pt-2">Qualité des données</h3>
+
+          <RuleCard title="Emails au format invalide" ruleKey="c09" severity="avertissement" isEmpty={c.c09.length === 0} count={c.c09.length}>
+            <PaginatedList
+              items={c.c09}
+              renderItem={(item: ContactIssue) => <ContactIssueRow key={item.id} contact={item} />}
+            />
+          </RuleCard>
+
+          <RuleCard title="Contacts inactifs depuis plus d'un an" ruleKey="c10" severity="info" isEmpty={c.c10.length === 0} count={c.c10.length}>
+            <PaginatedList
+              items={c.c10}
+              renderItem={(item: ContactIssue) => <ContactIssueRow key={item.id} contact={item} />}
+            />
+          </RuleCard>
+
+          <RuleCard title="Contacts sans propriétaire assigné" ruleKey="c11" severity="info" isEmpty={c.c11.length === 0} count={c.c11.length}>
+            <PaginatedList
+              items={c.c11}
+              renderItem={(item: ContactIssue) => <ContactIssueRow key={item.id} contact={item} />}
+            />
+          </RuleCard>
+
+          <RuleCard title="Contacts sans source d'acquisition" ruleKey="c12" severity="info" isEmpty={c.c12.length === 0} count={c.c12.length}>
+            <PaginatedList
+              items={c.c12}
+              renderItem={(item: ContactIssue) => <ContactIssueRow key={item.id} contact={item} />}
+            />
+          </RuleCard>
+
+          {/* Bloc lifecycle */}
+          <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide pt-2">Cohérence lifecycle</h3>
+
+          <RuleCard title="Taux de contacts avec email renseigné" ruleKey="c01" severity="critique" isEmpty={!c.c01.triggered} defaultOpen={c.c01.triggered} rateResult={c.c01}>
+            <span />
+          </RuleCard>
+
+          <RuleCard title="Contacts sans prénom ni nom" ruleKey="c02" severity="critique" isEmpty={c.c02.count === 0} count={c.c02.count} defaultOpen={c.c02.count > 0}>
+            {c.c02.count > 0 && (
+              <div>
+                <p className="text-sm text-gray-300 mb-2">
+                  <span className="font-semibold text-red-400">{c.c02.count.toLocaleString("fr-FR")}</span> contacts sans identité
+                </p>
+                {c.c02.examples.length > 0 && (
+                  <PaginatedList
+                    items={c.c02.examples}
+                    renderItem={(item: ContactIssue) => <ContactIssueRow key={item.id} contact={item} />}
+                  />
+                )}
+              </div>
+            )}
+          </RuleCard>
+
+          <RuleCard title="Taux de contacts avec lifecycle stage" ruleKey="c03" severity="avertissement" isEmpty={!c.c03.triggered} rateResult={c.c03}>
+            <span />
+          </RuleCard>
+
+          <RuleCard title="Deal gagné sans lifecycle customer" ruleKey="c04a" severity="avertissement" isEmpty={c.c04a.count === 0} count={c.c04a.count}>
+            {c.c04a.count > 0 && (
+              <div>
+                <p className="text-sm text-gray-300 mb-2">
+                  <span className="font-semibold text-amber-400">{c.c04a.count.toLocaleString("fr-FR")}</span> contacts avec lifecycle incohérent
+                </p>
+                {c.c04a.examples.length > 0 && (
+                  <PaginatedList
+                    items={c.c04a.examples}
+                    renderItem={(item: ContactIssue) => <ContactIssueRow key={item.id} contact={item} />}
+                  />
+                )}
+              </div>
+            )}
+          </RuleCard>
+
+          <RuleCard title="Aucun MQL ni SQL avec des deals ouverts" ruleKey="c04c" severity="avertissement" isEmpty={!c.c04c.triggered} defaultOpen={c.c04c.triggered}>
+            {c.c04c.triggered && (
+              <p className="text-sm text-amber-400 font-medium">Votre entonnoir de qualification n&apos;est pas tracé dans HubSpot.</p>
+            )}
+          </RuleCard>
+
+          <RuleCard title="Taux de contacts rattachés à une company" ruleKey="c05" severity="info" isEmpty={c.c05 === null || !c.c05.triggered} rateResult={c.c05 ?? undefined}>
+            {c.c05 === null ? (
+              <p className="text-sm text-gray-500 italic">Règle non applicable — aucune company détectée (contexte B2C).</p>
+            ) : <span />}
+          </RuleCard>
+        </section>
+      )}
 
       {/* Companies */}
       <section id="section-companies" className="space-y-4">
         <h2 className="text-lg font-semibold text-gray-100">Companies</h2>
-
-        <RuleCard title="Taux de contacts rattachés à une company" ruleKey="p11" severity="avertissement" isEmpty={r.p11 === null || !r.p11.triggered} rateResult={r.p11 ?? undefined}>
-          {r.p11 === null ? (
-            <p className="text-sm text-gray-500 italic">Règle non applicable — aucune company détectée (usage B2C possible).</p>
-          ) : <span />}
-        </RuleCard>
 
         <RuleCard title="Taux de companies avec domaine renseigné" ruleKey="p12" severity="avertissement" isEmpty={!r.p12.triggered} rateResult={r.p12}>
           <span />

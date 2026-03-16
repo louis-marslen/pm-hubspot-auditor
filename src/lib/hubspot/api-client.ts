@@ -44,7 +44,8 @@ export class HubSpotClient {
     });
     if (!res.ok) {
       const text = await res.text();
-      throw new Error(`HubSpot POST ${path} → ${res.status}: ${text}`);
+      const bodyPreview = JSON.stringify(body).slice(0, 200);
+      throw new Error(`HubSpot POST ${path} → ${res.status}: ${text} [body: ${bodyPreview}]`);
     }
     return res.json();
   }

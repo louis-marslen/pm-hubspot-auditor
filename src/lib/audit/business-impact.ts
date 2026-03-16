@@ -127,6 +127,98 @@ export const BUSINESS_IMPACTS: Record<string, BusinessImpact> = {
     urgence: "élevée",
   },
 
+  // Contacts C-01 à C-12 (EP-05)
+  c01: {
+    titre: "Contacts inutilisables pour le marketing",
+    estimation:
+      "Sans adresse email, vous ne pouvez pas contacter ces prospects via HubSpot. C'est un frein direct à vos campagnes d'emailing et à l'automation marketing.",
+    urgence: "critique",
+  },
+  c02: {
+    titre: "Contacts anonymes dégradant la personnalisation",
+    estimation:
+      "Des contacts sans prénom ni nom rendent impossible toute personnalisation de vos communications. Cela impacte directement vos taux d'ouverture et de conversion.",
+    urgence: "critique",
+  },
+  c03: {
+    titre: "Pipeline et segmentation peu fiables",
+    estimation:
+      "Sans lifecycle stage, vous ne pouvez pas distinguer vos prospects de vos clients. Vos workflows de nurturing et vos rapports de conversion deviennent inexploitables.",
+    urgence: "élevée",
+  },
+  c04a: {
+    titre: "Incohérences lifecycle / deals créant des rapports erronés",
+    estimation:
+      "Des contacts gagnés (deal closedwon) avec un lifecycle non mis à jour faussent vos métriques de conversion et peuvent déclencher des workflows de nurturing inappropriés.",
+    urgence: "élevée",
+  },
+  c04b: {
+    titre: "Clients sans deal associé créant des angles morts",
+    estimation:
+      "Des contacts marqués 'customer' sans deal closedwon indiquent un process de vente non suivi dans HubSpot. Vos revenus réels ne sont pas reflétés dans votre CRM.",
+    urgence: "modérée",
+  },
+  c04c: {
+    titre: "Pipeline actif sans MQL ni SQL — entonnoir de vente invisible",
+    estimation:
+      "Avoir des deals ouverts sans aucun contact qualifié en MQL ou SQL indique que votre processus de qualification n'est pas tracé dans HubSpot. Impossible de piloter votre funnel.",
+    urgence: "élevée",
+  },
+  c04d: {
+    titre: "Leads précoces déjà en deal — processus de qualification court-circuité",
+    estimation:
+      "Des contacts en phase subscriber ou lead avec des deals associés suggèrent que votre qualification est incomplète. Cela fausse vos taux de conversion par étape.",
+    urgence: "faible",
+  },
+  c05: {
+    titre: "Impossible d'analyser les données par compte",
+    estimation:
+      "Sans lien contact-company, impossible de faire de l'ABM, le revenu par client est peu fiable et la vue 'compte' est inutilisable pour vos commerciaux.",
+    urgence: "modérée",
+  },
+  c06: {
+    titre: "Base contacts polluée par des doublons email",
+    estimation:
+      "Des doublons email faussent vos métriques marketing, doublent vos coûts d'envoi et créent de la confusion commerciale avec plusieurs fiches pour le même prospect.",
+    urgence: "critique",
+  },
+  c07: {
+    titre: "Risque de doublons non détectés par nom",
+    estimation:
+      "Des noms similaires dans la même company suggèrent des doublons. L'historique des interactions est fragmenté et vos commerciaux peuvent contacter la même personne deux fois.",
+    urgence: "modérée",
+  },
+  c08: {
+    titre: "Risque de doublons non détectés par téléphone",
+    estimation:
+      "Des numéros de téléphone identiques sur plusieurs fiches indiquent des doublons. L'historique des appels et SMS est dispersé entre plusieurs fiches.",
+    urgence: "modérée",
+  },
+  c09: {
+    titre: "Emails non délivrables dans la base",
+    estimation:
+      "Des emails au format invalide empoisonnent vos listes d'envoi, dégradent votre réputation d'expéditeur et faussent vos métriques de délivrabilité.",
+    urgence: "modérée",
+  },
+  c10: {
+    titre: "Contacts fantômes dans la base",
+    estimation:
+      "Des contacts inactifs depuis plus d'un an gonflent la taille de votre base, augmentent vos coûts de licence HubSpot et faussent vos métriques de segmentation.",
+    urgence: "faible",
+  },
+  c11: {
+    titre: "Manque de traçabilité — contacts sans propriétaire",
+    estimation:
+      "Sans propriétaire assigné, l'attribution des leads est impossible et aucun commercial n'est responsable du suivi. Ces contacts risquent de tomber dans l'oubli.",
+    urgence: "faible",
+  },
+  c12: {
+    titre: "Attribution impossible — contacts sans source",
+    estimation:
+      "Sans source d'acquisition, vous ne pouvez pas mesurer la performance de vos canaux marketing. L'optimisation budgétaire et le ROI par canal sont impossibles.",
+    urgence: "faible",
+  },
+
   // Workflows W1-W7
   w1: {
     titre: "Workflows actifs avec un fort taux d'erreur",

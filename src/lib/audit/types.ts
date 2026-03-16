@@ -34,10 +34,67 @@ export interface WorkflowAuditResults {
 export interface GlobalAuditResults {
   propertyResults: AuditResults;
   workflowResults: WorkflowAuditResults | null;
+  contactResults: ContactAuditResults | null;
   globalScore: number;
   globalScoreLabel: string;
   propertyWeight: number;
   workflowWeight: number;
+  contactWeight: number;
+}
+
+// ─── Contacts domain (EP-05) ───────────────────────────────────────────────
+
+export interface ContactIssue {
+  id: string;           // Hub ID du contact
+  name: string;         // firstname + lastname (ou "Sans nom")
+  email: string | null;
+  lifecycleStage: string | null;
+  ownerId: string | null;
+  source: string | null;
+  phone: string | null;
+  mobilephone: string | null;
+  companyId: string | null;
+  lastModifiedDate: string | null;
+  createdAt: string;
+}
+
+export interface DuplicateCluster {
+  criterion: "email" | "name_company" | "phone";
+  normalizedValue: string;   // valeur normalisée servant de clé de regroupement
+  members: ContactIssue[];
+  size: number;
+}
+
+export interface ContactAuditResults {
+  totalContacts: number;
+  hasContacts: boolean;
+
+  // Règles migrées (ex-P7→C-01, P8→C-02, P9→C-03, P10a-d→C-04a-d, P11→C-05)
+  c01: RateResult;                                                    // Email rate < 80% — critique
+  c02: { count: number; examples: ContactIssue[] };                   // Sans prénom ni nom — critique
+  c03: RateResult;                                                    // Lifecycle rate < 60% — avertissement
+  c04a: { count: number; examples: ContactIssue[] };                  // Deal won sans customer — avertissement
+  c04b: { count: number; examples: ContactIssue[] };                  // Customer sans deal won — info
+  c04c: { triggered: boolean };                                       // 0 MQL/SQL avec deals — avertissement
+  c04d: { count: number; examples: ContactIssue[] };                  // Lead avec deal actif — info
+  c05: RateResult | null;                                             // Sans company (B2B) < 60% — info
+
+  // Doublons
+  c06: DuplicateCluster[];   // Doublons email exact — critique (1 par cluster)
+  c07: DuplicateCluster[];   // Doublons nom+company — avertissement (1 par cluster)
+  c08: DuplicateCluster[];   // Doublons téléphone — avertissement (1 par cluster)
+
+  // Qualité
+  c09: ContactIssue[];       // Email invalide — avertissement (1 par contact)
+  c10: ContactIssue[];       // Contact stale > 365j — info (1 par contact)
+  c11: ContactIssue[];       // Sans owner — info (1 par contact)
+  c12: ContactIssue[];       // Sans source — info (1 par contact)
+
+  score: number;
+  scoreLabel: string;
+  totalCritiques: number;
+  totalAvertissements: number;
+  totalInfos: number;
 }
 
 export interface PropertyIssue {
@@ -100,15 +157,7 @@ export interface AuditResults {
   p5: PropertyIssue[];
   p6: TypingIssue[];
 
-  // Règles propriétés système
-  p7: RateResult;
-  p8: { count: number; examples: { id: string; createdAt: string }[] };
-  p9: RateResult;
-  p10a: { count: number; examples: unknown[] };
-  p10b: { count: number };
-  p10c: { triggered: boolean };
-  p10d: { count: number };
-  p11: RateResult | null; // null = workspace B2C (aucune company)
+  // Règles propriétés système (P7-P11 migrées vers ContactAuditResults en EP-05)
   p12: RateResult;
   p13: RateResult;
   p14: RateResult;

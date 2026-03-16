@@ -76,20 +76,36 @@ export async function POST(req: NextRequest) {
     const llmSummary = await generateLlmSummary(global);
     const executionDurationMs = Date.now() - startedAt;
 
+    // Totaux combinés pour les 3 domaines
+    const totalCritiques =
+      global.propertyResults.totalCritiques +
+      (global.contactResults?.totalCritiques ?? 0) +
+      (global.workflowResults?.totalCritiques ?? 0);
+    const totalAvertissements =
+      global.propertyResults.totalAvertissements +
+      (global.contactResults?.totalAvertissements ?? 0) +
+      (global.workflowResults?.totalAvertissements ?? 0);
+    const totalInfos =
+      global.propertyResults.totalInfos +
+      (global.contactResults?.totalInfos ?? 0) +
+      (global.workflowResults?.totalInfos ?? 0);
+
     const { data: updated } = await supabase
       .from("audit_runs")
       .update({
         status: "completed",
         results: global.propertyResults,
         workflow_results: global.workflowResults,
+        contact_results: global.contactResults,
         llm_summary: llmSummary,
         score: global.propertyResults.score,
         property_score: global.propertyResults.score,
         workflow_score: global.workflowResults?.score ?? null,
+        contact_score: global.contactResults?.score ?? null,
         global_score: global.globalScore,
-        total_critiques: global.propertyResults.totalCritiques,
-        total_avertissements: global.propertyResults.totalAvertissements,
-        total_infos: global.propertyResults.totalInfos,
+        total_critiques: totalCritiques,
+        total_avertissements: totalAvertissements,
+        total_infos: totalInfos,
         portal_id: connection.portal_id ?? null,
         portal_name: connection.portal_name ?? null,
         execution_duration_ms: executionDurationMs,

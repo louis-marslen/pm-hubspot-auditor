@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { AuditResults, WorkflowAuditResults } from "@/lib/audit/types";
+import { AuditResults, WorkflowAuditResults, ContactAuditResults } from "@/lib/audit/types";
 import { AuditResultsView } from "@/components/audit/audit-results-view";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ interface AuditRun {
   status: string;
   results: AuditResults | null;
   workflow_results: WorkflowAuditResults | null;
+  contact_results: ContactAuditResults | null;
   global_score: number | null;
   llm_summary: string | null;
   share_token: string | null;
@@ -33,7 +34,7 @@ export default async function AuditPage({ params }: { params: Promise<{ auditId:
 
   const { data: audit } = await supabase
     .from("audit_runs")
-    .select("id, status, results, workflow_results, global_score, llm_summary, share_token, portal_name, execution_duration_ms, error, started_at, completed_at")
+    .select("id, status, results, workflow_results, contact_results, global_score, llm_summary, share_token, portal_name, execution_duration_ms, error, started_at, completed_at")
     .eq("id", auditId)
     .eq("user_id", user.id)
     .single<AuditRun>();
@@ -87,6 +88,7 @@ export default async function AuditPage({ params }: { params: Promise<{ auditId:
         <AuditResultsView
           r={audit.results}
           w={audit.workflow_results}
+          c={audit.contact_results}
           globalScore={globalScore}
           globalScoreLabel={globalScoreLabel}
           llmSummary={audit.llm_summary}

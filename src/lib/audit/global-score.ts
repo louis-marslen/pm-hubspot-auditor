@@ -1,4 +1,4 @@
-import { AuditResults, WorkflowAuditResults, GlobalAuditResults } from "@/lib/audit/types";
+import { AuditResults, WorkflowAuditResults, ContactAuditResults, GlobalAuditResults } from "@/lib/audit/types";
 
 /**
  * Retourne le scoreLabel selon la scale PRD-04.
@@ -12,40 +12,43 @@ function scoreLabelFromScore(score: number): string {
 }
 
 /**
- * Calcule le score global en combinant propriétés et workflows.
+ * Calcule le score global en combinant propriétés, contacts et workflows.
  *
- * Redistribution :
- * - Si workflowScore === null (pas de workflows) → propertyWeight = 1.0, workflowWeight = 0
- * - Sinon → 50/50, globalScore = Math.round(propertyScore * 0.5 + workflowScore * 0.5)
+ * Redistribution EP-05 : pondération égale entre domaines actifs.
+ * - domaines actifs = [propriétés, contacts, workflows].filter(score !== null)
+ * - score_global = somme(scores) / nombre_domaines_actifs
  */
 export function calculateGlobalScore(
   propertyResults: AuditResults,
   workflowResults: WorkflowAuditResults | null,
+  contactResults?: ContactAuditResults | null,
 ): GlobalAuditResults {
   const propertyScore = propertyResults.score;
   const workflowScore = workflowResults?.score ?? null;
+  const contactScore = contactResults?.score ?? null;
 
-  let globalScore: number;
-  let propertyWeight: number;
-  let workflowWeight: number;
+  // Collecter les domaines actifs (score non-null)
+  const activeScores: number[] = [propertyScore];
+  if (contactScore !== null) activeScores.push(contactScore);
+  if (workflowScore !== null) activeScores.push(workflowScore);
 
-  if (workflowScore === null) {
-    // Pas de workflows : score global = score propriétés
-    globalScore = propertyScore;
-    propertyWeight = 1.0;
-    workflowWeight = 0;
-  } else {
-    globalScore = Math.round(propertyScore * 0.5 + workflowScore * 0.5);
-    propertyWeight = 0.5;
-    workflowWeight = 0.5;
-  }
+  const weight = activeScores.length > 0 ? 1 / activeScores.length : 0;
+  const globalScore = Math.round(
+    activeScores.reduce((sum, s) => sum + s, 0) / activeScores.length
+  );
+
+  const propertyWeight = weight;
+  const workflowWeight = workflowScore !== null ? weight : 0;
+  const contactWeight = contactScore !== null ? weight : 0;
 
   return {
     propertyResults,
     workflowResults,
+    contactResults: contactResults ?? null,
     globalScore,
     globalScoreLabel: scoreLabelFromScore(globalScore),
     propertyWeight,
     workflowWeight,
+    contactWeight,
   };
 }

@@ -9,7 +9,7 @@ export async function generateLlmSummary(global: GlobalAuditResults): Promise<st
   if (!process.env.OPENAI_API_KEY) return null;
 
   const model = process.env.OPENAI_MODEL ?? "gpt-4.1";
-  const { globalScore, propertyResults, workflowResults } = global;
+  const { globalScore, propertyResults, workflowResults, contactResults } = global;
 
   // Recommandation calibrée selon le score
   let callToAction: string;
@@ -27,11 +27,16 @@ export async function generateLlmSummary(global: GlobalAuditResults): Promise<st
     ? `Workflows : ${workflowResults.totalWorkflows} analysés, score ${workflowResults.score ?? "N/A"}/100 (${workflowResults.totalCritiques} critiques, ${workflowResults.totalAvertissements} avertissements).`
     : "Aucun workflow détecté — domaine exclu du score global.";
 
+  const contactSummary = contactResults
+    ? `Contacts : ${contactResults.totalContacts} analysés, score ${contactResults.score}/100 (${contactResults.totalCritiques} critiques, ${contactResults.totalAvertissements} avertissements, ${contactResults.totalInfos} infos). Doublons email : ${contactResults.c06.length} clusters, doublons nom+company : ${contactResults.c07.length} clusters, doublons téléphone : ${contactResults.c08.length} clusters.`
+    : "Aucun contact détecté — domaine exclu du score global.";
+
   const prompt = `Tu es un expert HubSpot qui rédige un résumé exécutif d'audit CRM pour un dirigeant non technique.
 
 Données d'audit :
 - Score global : ${globalScore}/100 (${global.globalScoreLabel})
 - Propriétés : score ${propertyResults.score}/100, ${propertyResults.totalCritiques} critiques, ${propertyResults.totalAvertissements} avertissements, ${propertyResults.totalInfos} infos
+- ${contactSummary}
 - ${wfSummary}
 - Contacts analysés : ${propertyResults.objectCounts.contacts ?? 0}, companies : ${propertyResults.objectCounts.companies ?? 0}, deals : ${propertyResults.objectCounts.deals ?? 0}
 
