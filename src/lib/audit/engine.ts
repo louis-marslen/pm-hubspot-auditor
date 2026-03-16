@@ -4,6 +4,7 @@ import { runWorkflowRules } from "@/lib/audit/rules/workflows";
 import { runContactAudit } from "@/lib/audit/contact-engine";
 import { runCompanyAudit } from "@/lib/audit/company-engine";
 import { runUserAudit } from "@/lib/audit/user-engine";
+import { runDealAudit } from "@/lib/audit/deal-engine";
 import { calculateGlobalScore } from "@/lib/audit/global-score";
 import {
   initProgress,
@@ -191,7 +192,7 @@ export async function runFullAudit(
 ): Promise<GlobalAuditResults> {
   // Domaines dans l'ordre d'affichage du tracker
   // Si selectedDomains est fourni, filtrer ; sinon tous les domaines
-  const ALL_DOMAIN_KEYS = ["properties", "contacts", "companies", "workflows", "users"];
+  const ALL_DOMAIN_KEYS = ["properties", "contacts", "companies", "deals", "workflows", "users"];
   const DOMAIN_KEYS = selectedDomains
     ? ALL_DOMAIN_KEYS.filter((d) => selectedDomains.includes(d as AuditDomainId))
     : ALL_DOMAIN_KEYS;
@@ -279,6 +280,27 @@ export async function runFullAudit(
     }
   }
 
+  // Deals task
+  const totalDeals = propertyResults.objectCounts.deals ?? 0;
+  async function runDealsTask(): Promise<Awaited<ReturnType<typeof runDealAudit>>> {
+    if (totalDeals === 0) {
+      await emit((p) => {
+        const updated = updateDomainStep(p, "deals", "fetching", 0);
+        return completeDomain(updated, "deals");
+      });
+      return null;
+    }
+    try {
+      await emit((p) => updateDomainStep(p, "deals", "fetching", totalDeals));
+      const results = await runDealAudit(accessToken, totalDeals, totalCompanies);
+      await emit((p) => completeDomain(p, "deals"));
+      return results;
+    } catch (err) {
+      await emit((p) => failDomain(p, "deals", err instanceof Error ? err.message : "Erreur inconnue"));
+      return null;
+    }
+  }
+
   // Users task
   async function runUsersTask(): Promise<Awaited<ReturnType<typeof runUserAudit>>> {
     try {
@@ -304,12 +326,13 @@ export async function runFullAudit(
   // Lancement parallèle des domaines sélectionnés
   const shouldRun = (domain: string) => DOMAIN_KEYS.includes(domain);
 
-  const [workflowResults, contactResults, companyResults, userResults] = await Promise.all([
+  const [workflowResults, contactResults, companyResults, dealResults, userResults] = await Promise.all([
     shouldRun("workflows") ? runWorkflowsTask() : Promise.resolve(null),
     shouldRun("contacts") ? runContactsTask() : Promise.resolve(null),
     shouldRun("companies") ? runCompaniesTask() : Promise.resolve(null),
+    shouldRun("deals") ? runDealsTask() : Promise.resolve(null),
     shouldRun("users") ? runUsersTask() : Promise.resolve(null),
   ]);
 
-  return calculateGlobalScore(propertyResults, workflowResults, contactResults, companyResults, userResults);
+  return calculateGlobalScore(propertyResults, workflowResults, contactResults, companyResults, userResults, dealResults);
 }

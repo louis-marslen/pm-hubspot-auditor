@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { AuditResults, WorkflowAuditResults, ContactAuditResults, CompanyAuditResults, UserAuditResults, type AuditDomainSelection } from "@/lib/audit/types";
+import { AuditResults, WorkflowAuditResults, ContactAuditResults, CompanyAuditResults, UserAuditResults, DealAuditResults, type AuditDomainSelection } from "@/lib/audit/types";
 import { AuditResultsView } from "@/components/audit/audit-results-view";
 import { AuditPageClient } from "./audit-page-client";
 import { Card } from "@/components/ui/card";
@@ -16,6 +16,7 @@ interface AuditRun {
   contact_results: ContactAuditResults | null;
   company_results: CompanyAuditResults | null;
   user_results: UserAuditResults | null;
+  deal_results: DealAuditResults | null;
   global_score: number | null;
   llm_summary: string | null;
   share_token: string | null;
@@ -38,7 +39,7 @@ export default async function AuditPage({ params }: { params: Promise<{ auditId:
 
   const { data: audit } = await supabase
     .from("audit_runs")
-    .select("id, status, results, workflow_results, contact_results, company_results, user_results, global_score, llm_summary, share_token, portal_name, execution_duration_ms, error, started_at, completed_at, audit_domains")
+    .select("id, status, results, workflow_results, contact_results, company_results, user_results, deal_results, global_score, llm_summary, share_token, portal_name, execution_duration_ms, error, started_at, completed_at, audit_domains")
     .eq("id", auditId)
     .eq("user_id", user.id)
     .single<AuditRun>();
@@ -83,6 +84,7 @@ export default async function AuditPage({ params }: { params: Promise<{ auditId:
           c={audit.contact_results}
           co={audit.company_results}
           u={audit.user_results}
+          d={audit.deal_results}
           globalScore={globalScore}
           globalScoreLabel={globalScoreLabel}
           llmSummary={audit.llm_summary}

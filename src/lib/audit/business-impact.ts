@@ -313,6 +313,98 @@ export const BUSINESS_IMPACTS: Record<string, BusinessImpact> = {
     urgence: "faible",
   },
 
+  // Deals D-01 à D-15 (EP-06)
+  d01: {
+    titre: "Deals sans montant rendant le forecast impossible",
+    estimation:
+      "Sans montant renseigné, votre forecast de revenus est inexact. Votre direction commerciale ne peut pas s'appuyer sur HubSpot pour ses prévisions de chiffre d'affaires.",
+    urgence: "critique",
+  },
+  d02: {
+    titre: "Deals sans date de clôture désorganisant le pipeline",
+    estimation:
+      "Sans date de clôture prévisionnelle, vos deals ouverts ne peuvent pas être priorisés temporellement. Vos commerciaux manquent de visibilité sur ce qu'ils doivent traiter en urgence.",
+    urgence: "critique",
+  },
+  d03: {
+    titre: "Deals anciens signalant des opportunités potentiellement perdues",
+    estimation:
+      "Des deals ouverts depuis plus de 60 jours sans progression indiquent soit des opportunités mortes non clôturées, soit un manque de suivi commercial. Cela gonfle artificiellement votre pipeline.",
+    urgence: "élevée",
+  },
+  d04: {
+    titre: "Propriétés obligatoires non renseignées dans les stages",
+    estimation:
+      "Des propriétés requises non renseignées dans certains stages indiquent que votre processus de vente n'est pas respecté. Vos deals avancent sans les informations nécessaires à leur qualification.",
+    urgence: "critique",
+  },
+  d05: {
+    titre: "Deals bloqués dans un stage depuis trop longtemps",
+    estimation:
+      "Des deals immobiles depuis plus de 60 jours dans le même stage encombrent votre pipeline et faussent vos métriques de vélocité commerciale.",
+    urgence: "élevée",
+  },
+  d06: {
+    titre: "Pipeline sans activité récente — potentiellement obsolète",
+    estimation:
+      "Un pipeline sans deal ouvert ni création récente est probablement obsolète. Il encombre la vue des commerciaux et peut créer de la confusion lors de la création de nouveaux deals.",
+    urgence: "faible",
+  },
+  d07: {
+    titre: "Pipeline avec trop de stages ralentissant la progression",
+    estimation:
+      "Un pipeline avec plus de 8 stages actifs complexifie inutilement le processus de vente. Les commerciaux risquent de sauter des étapes ou de mal qualifier la progression des deals.",
+    urgence: "faible",
+  },
+  d08: {
+    titre: "Deals sans propriétaire — responsabilité non attribuée",
+    estimation:
+      "Des deals sans owner signifient qu'aucun commercial n'est responsable de leur avancement. Ces opportunités risquent de tomber dans l'oubli.",
+    urgence: "faible",
+  },
+  d09: {
+    titre: "Deals sans contact associé — suivi impossible",
+    estimation:
+      "Des deals sans contact rendent impossible le suivi des interactions et la communication avec le prospect. Les emails et appels ne sont pas tracés sur le deal.",
+    urgence: "élevée",
+  },
+  d10: {
+    titre: "Deals sans company associée — vue compte incomplète",
+    estimation:
+      "Des deals sans company empêchent la consolidation du chiffre d'affaires par client et limitent la vision account-based de votre pipeline.",
+    urgence: "faible",
+  },
+  d11: {
+    titre: "Deals avec montant à 0 — forecast faussé",
+    estimation:
+      "Des deals avec un montant explicitement à 0 faussent votre weighted pipeline et vos prévisions de revenus. Ces deals doivent être qualifiés ou fermés.",
+    urgence: "élevée",
+  },
+  d12: {
+    titre: "Phases sautées dans le pipeline — processus non respecté",
+    estimation:
+      "Plus de 20% des deals sautent des étapes dans ce pipeline. Votre processus commercial n'est pas suivi, ce qui fausse les taux de conversion par étape et rend le coaching commercial difficile.",
+    urgence: "élevée",
+  },
+  d13: {
+    titre: "Points d'entrée multiples — pipeline mal structuré",
+    estimation:
+      "Plus de 20% des deals ne commencent pas à la première étape. Cela indique soit un pipeline mal structuré, soit des deals créés manuellement sans respect du processus.",
+    urgence: "élevée",
+  },
+  d14: {
+    titre: "Stages fermés redondants — configuration à simplifier",
+    estimation:
+      "Plusieurs stages 'Gagné' ou 'Perdu' dans le même pipeline créent de la confusion. Les commerciaux risquent de mal catégoriser les deals fermés, faussant vos métriques win/loss.",
+    urgence: "élevée",
+  },
+  d15: {
+    titre: "Stages sans activité depuis 90 jours — étapes obsolètes",
+    estimation:
+      "Des stages sans aucun deal ni activité depuis 3 mois sont probablement obsolètes. Ils encombrent la vue pipeline et complexifient inutilement le processus.",
+    urgence: "faible",
+  },
+
   // Workflows W1-W7
   w1: {
     titre: "Workflows actifs avec un fort taux d'erreur",

@@ -51,8 +51,8 @@ product/
 | EP-05b | [prd-05b-audit-companies.md](prd/prd-05b-audit-companies.md) | [ep05b-audit-companies.md](epics/ep05b-audit-companies.md) | ✅ Livré |
 | EP-UX-02 | [prd-progression-audit.md](prd/prd-progression-audit.md) | [ep-ux-02-progression-audit.md](epics/ep-ux-02-progression-audit.md) | ✅ Livré |
 | EP-09 | [prd-09-audit-utilisateurs-equipes.md](prd/prd-09-audit-utilisateurs-equipes.md) | [ep09-audit-utilisateurs-equipes.md](epics/ep09-audit-utilisateurs-equipes.md) | ✅ Livré |
-| EP-06 | [prd-06-audit-deals.md](prd/prd-06-audit-deals.md) | [ep06-audit-deals.md](epics/ep06-audit-deals.md) | Spécifié |
-| EP-17 | [prd-17-selection-domaines-audit.md](prd/prd-17-selection-domaines-audit.md) | [ep17-selection-domaines-audit.md](epics/ep17-selection-domaines-audit.md) | Spécifié |
+| EP-06 | [prd-06-audit-deals.md](prd/prd-06-audit-deals.md) | [ep06-audit-deals.md](epics/ep06-audit-deals.md) | ✅ Livré |
+| EP-17 | [prd-17-selection-domaines-audit.md](prd/prd-17-selection-domaines-audit.md) | [ep17-selection-domaines-audit.md](epics/ep17-selection-domaines-audit.md) | ✅ Livré |
 | EP-08 | À créer | À créer | À spécifier |
 
 ---

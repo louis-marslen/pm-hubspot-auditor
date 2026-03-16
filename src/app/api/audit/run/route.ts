@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
   }
 
   // 4. Création de l'audit run en status 'running' avec progression initiale
-  const domainsToInit = selectedDomains ?? ["properties", "contacts", "companies", "workflows", "users"];
+  const domainsToInit = selectedDomains ?? ["properties", "contacts", "companies", "deals", "workflows", "users"];
   const initialProgress = initProgress(domainsToInit);
 
   // Construire la sélection persistée (null si tous les domaines = rétrocompatibilité)
@@ -130,7 +130,7 @@ async function runAuditInBackground(
   selectedDomains?: AuditDomainId[],
 ) {
   const startedAt = Date.now();
-  const domainsToInit = selectedDomains ?? ["properties", "contacts", "companies", "workflows", "users"];
+  const domainsToInit = selectedDomains ?? ["properties", "contacts", "companies", "deals", "workflows", "users"];
 
   try {
     const global = await runFullAudit(accessToken, auditId, selectedDomains);
@@ -166,18 +166,21 @@ async function runAuditInBackground(
       global.propertyResults.totalCritiques +
       (global.contactResults?.totalCritiques ?? 0) +
       (global.companyResults?.totalCritiques ?? 0) +
+      (global.dealResults?.totalCritiques ?? 0) +
       (global.workflowResults?.totalCritiques ?? 0) +
       (global.userResults?.totalCritiques ?? 0);
     const totalAvertissements =
       global.propertyResults.totalAvertissements +
       (global.contactResults?.totalAvertissements ?? 0) +
       (global.companyResults?.totalAvertissements ?? 0) +
+      (global.dealResults?.totalAvertissements ?? 0) +
       (global.workflowResults?.totalAvertissements ?? 0) +
       (global.userResults?.totalAvertissements ?? 0);
     const totalInfos =
       global.propertyResults.totalInfos +
       (global.contactResults?.totalInfos ?? 0) +
       (global.companyResults?.totalInfos ?? 0) +
+      (global.dealResults?.totalInfos ?? 0) +
       (global.workflowResults?.totalInfos ?? 0) +
       (global.userResults?.totalInfos ?? 0);
 
@@ -191,6 +194,9 @@ async function runAuditInBackground(
     }
     if (selectedDomains?.includes("users") && !global.userResults) {
       skippedReasons.users = "less_than_2_users";
+    }
+    if (selectedDomains?.includes("deals") && !global.dealResults) {
+      skippedReasons.deals = "no_deals";
     }
     if (selectedDomains?.includes("workflows") && !global.workflowResults) {
       skippedReasons.workflows = "no_workflows";
@@ -214,6 +220,7 @@ async function runAuditInBackground(
         contact_results: global.contactResults,
         company_results: global.companyResults,
         user_results: global.userResults,
+        deal_results: global.dealResults,
         llm_summary: llmSummary,
         score: global.propertyResults.score,
         property_score: global.propertyResults.score,
@@ -221,6 +228,7 @@ async function runAuditInBackground(
         contact_score: global.contactResults?.score ?? null,
         company_score: global.companyResults?.score ?? null,
         user_score: global.userResults?.score ?? null,
+        deal_score: global.dealResults?.score ?? null,
         global_score: global.globalScore,
         total_critiques: totalCritiques,
         total_avertissements: totalAvertissements,

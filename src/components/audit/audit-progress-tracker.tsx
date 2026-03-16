@@ -16,6 +16,7 @@ import {
   Circle,
   RefreshCw,
   Shield,
+  TrendingUp,
 } from "lucide-react";
 import type { DomainProgress } from "@/lib/audit/types";
 
@@ -49,6 +50,7 @@ const DOMAIN_CONFIG: Record<
   properties: { icon: ListTree, label: "Propriétés" },
   contacts: { icon: Users, label: "Contacts" },
   companies: { icon: Building2, label: "Companies" },
+  deals: { icon: TrendingUp, label: "Deals & Pipelines" },
   workflows: { icon: Workflow, label: "Workflows" },
   users: { icon: Shield, label: "Utilisateurs & Équipes" },
 };
@@ -59,7 +61,7 @@ const STEP_LABELS: Record<string, string> = {
   scoring: "Scoring et recommandations",
 };
 
-const DOMAIN_ORDER = ["properties", "contacts", "companies", "workflows", "users"];
+const DOMAIN_ORDER = ["properties", "contacts", "companies", "deals", "workflows", "users"];
 
 function formatCount(count: number): string {
   return count.toLocaleString("fr-FR");

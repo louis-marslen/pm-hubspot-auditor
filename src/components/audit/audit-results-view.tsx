@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import {
-  AuditResults, WorkflowAuditResults, ContactAuditResults, CompanyAuditResults, UserAuditResults,
+  AuditResults, WorkflowAuditResults, ContactAuditResults, CompanyAuditResults, UserAuditResults, DealAuditResults,
   WorkflowIssue, PropertyIssue, PropertyPair, TypingIssue, DealIssue, PipelineStageIssue,
   RateResult, ContactIssue, DuplicateCluster, CompanyIssue, CompanyDuplicateCluster,
   UserIssue, TeamIssue, RoleDistribution,
+  DealDetailIssue, BlockedDealGroup, PipelineRuleResult, StageRuleResult,
   AUDIT_DOMAINS, type AuditDomainSelection,
 } from "@/lib/audit/types";
 import { BUSINESS_IMPACTS } from "@/lib/audit/business-impact";
@@ -319,6 +320,7 @@ interface AuditResultsViewProps {
   c?: ContactAuditResults | null;
   co?: CompanyAuditResults | null;
   u?: UserAuditResults | null;
+  d?: DealAuditResults | null;
   globalScore?: number;
   globalScoreLabel?: string;
   llmSummary?: string | null;
@@ -333,7 +335,7 @@ interface AuditResultsViewProps {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function AuditResultsView({
-  r, w, c, co, u, globalScore, globalScoreLabel, llmSummary,
+  r, w, c, co, u, d, globalScore, globalScoreLabel, llmSummary,
   shareToken, isPublic, portalName, startedAt, executionDurationMs, auditDomains,
 }: AuditResultsViewProps) {
   const displayScore = globalScore ?? r.score;
@@ -349,9 +351,9 @@ export function AuditResultsView({
     }).catch(() => {});
   }
 
-  const totalCritiques = r.totalCritiques + (c?.totalCritiques ?? 0) + (co?.totalCritiques ?? 0) + (w?.totalCritiques ?? 0) + (u?.totalCritiques ?? 0);
-  const totalAvertissements = r.totalAvertissements + (c?.totalAvertissements ?? 0) + (co?.totalAvertissements ?? 0) + (w?.totalAvertissements ?? 0) + (u?.totalAvertissements ?? 0);
-  const totalInfos = r.totalInfos + (c?.totalInfos ?? 0) + (co?.totalInfos ?? 0) + (w?.totalInfos ?? 0) + (u?.totalInfos ?? 0);
+  const totalCritiques = r.totalCritiques + (c?.totalCritiques ?? 0) + (co?.totalCritiques ?? 0) + (d?.totalCritiques ?? 0) + (w?.totalCritiques ?? 0) + (u?.totalCritiques ?? 0);
+  const totalAvertissements = r.totalAvertissements + (c?.totalAvertissements ?? 0) + (co?.totalAvertissements ?? 0) + (d?.totalAvertissements ?? 0) + (w?.totalAvertissements ?? 0) + (u?.totalAvertissements ?? 0);
+  const totalInfos = r.totalInfos + (c?.totalInfos ?? 0) + (co?.totalInfos ?? 0) + (d?.totalInfos ?? 0) + (w?.totalInfos ?? 0) + (u?.totalInfos ?? 0);
 
   const dateStr = new Date(startedAt).toLocaleDateString("fr-FR", {
     day: "numeric", month: "long", year: "numeric",
@@ -363,6 +365,7 @@ export function AuditResultsView({
   const companyCount = co ? (co.totalCritiques + co.totalAvertissements + co.totalInfos) : 0;
   const workflowCount = w ? (w.totalCritiques + w.totalAvertissements + w.totalInfos) : 0;
 
+  const dealCount = d?.hasDeals ? (d.totalCritiques + d.totalAvertissements + d.totalInfos) : 0;
   const userCount = u?.hasUsers ? (u.totalCritiques + u.totalAvertissements + u.totalInfos) : 0;
 
   // Determine if a domain was audited (selected or full audit)
@@ -383,7 +386,7 @@ export function AuditResultsView({
     { id: "properties", label: "Propriétés", count: propCount > 0 ? propCount : undefined },
     ...(isDomainAudited("contacts") && c?.hasContacts ? [{ id: "contacts", label: "Contacts", count: contactCount > 0 ? contactCount : undefined }] : []),
     ...(isDomainAudited("companies") && co?.hasCompanies ? [{ id: "companies", label: "Companies", count: companyCount > 0 ? companyCount : undefined }] : []),
-    ...(isDomainAudited("deals") ? [{ id: "deals", label: "Deals" }] : []),
+    ...(isDomainAudited("deals") && d?.hasDeals ? [{ id: "deals", label: "Deals & Pipelines", count: dealCount > 0 ? dealCount : undefined }] : []),
     ...(isDomainAudited("workflows") && w?.hasWorkflows ? [{ id: "workflows", label: "Workflows", count: workflowCount > 0 ? workflowCount : undefined }] : []),
     ...(isDomainAudited("users") && u?.hasUsers ? [{ id: "users", label: "Utilisateurs & Équipes", count: userCount > 0 ? userCount : undefined }] : []),
   ];
@@ -847,50 +850,252 @@ export function AuditResultsView({
         </section>
       )}
 
-      {/* Deals */}
-      <section id="section-deals" className="scroll-mt-16 space-y-4">
-        <h2 className="text-lg font-semibold text-gray-100">Deals</h2>
+      {/* Deals & Pipelines (EP-06) */}
+      {d !== undefined && d !== null && d.hasDeals && (
+        <section id="section-deals" className="scroll-mt-16 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-100">Deals &amp; Pipelines</h2>
+            <ScoreCircle score={d.score} size="sm" />
+          </div>
 
-        <RuleCard title="Taux de deals avec montant renseigné" ruleKey="p13" severity="critique" isEmpty={!r.p13.triggered} defaultOpen={r.p13.triggered} rateResult={r.p13}>
-          <span />
-        </RuleCard>
+          <div className="text-sm text-gray-400 mb-2">
+            {d.totalOpenDeals.toLocaleString("fr-FR")} deals ouverts · {d.totalPipelines} pipeline{d.totalPipelines !== 1 ? "s" : ""}
+          </div>
 
-        <RuleCard title="Taux de deals avec date de clôture" ruleKey="p14" severity="critique" isEmpty={!r.p14.triggered} defaultOpen={r.p14.triggered} rateResult={r.p14}>
-          <span />
-        </RuleCard>
+          {/* D-01 : Taux montant */}
+          <RuleCard title="Taux de deals avec montant renseigné" ruleKey="d01" severity="critique" isEmpty={!d.d01.triggered} defaultOpen={d.d01.triggered} rateResult={d.d01}>
+            <span />
+          </RuleCard>
 
-        <RuleCard title="Deals anciens (> 60 jours)" ruleKey="p15" severity="critique" isEmpty={r.p15.length === 0} count={r.p15.length} defaultOpen={r.p15.length > 0}>
-          <PaginatedList
-            items={r.p15}
-            renderItem={(item: DealIssue) => (
-              <div key={item.id} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm flex items-center justify-between">
-                <div>
+          {/* D-02 : Taux date de clôture */}
+          <RuleCard title="Taux de deals avec date de clôture" ruleKey="d02" severity="critique" isEmpty={!d.d02.triggered} defaultOpen={d.d02.triggered} rateResult={d.d02}>
+            <span />
+          </RuleCard>
+
+          {/* D-03 : Deals anciens */}
+          <RuleCard title="Deals ouverts depuis plus de 60 jours" ruleKey="d03" severity="avertissement" isEmpty={d.d03.length === 0} count={d.d03.length} defaultOpen={d.d03.length > 0}>
+            <PaginatedList
+              items={d.d03}
+              renderItem={(item: DealDetailIssue) => (
+                <div key={item.id} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm flex items-center justify-between">
+                  <div>
+                    <span className="font-medium text-gray-200">{item.name}</span>
+                    <span className="ml-2 text-xs text-gray-500">{item.pipelineLabel} → {item.stageLabel}</span>
+                  </div>
+                  <span className="text-xs text-red-400 font-medium">{item.ageInDays}j</span>
+                </div>
+              )}
+            />
+          </RuleCard>
+
+          {/* D-04 : Propriétés obligatoires manquantes */}
+          <RuleCard title="Propriétés obligatoires non renseignées" ruleKey="d04" severity="critique" isEmpty={d.d04.reduce((s, g) => s + g.deals.length, 0) === 0} count={d.d04.reduce((s, g) => s + g.deals.length, 0)}>
+            <PaginatedList
+              items={d.d04}
+              renderItem={(item: PipelineStageIssue) => (
+                <div key={`${item.pipeline}-${item.stage}`} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-gray-200">{item.pipeline} → {item.stage}</span>
+                    <span className="text-xs text-amber-400">{item.deals.length} deal{item.deals.length !== 1 ? "s" : ""}</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Propriétés manquantes : {item.missingProperties.join(", ")}
+                  </p>
+                </div>
+              )}
+            />
+          </RuleCard>
+
+          {/* D-05 : Deals bloqués */}
+          <RuleCard title="Deals bloqués dans un stage (> 60 jours)" ruleKey="d05" severity="avertissement" isEmpty={d.d05.reduce((s, g) => s + g.deals.length, 0) === 0} count={d.d05.reduce((s, g) => s + g.deals.length, 0)} defaultOpen={d.d05.length > 0}>
+            <PaginatedList
+              items={d.d05}
+              renderItem={(group: BlockedDealGroup) => (
+                <div key={`${group.pipelineId}-${group.stageId}`} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-medium text-gray-200">{group.pipelineLabel} → {group.stageLabel}</span>
+                    <span className="text-xs text-amber-400">{group.deals.length} deal{group.deals.length !== 1 ? "s" : ""}</span>
+                  </div>
+                  <div className="space-y-1">
+                    {group.deals.slice(0, 5).map((deal) => (
+                      <div key={deal.id} className="text-xs text-gray-400 flex justify-between">
+                        <span>{deal.name}</span>
+                        <span className="text-red-400">{deal.daysInStage}j dans ce stage</span>
+                      </div>
+                    ))}
+                    {group.deals.length > 5 && (
+                      <p className="text-xs text-gray-500">+ {group.deals.length - 5} autres</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            />
+          </RuleCard>
+
+          {/* D-08 : Sans owner */}
+          <RuleCard title="Deals sans propriétaire assigné" ruleKey="d08" severity="info" isEmpty={d.d08.length === 0} count={d.d08.length}>
+            <PaginatedList
+              items={d.d08}
+              renderItem={(item: DealDetailIssue) => (
+                <div key={item.id} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm flex items-center justify-between">
                   <span className="font-medium text-gray-200">{item.name}</span>
-                  <span className="ml-2 text-xs text-gray-500">{item.stage}</span>
+                  <span className="text-xs text-gray-500">{item.pipelineLabel}</span>
                 </div>
-                <span className="text-xs text-red-400 font-medium">{item.ageInDays}j</span>
-              </div>
-            )}
-          />
-        </RuleCard>
+              )}
+            />
+          </RuleCard>
 
-        <RuleCard title="Stages avec propriétés requises manquantes" ruleKey="p16" severity="avertissement" isEmpty={r.p16.length === 0} count={r.p16.length}>
-          <PaginatedList
-            items={r.p16}
-            renderItem={(item: PipelineStageIssue) => (
-              <div key={`${item.pipeline}-${item.stage}`} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-gray-200">{item.pipeline} → {item.stage}</span>
-                  <span className="text-xs text-amber-400">{item.deals.length} deal{item.deals.length !== 1 ? "s" : ""}</span>
+          {/* D-09 : Sans contact */}
+          <RuleCard title="Deals sans contact associé" ruleKey="d09" severity="avertissement" isEmpty={d.d09.length === 0} count={d.d09.length}>
+            <PaginatedList
+              items={d.d09}
+              renderItem={(item: DealDetailIssue) => (
+                <div key={item.id} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm flex items-center justify-between">
+                  <span className="font-medium text-gray-200">{item.name}</span>
+                  <span className="text-xs text-gray-500">{item.pipelineLabel}</span>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Propriétés manquantes : {item.missingProperties.join(", ")}
-                </p>
-              </div>
-            )}
-          />
-        </RuleCard>
-      </section>
+              )}
+            />
+          </RuleCard>
+
+          {/* D-10 : Sans company */}
+          {!d.d10.disabled && (
+            <RuleCard title="Deals sans company associée" ruleKey="d10" severity="info" isEmpty={d.d10.deals.length === 0} count={d.d10.deals.length}>
+              <PaginatedList
+                items={d.d10.deals}
+                renderItem={(item: DealDetailIssue) => (
+                  <div key={item.id} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm flex items-center justify-between">
+                    <span className="font-medium text-gray-200">{item.name}</span>
+                    <span className="text-xs text-gray-500">{item.pipelineLabel}</span>
+                  </div>
+                )}
+              />
+            </RuleCard>
+          )}
+
+          {/* D-11 : Montant à 0 */}
+          <RuleCard title="Deals avec montant à 0" ruleKey="d11" severity="avertissement" isEmpty={d.d11.length === 0} count={d.d11.length}>
+            <PaginatedList
+              items={d.d11}
+              renderItem={(item: DealDetailIssue) => (
+                <div key={item.id} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm flex items-center justify-between">
+                  <span className="font-medium text-gray-200">{item.name}</span>
+                  <span className="text-xs text-gray-500">{item.pipelineLabel}</span>
+                </div>
+              )}
+            />
+          </RuleCard>
+
+          {/* Pipeline rules section */}
+          <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mt-6">Configuration des pipelines</h3>
+
+          {/* D-06 : Pipeline sans activité */}
+          <RuleCard title="Pipelines sans activité récente" ruleKey="d06" severity="info" isEmpty={d.d06.length === 0} count={d.d06.length}>
+            <PaginatedList
+              items={d.d06}
+              renderItem={(item: PipelineRuleResult) => (
+                <div key={item.pipelineId} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm flex items-center justify-between">
+                  <span className="font-medium text-gray-200">{item.pipelineLabel}</span>
+                  <span className="text-xs text-gray-500">{item.stageCount} stages</span>
+                </div>
+              )}
+            />
+          </RuleCard>
+
+          {/* D-07 : Trop de stages */}
+          <RuleCard title="Pipelines avec trop de stages (> 8)" ruleKey="d07" severity="info" isEmpty={d.d07.length === 0} count={d.d07.length}>
+            <PaginatedList
+              items={d.d07}
+              renderItem={(item: PipelineRuleResult) => (
+                <div key={item.pipelineId} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm flex items-center justify-between">
+                  <span className="font-medium text-gray-200">{item.pipelineLabel}</span>
+                  <span className="text-xs text-amber-400">{item.activeStageCount} stages actifs</span>
+                </div>
+              )}
+            />
+          </RuleCard>
+
+          {/* D-12 : Phases sautées */}
+          <RuleCard title="Pipelines avec phases fréquemment sautées" ruleKey="d12" severity="avertissement" isEmpty={d.d12.length === 0} count={d.d12.length}>
+            <PaginatedList
+              items={d.d12}
+              renderItem={(item: PipelineRuleResult) => (
+                <div key={item.pipelineId} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-gray-200">{item.pipelineLabel}</span>
+                    <span className="text-xs text-amber-400">{Math.round((item.skippedRate ?? 0) * 100)}% des deals</span>
+                  </div>
+                  {item.topSkippedStages && item.topSkippedStages.length > 0 && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Stages les plus sautés : {item.topSkippedStages.map((s) => s.stageLabel).join(", ")}
+                    </p>
+                  )}
+                </div>
+              )}
+            />
+          </RuleCard>
+
+          {/* D-13 : Points d'entrée multiples */}
+          <RuleCard title="Pipelines avec points d'entrée multiples" ruleKey="d13" severity="avertissement" isEmpty={d.d13.length === 0} count={d.d13.length}>
+            <PaginatedList
+              items={d.d13}
+              renderItem={(item: PipelineRuleResult) => (
+                <div key={item.pipelineId} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-gray-200">{item.pipelineLabel}</span>
+                    <span className="text-xs text-amber-400">{Math.round((item.nonStandardEntryRate ?? 0) * 100)}% hors 1ère étape</span>
+                  </div>
+                </div>
+              )}
+            />
+          </RuleCard>
+
+          {/* D-14 : Stages fermés redondants */}
+          <RuleCard title="Pipelines avec stages fermés redondants" ruleKey="d14" severity="avertissement" isEmpty={d.d14.length === 0} count={d.d14.length}>
+            <PaginatedList
+              items={d.d14}
+              renderItem={(item: PipelineRuleResult) => (
+                <div key={item.pipelineId} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-gray-200">{item.pipelineLabel}</span>
+                  </div>
+                  {item.closedWonStages && item.closedWonStages.length > 1 && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Gagné : {item.closedWonStages.map((s) => s.label).join(", ")}
+                    </p>
+                  )}
+                  {item.closedLostStages && item.closedLostStages.length > 1 && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Perdu : {item.closedLostStages.map((s) => s.label).join(", ")}
+                    </p>
+                  )}
+                </div>
+              )}
+            />
+          </RuleCard>
+
+          {/* D-15 : Stages sans activité */}
+          <RuleCard title="Stages sans activité depuis 90 jours" ruleKey="d15" severity="info" isEmpty={d.d15.length === 0} count={d.d15.length}>
+            <PaginatedList
+              items={d.d15}
+              renderItem={(item: StageRuleResult) => (
+                <div key={`${item.pipelineId}-${item.stageId}`} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm flex items-center justify-between">
+                  <div>
+                    <span className="font-medium text-gray-200">{item.pipelineLabel}</span>
+                    <span className="mx-1 text-gray-600">→</span>
+                    <span className="text-gray-300">{item.stageLabel}</span>
+                  </div>
+                  {item.lastActivity && (
+                    <span className="text-xs text-gray-500">
+                      Dernière activité : {new Date(item.lastActivity).toLocaleDateString("fr-FR")}
+                    </span>
+                  )}
+                </div>
+              )}
+            />
+          </RuleCard>
+        </section>
+      )}
 
       {/* Workflows */}
       {w !== undefined && w !== null && w.hasWorkflows && (

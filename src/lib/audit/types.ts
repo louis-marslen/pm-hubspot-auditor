@@ -57,7 +57,7 @@ export const AUDIT_DOMAINS: AuditDomainMeta[] = [
     label: 'Deals & Pipelines',
     description: 'Deals bloqués, étapes mal configurées, conversions',
     required: false,
-    implemented: false,
+    implemented: true,
   },
 ];
 
@@ -118,6 +118,7 @@ export interface GlobalAuditResults {
   contactResults: ContactAuditResults | null;
   companyResults: CompanyAuditResults | null;
   userResults: UserAuditResults | null;
+  dealResults: DealAuditResults | null;
   globalScore: number;
   globalScoreLabel: string;
   propertyWeight: number;
@@ -125,6 +126,7 @@ export interface GlobalAuditResults {
   contactWeight: number;
   companyWeight: number;
   userWeight: number;
+  dealWeight: number;
 }
 
 // ─── Users & Teams domain (EP-09) ─────────────────────────────────────────
@@ -338,6 +340,133 @@ export interface CompanyAuditResults {
   co07: CompanyIssue[];
   // CO-08 : Company stale > 365j — info (1 par company)
   co08: CompanyIssue[];
+
+  score: number;
+  scoreLabel: string;
+  totalCritiques: number;
+  totalAvertissements: number;
+  totalInfos: number;
+}
+
+// ─── Deals & Pipelines domain (EP-06) ─────────────────────────────────────
+
+export interface DealDetailIssue {
+  id: string;
+  name: string;
+  pipeline: string;
+  pipelineLabel: string;
+  stage: string;
+  stageLabel: string;
+  amount: number | null;
+  closedate: string | null;
+  ownerId: string | null;
+  createdAt: string;
+  lastModifiedDate: string | null;
+  ageInDays: number;
+  daysInStage?: number;
+  dateEnteredStage?: string | null;
+  missingProperties?: string[];
+  contactCount?: number;
+  companyCount?: number;
+}
+
+export interface BlockedDealGroup {
+  pipelineId: string;
+  pipelineLabel: string;
+  stageId: string;
+  stageLabel: string;
+  deals: DealDetailIssue[];
+}
+
+export interface PipelineInfo {
+  id: string;
+  label: string;
+  stageCount: number;
+  activeStageCount: number;
+  openDealCount: number;
+  totalDealCount: number;
+  lastDealCreatedAt: string | null;
+  stages: PipelineStageInfo[];
+}
+
+export interface PipelineStageInfo {
+  id: string;
+  label: string;
+  displayOrder: number;
+  isClosed: boolean;
+  probability: number;
+  openDealCount: number;
+  lastActivity: string | null;
+}
+
+export interface SkippedStageInfo {
+  stageId: string;
+  stageLabel: string;
+  skipCount: number;
+}
+
+export interface PipelineRuleResult {
+  pipelineId: string;
+  pipelineLabel: string;
+  triggered: boolean;
+  // D-06
+  totalDeals?: number;
+  lastDealCreatedAt?: string | null;
+  stageCount?: number;
+  // D-07
+  activeStageCount?: number;
+  stages?: PipelineStageInfo[];
+  // D-12
+  skippedRate?: number;
+  dealsWithSkips?: number;
+  totalAnalyzed?: number;
+  topSkippedStages?: SkippedStageInfo[];
+  // D-13
+  nonStandardEntryRate?: number;
+  nonStandardEntries?: number;
+  entryDistribution?: { stageId: string; stageLabel: string; count: number }[];
+  // D-14
+  closedWonStages?: { id: string; label: string; dealCount: number }[];
+  closedLostStages?: { id: string; label: string; dealCount: number }[];
+}
+
+export interface StageRuleResult {
+  pipelineId: string;
+  pipelineLabel: string;
+  stageId: string;
+  stageLabel: string;
+  displayOrder: number;
+  lastActivity: string | null;
+}
+
+export interface DealAuditResults {
+  totalDeals: number;         // tous statuts
+  totalOpenDeals: number;     // statut open uniquement
+  totalPipelines: number;
+  hasDeals: boolean;
+
+  // Règles migrées depuis EP-02
+  d01: RateResult;                    // Taux montant insuffisant — critique
+  d02: RateResult;                    // Taux date de clôture insuffisant — critique
+  d03: DealDetailIssue[];             // Deal open ancien 60j+ — avertissement
+  d04: PipelineStageIssue[];          // Propriétés obligatoires manquantes — critique
+
+  // Deals bloqués
+  d05: BlockedDealGroup[];            // Deal bloqué dans un stage — avertissement
+
+  // Configuration pipeline
+  d06: PipelineRuleResult[];          // Pipeline sans activité — info
+  d07: PipelineRuleResult[];          // Pipeline trop de stages — info
+  d12: PipelineRuleResult[];          // Phases sautées — avertissement
+  d13: PipelineRuleResult[];          // Points d'entrée multiples — avertissement
+  d14: PipelineRuleResult[];          // Stages fermés redondants — avertissement
+  d15: StageRuleResult[];             // Stage sans activité 90j — info
+
+  // Qualité données
+  d08: DealDetailIssue[];             // Sans owner — info
+  d09: DealDetailIssue[];             // Sans contact associé — avertissement
+  d10: { disabled: boolean; disabledReason: string | null; deals: DealDetailIssue[] }; // Sans company — info
+  d11: DealDetailIssue[];             // Montant à 0 — avertissement
 
   score: number;
   scoreLabel: string;

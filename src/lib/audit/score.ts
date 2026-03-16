@@ -39,11 +39,8 @@ export function calculateScore(results: AuditResults): ScoreResult {
   infos += results.p5.length; // P5 : groupe par défaut
   avertissements += results.p6.length; // P6 : mauvais typage
 
-  // Propriétés système (P7-P11 migrées vers contacts EP-05, P12 migrée vers companies EP-05b)
-  if (results.p13.triggered) critiques += 1; // P13 : deals sans montant
-  if (results.p14.triggered) critiques += 1; // P14 : deals sans date de clôture
-  critiques += results.p15.length; // P15 : deals bloqués (1 par deal)
-  avertissements += results.p16.length; // P16 : stages avec props manquantes
+  // P13-P16 migrés vers le domaine Deals (EP-06 : D-01 à D-04)
+  // Ils ne sont plus comptabilisés dans le score Propriétés
 
   // Calcul des déductions plafonnées
   const deductionCritiques = Math.min(critiques * 5, 30);

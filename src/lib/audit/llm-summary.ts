@@ -9,7 +9,7 @@ export async function generateLlmSummary(global: GlobalAuditResults, selectedDom
   if (!process.env.OPENAI_API_KEY) return null;
 
   const model = process.env.OPENAI_MODEL ?? "gpt-4.1";
-  const { globalScore, propertyResults, workflowResults, contactResults, companyResults, userResults } = global;
+  const { globalScore, propertyResults, workflowResults, contactResults, companyResults, userResults, dealResults } = global;
 
   // Recommandation calibrée selon le score
   let callToAction: string;
@@ -34,6 +34,10 @@ export async function generateLlmSummary(global: GlobalAuditResults, selectedDom
   const companySummary = companyResults
     ? `Companies : ${companyResults.totalCompanies} analysées, score ${companyResults.score}/100 (${companyResults.totalCritiques} critiques, ${companyResults.totalAvertissements} avertissements, ${companyResults.totalInfos} infos). Doublons domain : ${companyResults.co02.length} clusters, doublons nom : ${companyResults.co03.length} clusters, orphelines : ${companyResults.co04.length}.`
     : "Aucune company détectée — domaine exclu du score global.";
+
+  const dealSummary = dealResults?.hasDeals
+    ? `Deals & Pipelines : ${dealResults.totalOpenDeals} deals ouverts, ${dealResults.totalPipelines} pipelines, score ${dealResults.score}/100 (${dealResults.totalCritiques} critiques, ${dealResults.totalAvertissements} avertissements, ${dealResults.totalInfos} infos).`
+    : "Aucun deal détecté — domaine exclu du score global.";
 
   const userSummary = userResults?.hasUsers && !userResults.scopeError
     ? `Utilisateurs & Équipes : ${userResults.totalUsers} utilisateurs, ${userResults.totalTeams} équipes, score ${userResults.score}/100 (${userResults.totalCritiques} critiques, ${userResults.totalAvertissements} avertissements, ${userResults.totalInfos} infos). Super Admins : ${userResults.u02.superAdminCount}/${userResults.u02.totalUsers}, inactifs : ${userResults.u05.inactiveUsers.length}, sans équipe : ${userResults.u01.length}.`
@@ -61,6 +65,7 @@ Données d'audit :
 - Propriétés : score ${propertyResults.score}/100, ${propertyResults.totalCritiques} critiques, ${propertyResults.totalAvertissements} avertissements, ${propertyResults.totalInfos} infos
 - ${contactSummary}
 - ${companySummary}
+- ${dealSummary}
 - ${wfSummary}
 - ${userSummary}
 - Contacts analysés : ${propertyResults.objectCounts.contacts ?? 0}, companies : ${propertyResults.objectCounts.companies ?? 0}, deals : ${propertyResults.objectCounts.deals ?? 0}

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { AuditResults, WorkflowAuditResults, ContactAuditResults, CompanyAuditResults, UserAuditResults, type AuditDomainSelection } from "@/lib/audit/types";
+import { AuditResults, WorkflowAuditResults, ContactAuditResults, CompanyAuditResults, UserAuditResults, DealAuditResults, type AuditDomainSelection } from "@/lib/audit/types";
 import { AuditResultsView } from "@/components/audit/audit-results-view";
 import Link from "next/link";
 
@@ -11,6 +11,7 @@ interface SharedAuditRun {
   contact_results: ContactAuditResults | null;
   company_results: CompanyAuditResults | null;
   user_results: UserAuditResults | null;
+  deal_results: DealAuditResults | null;
   global_score: number | null;
   llm_summary: string | null;
   portal_name: string | null;
@@ -32,7 +33,7 @@ export default async function SharePage({ params }: { params: Promise<{ shareTok
 
   const { data: audit } = await supabase
     .from("audit_runs")
-    .select("id, results, workflow_results, contact_results, company_results, user_results, global_score, llm_summary, portal_name, execution_duration_ms, started_at, audit_domains")
+    .select("id, results, workflow_results, contact_results, company_results, user_results, deal_results, global_score, llm_summary, portal_name, execution_duration_ms, started_at, audit_domains")
     .eq("share_token", shareToken)
     .eq("status", "completed")
     .single<SharedAuditRun>();
@@ -75,6 +76,7 @@ export default async function SharePage({ params }: { params: Promise<{ shareTok
           c={audit.contact_results}
           co={audit.company_results}
           u={audit.user_results}
+          d={audit.deal_results}
           globalScore={globalScore}
           globalScoreLabel={globalScoreLabel}
           llmSummary={audit.llm_summary}

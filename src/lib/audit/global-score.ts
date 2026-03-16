@@ -1,4 +1,4 @@
-import { AuditResults, WorkflowAuditResults, ContactAuditResults, CompanyAuditResults, UserAuditResults, GlobalAuditResults } from "@/lib/audit/types";
+import { AuditResults, WorkflowAuditResults, ContactAuditResults, CompanyAuditResults, UserAuditResults, DealAuditResults, GlobalAuditResults } from "@/lib/audit/types";
 
 /**
  * Retourne le scoreLabel selon la scale PRD-04.
@@ -12,11 +12,10 @@ function scoreLabelFromScore(score: number): string {
 }
 
 /**
- * Calcule le score global en combinant propriétés, contacts, companies, workflows et utilisateurs.
+ * Calcule le score global en combinant tous les domaines actifs.
  *
- * Redistribution EP-09 : pondération égale entre domaines actifs (jusqu'à 5).
- * - domaines actifs = [propriétés, contacts, companies, workflows, utilisateurs].filter(score !== null)
- * - score_global = somme(scores) / nombre_domaines_actifs
+ * EP-06 : pondération renforcée pour Deals (coefficient 1.5), autres à 1.0.
+ * score_global = Σ(score × poids) / Σ(poids) des domaines actifs
  */
 export function calculateGlobalScore(
   propertyResults: AuditResults,
@@ -24,30 +23,36 @@ export function calculateGlobalScore(
   contactResults?: ContactAuditResults | null,
   companyResults?: CompanyAuditResults | null,
   userResults?: UserAuditResults | null,
+  dealResults?: DealAuditResults | null,
 ): GlobalAuditResults {
   const propertyScore = propertyResults.score;
   const workflowScore = workflowResults?.score ?? null;
   const contactScore = contactResults?.score ?? null;
   const companyScore = companyResults?.score ?? null;
   const userScore = (userResults?.hasUsers && !userResults?.scopeError) ? userResults.score : null;
+  const dealScore = dealResults?.hasDeals ? dealResults.score : null;
 
-  // Collecter les domaines actifs (score non-null)
-  const activeScores: number[] = [propertyScore];
-  if (contactScore !== null) activeScores.push(contactScore);
-  if (companyScore !== null) activeScores.push(companyScore);
-  if (workflowScore !== null) activeScores.push(workflowScore);
-  if (userScore !== null) activeScores.push(userScore);
+  // Weighted scoring: deals get 1.5, all others get 1.0
+  const DEAL_WEIGHT = 1.5;
+  const DEFAULT_WEIGHT = 1.0;
 
-  const weight = activeScores.length > 0 ? 1 / activeScores.length : 0;
-  const globalScore = Math.round(
-    activeScores.reduce((sum, s) => sum + s, 0) / activeScores.length
-  );
+  let weightedSum = propertyScore * DEFAULT_WEIGHT;
+  let totalWeight = DEFAULT_WEIGHT;
 
-  const propertyWeight = weight;
-  const workflowWeight = workflowScore !== null ? weight : 0;
-  const contactWeight = contactScore !== null ? weight : 0;
-  const companyWeight = companyScore !== null ? weight : 0;
-  const userWeight = userScore !== null ? weight : 0;
+  if (contactScore !== null) { weightedSum += contactScore * DEFAULT_WEIGHT; totalWeight += DEFAULT_WEIGHT; }
+  if (companyScore !== null) { weightedSum += companyScore * DEFAULT_WEIGHT; totalWeight += DEFAULT_WEIGHT; }
+  if (workflowScore !== null) { weightedSum += workflowScore * DEFAULT_WEIGHT; totalWeight += DEFAULT_WEIGHT; }
+  if (userScore !== null) { weightedSum += userScore * DEFAULT_WEIGHT; totalWeight += DEFAULT_WEIGHT; }
+  if (dealScore !== null) { weightedSum += dealScore * DEAL_WEIGHT; totalWeight += DEAL_WEIGHT; }
+
+  const globalScore = Math.round(weightedSum / totalWeight);
+
+  const propertyWeight = DEFAULT_WEIGHT / totalWeight;
+  const contactWeight = contactScore !== null ? DEFAULT_WEIGHT / totalWeight : 0;
+  const companyWeight = companyScore !== null ? DEFAULT_WEIGHT / totalWeight : 0;
+  const workflowWeight = workflowScore !== null ? DEFAULT_WEIGHT / totalWeight : 0;
+  const userWeight = userScore !== null ? DEFAULT_WEIGHT / totalWeight : 0;
+  const dealWeight = dealScore !== null ? DEAL_WEIGHT / totalWeight : 0;
 
   return {
     propertyResults,
@@ -55,6 +60,7 @@ export function calculateGlobalScore(
     contactResults: contactResults ?? null,
     companyResults: companyResults ?? null,
     userResults: userResults ?? null,
+    dealResults: dealResults ?? null,
     globalScore,
     globalScoreLabel: scoreLabelFromScore(globalScore),
     propertyWeight,
@@ -62,5 +68,6 @@ export function calculateGlobalScore(
     contactWeight,
     companyWeight,
     userWeight,
+    dealWeight,
   };
 }
