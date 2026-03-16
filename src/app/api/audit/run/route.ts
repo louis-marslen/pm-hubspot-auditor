@@ -152,7 +152,7 @@ async function runAuditInBackground(
     allCompleted.globalProgress = Object.keys(allCompleted.domains).length * 3 / (Object.keys(allCompleted.domains).length * 3 + 1);
     await persistProgress(auditId, allCompleted);
 
-    const llmSummary = await generateLlmSummary(global);
+    const llmSummary = await generateLlmSummary(global, selectedDomains);
 
     // Progression LLM terminée
     allCompleted.llmSummary = { status: "completed" };
