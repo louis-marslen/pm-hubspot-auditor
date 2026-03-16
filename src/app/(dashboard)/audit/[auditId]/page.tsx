@@ -2,9 +2,10 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { AuditResults, WorkflowAuditResults, ContactAuditResults, CompanyAuditResults } from "@/lib/audit/types";
 import { AuditResultsView } from "@/components/audit/audit-results-view";
+import { AuditPageClient } from "./audit-page-client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CircleX, Loader2 } from "lucide-react";
+import { CircleX } from "lucide-react";
 import Link from "next/link";
 
 interface AuditRun {
@@ -42,6 +43,29 @@ export default async function AuditPage({ params }: { params: Promise<{ auditId:
 
   if (!audit) redirect("/dashboard");
 
+  // Si l'audit est en cours, afficher le tracker client-side avec polling
+  if (audit.status === "running") {
+    return (
+      <AuditPageClient
+        auditId={auditId}
+        portalName={audit.portal_name}
+      />
+    );
+  }
+
+  // Si l'audit a échoué, afficher l'erreur avec le tracker en état d'erreur
+  if (audit.status === "failed") {
+    return (
+      <AuditPageClient
+        auditId={auditId}
+        portalName={audit.portal_name}
+        initialStatus="failed"
+        errorMessage={audit.error}
+      />
+    );
+  }
+
+  // Audit terminé — afficher le rapport directement (SSR)
   const globalScore = audit.global_score ?? audit.results?.score;
   const globalScoreLabel =
     globalScore !== undefined && globalScore !== null
@@ -50,42 +74,7 @@ export default async function AuditPage({ params }: { params: Promise<{ auditId:
 
   return (
     <>
-      {audit.status === "failed" && (
-        <Card className="border-red-500/30 bg-[rgba(239,68,68,0.08)]">
-          <div className="flex items-start gap-3">
-            <CircleX className="h-5 w-5 text-red-400 mt-0.5 shrink-0" />
-            <div>
-              <h2 className="text-lg font-semibold text-red-300 mb-2">L&apos;audit a échoué</h2>
-              <p className="text-sm text-red-200/80">{audit.error ?? "Une erreur inattendue s'est produite."}</p>
-              <Link href="/dashboard" className="mt-4 inline-block">
-                <Button variant="secondary" size="sm">Retour au dashboard</Button>
-              </Link>
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {(audit.status === "running" || !audit.results) && audit.status !== "failed" && (
-        <div className="flex items-center justify-center py-20">
-          <div className="text-center space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin text-brand-500 mx-auto" />
-            <div>
-              <p className="text-gray-200 font-medium">Audit en cours…</p>
-              <p className="text-sm text-gray-500 mt-1">
-                {audit.portal_name && `Analyse de ${audit.portal_name}`}
-              </p>
-            </div>
-            <div className="space-y-2 text-sm text-gray-400 max-w-xs mx-auto text-left">
-              <p>Analyse des propriétés…</p>
-              <p>Analyse des contacts et companies…</p>
-              <p>Analyse des workflows…</p>
-              <p>Génération du rapport…</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {audit.status === "completed" && audit.results && (
+      {audit.results && (
         <AuditResultsView
           r={audit.results}
           w={audit.workflow_results}
