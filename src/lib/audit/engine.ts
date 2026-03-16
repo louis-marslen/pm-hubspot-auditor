@@ -232,8 +232,11 @@ export async function runFullAudit(
   let contactResults: ReturnType<typeof runContactAudit> extends Promise<infer T> ? T : never = null;
 
   if (totalContacts === 0) {
-    // Domaine exclu — marquer completed directement
-    await emit((p) => completeDomain(p, "contacts"));
+    // Domaine exclu — marquer completed avec itemCount 0
+    await emit((p) => {
+      const updated = updateDomainStep(p, "contacts", "fetching", 0);
+      return completeDomain(updated, "contacts");
+    });
   } else {
     try {
       await emit((p) => updateDomainStep(p, "contacts", "fetching", totalContacts));
@@ -249,7 +252,10 @@ export async function runFullAudit(
   let companyResults: ReturnType<typeof runCompanyAudit> extends Promise<infer T> ? T : never = null;
 
   if (totalCompanies === 0) {
-    await emit((p) => completeDomain(p, "companies"));
+    await emit((p) => {
+      const updated = updateDomainStep(p, "companies", "fetching", 0);
+      return completeDomain(updated, "companies");
+    });
   } else {
     try {
       await emit((p) => updateDomainStep(p, "companies", "fetching", totalCompanies));

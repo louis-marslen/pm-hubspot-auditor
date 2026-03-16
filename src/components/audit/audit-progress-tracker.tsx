@@ -207,6 +207,11 @@ function DomainRow({
   const status = domain?.status ?? "pending";
   const steps = ["fetching", "analyzing", "scoring"];
 
+  // Domaine avec 0 éléments : complété avec itemCount = 0
+  const isExcluded =
+    status === "completed" &&
+    domain?.itemCount === 0;
+
   return (
     <div>
       {/* Domain header */}
@@ -214,8 +219,11 @@ function DomainRow({
         <StepIcon status={status} />
         <Icon className="h-5 w-5 text-gray-400" />
         <span className="text-sm text-gray-200 font-medium">{label}</span>
-        {status === "completed" && (
+        {status === "completed" && !isExcluded && (
           <span className="text-xs text-green-500 ml-auto">OK</span>
+        )}
+        {isExcluded && (
+          <span className="text-xs text-gray-500 ml-auto">Exclu</span>
         )}
         {status === "running" && (
           <span className="text-xs text-brand-400 ml-auto">En cours</span>
@@ -230,8 +238,17 @@ function DomainRow({
         )}
       </div>
 
-      {/* Sub-steps (show only when running or completed or error) */}
-      {status !== "pending" && (
+      {/* Domaine exclu : message inline */}
+      {isExcluded && (
+        <div className="ml-11 mt-2">
+          <span className="text-xs text-gray-500">
+            Aucun élément détecté — domaine exclu
+          </span>
+        </div>
+      )}
+
+      {/* Sub-steps (show only when running or completed or error, and not excluded) */}
+      {status !== "pending" && !isExcluded && (
         <div className="ml-11 mt-2 space-y-1.5">
           {steps.map((step) => {
             const isCompleted = domain?.completedSteps?.includes(step) ?? false;

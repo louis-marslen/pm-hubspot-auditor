@@ -310,12 +310,12 @@ function DashboardContent() {
                       ) : "—"}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      {audit.status === "completed" && (
+                      {(audit.status === "completed" || audit.status === "running") && (
                         <Link
                           href={`/audit/${audit.id}`}
                           className="text-sm text-brand-500 hover:text-brand-400 font-medium transition-colors"
                         >
-                          Voir →
+                          {audit.status === "running" ? "Suivre →" : "Voir →"}
                         </Link>
                       )}
                     </td>

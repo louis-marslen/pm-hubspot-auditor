@@ -35,7 +35,7 @@ export function AuditPageClient({
 
   return (
     <div
-      className={`transition-opacity duration-200 ease-in ${
+      className={`transition-opacity duration-200 ease-in motion-reduce:duration-0 ${
         transitioning ? "opacity-0" : "opacity-100"
       }`}
     >
