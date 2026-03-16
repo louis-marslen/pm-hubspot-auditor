@@ -24,22 +24,33 @@ Tous les epics identifiés avec leur scoring RICE indicatif et leur statut.
 | EP-05b | Audit des companies | 35 | 2 | 70% | 1 | 49 | LIVRÉ | ✅ Livré |
 | EP-UX-02 | Progression d'audit en temps réel | 50 | 3 | 90% | 1 | 135 | LIVRÉ | ✅ Livré |
 | EP-06 | Audit des deals & pipelines | 40 | 2 | 70% | 1.5 | 37 | NOW | Spécifié |
-| EP-09 | Audit utilisateurs & équipes | 30 | 2 | 60% | 1 | 36 | NOW | Spécifié |
-| EP-10 | Audit des intégrations | 20 | 2 | 50% | 1.5 | 13 | NOW | À spécifier |
-| EP-11 | Audit du reporting | 25 | 1 | 60% | 1 | 15 | NOW | À spécifier |
-| EP-07 | Export du rapport (PDF) | 30 | 2 | 90% | 0.5 | 108 | NOW | À spécifier |
+| EP-09 | Audit utilisateurs & équipes | 30 | 2 | 60% | 1 | 36 | LIVRÉ | ✅ Livré |
+| EP-17 | Sélection des domaines d'audit | 50 | 2 | 90% | 0.5 | 180 | NOW | Spécifié |
 | EP-08 | Onboarding self-service | 50 | 3 | 70% | 1 | 105 | NOW | À spécifier |
+| ~~EP-10~~ | ~~Audit des intégrations~~ | — | — | — | — | — | — | Abandonné |
+| ~~EP-11~~ | ~~Audit du reporting~~ | — | — | — | — | — | — | Abandonné |
+| ~~EP-07~~ | ~~Export du rapport (PDF)~~ | — | — | — | — | — | — | Abandonné |
 | EP-12 | Historique & comparaison d'audits | 20 | 2 | 60% | 2 | 12 | LATER | Idée |
 | EP-13 | Mode multi-workspace | 10 | 3 | 70% | 2 | 10.5 | LATER | Idée |
 | EP-14 | Recommandations enrichies (IA) | 30 | 3 | 40% | 3 | 12 | LATER | Idée |
 | EP-15 | Modèle de pricing & paywall | 50 | 3 | 60% | 1 | 90 | LATER | Idée |
 | EP-16 | Profil business & audit contextuel | 40 | 3 | 50% | 2 | 30 | LATER | Idée |
 
-> ⚠️ La priorisation NOW suit l'ordre : couverture d'audit complète d'abord (EP-06→11), puis packaging/distribution (EP-07, EP-08). Les scores RICE sur les epics LATER sont indicatifs.
+> ⚠️ EP-10, EP-11 et EP-07 ont été abandonnés — EP-10/EP-11 car les API HubSpot n'exposent pas les données nécessaires, EP-07 car le lien de partage public suffit. Les scores RICE sur les epics LATER sont indicatifs.
 
 ---
 
 ## Ce qui a été livré en Phase 2
+
+### EP-09 — Audit des utilisateurs & équipes
+- **7 règles (U-01 à U-07)** : Super Admins en excès (>25% ou >3), rôles non différenciés (tous identiques), utilisateurs sans équipe, équipes vides, utilisateurs inactifs (fallback owners sans objet CRM si non-Enterprise), comptes email générique (admin@, info@…), utilisateurs sans rôle assigné
+- **2 recommandations non scorées (R1/R2)** : permissions granulaires, optimisation licences
+- **Activation conditionnelle** : domaine actif uniquement si ≥ 2 utilisateurs dans le workspace
+- **Grace period** de 30 jours sur U-05 (comptes récents exclus)
+- **Détection Enterprise** pour enrichir U-05 avec l'historique de connexion (`lastLoginAt`)
+- **Exclusion automatique** des apps de service (comptes techniques HubSpot)
+- Score utilisateurs (0-100) intégré au score global du dashboard — **5 domaines actifs**
+- **Parallélisation** des 4 domaines post-Properties (Workflows, Contacts, Companies, Users) via `Promise.all`
 
 ### EP-05 — Audit des contacts & doublons
 - **12 règles (C-01 à C-12)** : doublons par email exact, doublons par nom+company, doublons par téléphone, emails invalides, contacts sans email, contacts sans nom, contacts stale (>1 an sans activité), contacts sans attribution (owner), incohérence lifecycle ↔ deal status, contacts sans entreprise (B2B), contacts sans lifecycle stage, contacts créés sans source

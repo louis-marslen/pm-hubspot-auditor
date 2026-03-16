@@ -50,11 +50,9 @@ product/
 | EP-05 | [prd-05-audit-contacts.md](prd/prd-05-audit-contacts.md) | [ep05-audit-contacts.md](epics/ep05-audit-contacts.md) | ✅ Livré |
 | EP-05b | [prd-05b-audit-companies.md](prd/prd-05b-audit-companies.md) | [ep05b-audit-companies.md](epics/ep05b-audit-companies.md) | ✅ Livré |
 | EP-UX-02 | [prd-progression-audit.md](prd/prd-progression-audit.md) | [ep-ux-02-progression-audit.md](epics/ep-ux-02-progression-audit.md) | ✅ Livré |
+| EP-09 | [prd-09-audit-utilisateurs-equipes.md](prd/prd-09-audit-utilisateurs-equipes.md) | [ep09-audit-utilisateurs-equipes.md](epics/ep09-audit-utilisateurs-equipes.md) | ✅ Livré |
 | EP-06 | [prd-06-audit-deals.md](prd/prd-06-audit-deals.md) | [ep06-audit-deals.md](epics/ep06-audit-deals.md) | Spécifié |
-| EP-09 | [prd-09-audit-utilisateurs-equipes.md](prd/prd-09-audit-utilisateurs-equipes.md) | [ep09-audit-utilisateurs-equipes.md](epics/ep09-audit-utilisateurs-equipes.md) | Spécifié |
-| EP-10 | À créer | À créer | À spécifier |
-| EP-11 | À créer | À créer | À spécifier |
-| EP-07 | À créer | À créer | À spécifier |
+| EP-17 | [prd-17-selection-domaines-audit.md](prd/prd-17-selection-domaines-audit.md) | [ep17-selection-domaines-audit.md](epics/ep17-selection-domaines-audit.md) | Spécifié |
 | EP-08 | À créer | À créer | À spécifier |
 
 ---

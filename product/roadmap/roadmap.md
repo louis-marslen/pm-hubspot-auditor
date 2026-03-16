@@ -22,21 +22,19 @@ Objectif atteint : produit fonctionnel, utilisable par Louis sur ses missions, t
 | [EP-05] Audit des contacts & doublons | Audit core | 12 règles : doublons multi-critères (email, nom+company, téléphone), qualité (emails invalides, stale, attribution), cohérence lifecycle | ✅ Livré |
 | [EP-05b] Audit des companies | Audit core | 8 règles : doublons domain/nom, companies orphelines, qualité données entreprises | ✅ Livré |
 | [EP-UX-02] Progression d'audit en temps réel | UX | Navigation immédiate, tracker de progression domaine par domaine avec sous-étapes, polling temps réel, transition fluide vers rapport | ✅ Livré |
+| [EP-09] Audit des utilisateurs & équipes | Audit core | 7 règles U-01 à U-07, détection Super Admins en excès, utilisateurs inactifs, équipes vides, 2 recommandations non scorées (R1/R2), activation conditionnelle (≥ 2 users) | ✅ Livré |
 
 ---
 
 ## 🟢 NOW — En cours de construction
 
-Objectif : Couvrir les 7 domaines d'audit HubSpot pour un diagnostic exhaustif, puis packager le produit pour la distribution.
+Objectif : Finaliser la couverture d'audit et packager le produit pour la distribution.
 
 | # | Epic | Thème | Valeur délivrée | Taille |
 |---|---|---|---|---|
 | 1 | [EP-06] Audit des deals & pipelines | Audit core | Deals bloqués, étapes mal configurées, taux de conversion anormaux | M |
-| 2 | [EP-09] Audit des utilisateurs & équipes | Audit core | Utilisateurs inactifs, rôles mal attribués, licences sous-utilisées | M |
-| 3 | [EP-10] Audit des intégrations | Audit core | Connexions actives/inactives, erreurs de sync, intégrations orphelines | M |
-| 4 | [EP-11] Audit du reporting | Audit core | Tableaux de bord orphelins, rapports non utilisés, métriques non configurées | M |
-| 5 | [EP-07] Export du rapport (PDF) | Rapport | Rapport exportable et présentable pour les clients / le management | S |
-| 6 | [EP-08] Onboarding & inscription self-service | Produit | Permettre à un utilisateur de s'inscrire et lancer son premier audit sans aide | M |
+| 2 | [EP-17] Sélection des domaines d'audit | Personnalisation | Modale de sélection des domaines avant lancement, score global adapté, première brique vers EP-16 | S |
+| 3 | [EP-08] Onboarding & inscription self-service | Produit | Permettre à un utilisateur de s'inscrire et lancer son premier audit sans aide | M |
 
 ---
 
@@ -46,6 +44,7 @@ Objectif : Étendre la valeur, explorer la monétisation et les cas d'usage avan
 
 | Epic | Thème | Valeur délivrée | Statut |
 |---|---|---|---|
+| [EP-16] Profil business & audit contextuel | Personnalisation | Questionnaire business (B2B/B2C, cycle de vente, maturité CRM) → seuils adaptatifs, criticités contextuelles, recommandations personnalisées. Étend EP-17 | Idée |
 | [EP-12] Historique & comparaison d'audits | Récurrence | Comparer l'évolution d'un workspace dans le temps | Idée |
 | [EP-13] Mode multi-workspace | Consultant | Gérer plusieurs workspaces clients depuis un seul compte | Idée |
 | [EP-14] Recommandations enrichies (IA) | Intelligence | Recommandations personnalisées basées sur le secteur / la taille | Idée |
@@ -65,21 +64,32 @@ Objectif : Étendre la valeur, explorer la monétisation et les cas d'usage avan
 
 - EP-05/05b ajoutent les domaines contacts et companies — les deux objets CRM les plus utilisés, essentiels pour un audit crédible
 - EP-UX-02 résout l'anxiété utilisateur pendant l'exécution de l'audit (30-300s) avec un feedback en temps réel — prérequis UX avant d'ajouter d'autres domaines qui allongent le temps d'audit
-- Le score global intègre désormais 4 domaines (propriétés, workflows, contacts, companies) au lieu de 2
+- Le score global intègre désormais 5 domaines (propriétés, workflows, contacts, companies, utilisateurs) au lieu de 2
 
 ### Pourquoi EP-UX était en première position de la phase 2 ? (livré)
 
 - Les 5 epics de la phase 1 avaient été codés sans guidelines UI/UX — le rattrapage était nécessaire avant d'ajouter des features
-- Un export PDF (EP-07) sur une UI non designée aurait produit un PDF non présentable
 - L'onboarding self-service (EP-08) n'a de sens que si le parcours post-inscription est pensé
 - Le design system créé par EP-UX est maintenant disponible pour tous les epics suivants
 
-### Pourquoi prioriser la couverture d'audit complète (EP-05→11) avant le packaging (EP-07, EP-08) ?
+### Pourquoi EP-09 a été livré avant EP-06 ?
 
-- Chaque domaine d'audit ajouté augmente directement la valeur de chaque audit lancé — c'est du ROI immédiat
-- Un export PDF ou un onboarding n'a de sens que si le rapport couvre un périmètre suffisant pour être convaincant
-- L'outil doit couvrir les 7 domaines clés (contacts, deals, propriétés, workflows, équipes, intégrations, reporting) pour être un vrai "audit HubSpot" et pas juste un outil partiel
-- Le self-service et le PDF sont du "packaging" — ils rendent le produit distribuable, mais ne changent pas sa valeur intrinsèque
+- EP-09 (utilisateurs & équipes) était plus rapide à implémenter que EP-06 (deals & pipelines) : API Settings + Owners vs API Deals avec pagination et analyse de pipelines
+- La valeur sécurité/gouvernance (Super Admins en excès, comptes fantômes) est immédiate et universelle — chaque workspace HubSpot a des utilisateurs
+- La parallélisation des 4 domaines post-Properties (Workflows, Contacts, Companies, Users via `Promise.all`) a été mise en place dans la foulée, réduisant significativement le temps d'audit total
+
+### Pourquoi EP-17 (sélection des domaines) est priorisé maintenant ?
+
+- Avec 6 domaines d'audit (5 livrés + deals en cours), le risque de "bruit" dans le rapport augmente — les utilisateurs qui n'utilisent pas certains objets CRM (ex: companies en B2C) voient leur score faussé
+- C'est la **première brique** du futur questionnaire business (EP-16) — elle pose les fondations UX (modale de configuration) et techniques (`audit_domains` en base, paramètre `selectedDomains` dans le moteur)
+- Impact technique faible (pas de nouvelle règle d'audit, principalement du filtrage) avec un impact UX élevé (pertinence perçue du score et du rapport)
+- Prérequis avant d'ajouter de futurs objets CRM (leads, tickets) qui ne seront pas pertinents pour tous les utilisateurs
+
+### Pourquoi EP-10 (intégrations), EP-11 (reporting) et EP-07 (PDF) ont été abandonnés ?
+
+- **EP-10 et EP-11** : les API HubSpot n'exposent pas suffisamment les données nécessaires pour auditer les intégrations (connexions, erreurs de sync) et le reporting (dashboards orphelins, rapports non utilisés) — impossible de construire un audit fiable sans accès aux données
+- **EP-07** : l'export PDF n'apporte pas assez de valeur par rapport au lien de partage public déjà en place — le rapport web est plus riche, interactif et toujours à jour
+- Le périmètre d'audit se stabilise à **6 domaines** (propriétés, workflows, contacts, companies, utilisateurs, deals) — suffisant pour un diagnostic HubSpot complet et crédible
 
 ---
 

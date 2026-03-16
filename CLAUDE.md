@@ -68,9 +68,7 @@ Actif quand on travaille dans `src/`. Objectif : implémenter les features spéc
 2. **Deals & Pipelines** — deals bloqués, étapes mal configurées, taux de conversion
 3. **Propriétés** — propriétés inutilisées, non mappées, redondantes
 4. **Workflows** — workflows inactifs, en erreur, redondants
-5. **Équipes & Utilisateurs** — utilisateurs inactifs, rôles mal attribués
-6. **Intégrations** — connexions actives/inactives, erreurs de sync
-7. **Reporting** — tableaux de bord orphelins, rapports non utilisés
+5. **Équipes & Utilisateurs** — utilisateurs inactifs, rôles mal attribués, Super Admins en excès
 
 ### Principes produit
 
