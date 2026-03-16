@@ -181,6 +181,30 @@ async function runAuditInBackground(
       (global.workflowResults?.totalInfos ?? 0) +
       (global.userResults?.totalInfos ?? 0);
 
+    // Build skipped_reasons for domains that were selected but returned no results
+    const skippedReasons: Record<string, string> = {};
+    if (selectedDomains?.includes("contacts") && !global.contactResults) {
+      skippedReasons.contacts = "no_contacts";
+    }
+    if (selectedDomains?.includes("companies") && !global.companyResults) {
+      skippedReasons.companies = "no_companies";
+    }
+    if (selectedDomains?.includes("users") && !global.userResults) {
+      skippedReasons.users = "less_than_2_users";
+    }
+    if (selectedDomains?.includes("workflows") && !global.workflowResults) {
+      skippedReasons.workflows = "no_workflows";
+    }
+
+    // Update audit_domains with skipped_reasons if any
+    const updatedAuditDomains = selectedDomains && Object.keys(skippedReasons).length > 0
+      ? {
+          selected: selectedDomains,
+          available: AUDIT_DOMAINS.filter((d) => d.implemented).map((d) => d.id),
+          skipped_reasons: skippedReasons,
+        }
+      : undefined; // Don't overwrite if no skips
+
     await supabase
       .from("audit_runs")
       .update({
@@ -205,6 +229,7 @@ async function runAuditInBackground(
         portal_name: connection.portal_name ?? null,
         execution_duration_ms: executionDurationMs,
         completed_at: new Date().toISOString(),
+        ...(updatedAuditDomains ? { audit_domains: updatedAuditDomains } : {}),
       })
       .eq("id", auditId);
   } catch (err) {
