@@ -19,6 +19,12 @@ import {
 } from "lucide-react";
 import type { DomainProgress } from "@/lib/audit/types";
 
+interface AuditDomainSelection {
+  selected: string[];
+  available: string[];
+  skipped_reasons?: Record<string, string>;
+}
+
 interface StatusResponse {
   status: "running" | "completed" | "failed";
   portalName: string | null;
@@ -26,6 +32,7 @@ interface StatusResponse {
   domains: Record<string, DomainProgress> | null;
   llmSummary: { status: string; error?: string } | null;
   globalProgress: number;
+  auditDomains: AuditDomainSelection | null;
 }
 
 interface AuditProgressTrackerProps {
@@ -117,9 +124,9 @@ export function AuditProgressTracker({
           Audit en cours — {displayName}
         </h2>
 
-        {/* Domaines */}
+        {/* Domaines — only show selected domains (from progress keys or all if no selection) */}
         <div className="space-y-5">
-          {DOMAIN_ORDER.map((key) => {
+          {DOMAIN_ORDER.filter((key) => !domains || key in domains).map((key) => {
             const config = DOMAIN_CONFIG[key];
             const domain = domains?.[key];
             if (!config) return null;

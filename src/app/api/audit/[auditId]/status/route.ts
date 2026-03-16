@@ -22,7 +22,7 @@ export async function GET(
 
   const { data, error } = await supabase
     .from("audit_runs")
-    .select("status, audit_progress, portal_name, error")
+    .select("status, audit_progress, audit_domains, portal_name, error")
     .eq("id", auditId)
     .eq("user_id", user.id)
     .single();
@@ -40,5 +40,6 @@ export async function GET(
     domains: progress?.domains ?? null,
     llmSummary: progress?.llmSummary ?? null,
     globalProgress: progress?.globalProgress ?? 0,
+    auditDomains: data.audit_domains ?? null,
   });
 }
