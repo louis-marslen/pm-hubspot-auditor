@@ -9,7 +9,7 @@ Dernière mise à jour : 16 Mars 2026
 
 ## ✅ LIVRÉ — Phase 1 complète
 
-Objectif atteint : produit fonctionnel, utilisable par Louis sur ses missions, testable par des beta users.
+Objectif atteint : produit fonctionnel avec 6 domaines d'audit, utilisable par Louis sur ses missions, testable par des beta users.
 
 | Epic | Thème | Valeur délivrée | Statut |
 |---|---|---|---|
@@ -23,6 +23,8 @@ Objectif atteint : produit fonctionnel, utilisable par Louis sur ses missions, t
 | [EP-05b] Audit des companies | Audit core | 8 règles : doublons domain/nom, companies orphelines, qualité données entreprises | ✅ Livré |
 | [EP-UX-02] Progression d'audit en temps réel | UX | Navigation immédiate, tracker de progression domaine par domaine avec sous-étapes, polling temps réel, transition fluide vers rapport | ✅ Livré |
 | [EP-09] Audit des utilisateurs & équipes | Audit core | 7 règles U-01 à U-07, détection Super Admins en excès, utilisateurs inactifs, équipes vides, 2 recommandations non scorées (R1/R2), activation conditionnelle (≥ 2 users) | ✅ Livré |
+| [EP-06] Audit des deals & pipelines | Audit core | 15 règles D-01 à D-15, deals bloqués, pipeline structurel (phases sautées, stages redondants, points d'entrée multiples), scoring pondéré ×1.5, migration P13-P16, associations batch | ✅ Livré |
+| [EP-17] Sélection des domaines d'audit | Personnalisation | Modale de sélection pré-audit (6 domaines, Properties obligatoire), score global adapté, bandeau de périmètre, skipped_reasons, historique partiel, LLM scope-aware | ✅ Livré |
 
 ---
 
@@ -32,9 +34,8 @@ Objectif : Finaliser la couverture d'audit et packager le produit pour la distri
 
 | # | Epic | Thème | Valeur délivrée | Taille |
 |---|---|---|---|---|
-| 1 | [EP-06] Audit des deals & pipelines | Audit core | Deals bloqués, étapes mal configurées, taux de conversion anormaux | M |
-| 2 | [EP-17] Sélection des domaines d'audit | Personnalisation | Modale de sélection des domaines avant lancement, score global adapté, première brique vers EP-16 | S |
-| 3 | [EP-08] Onboarding & inscription self-service | Produit | Permettre à un utilisateur de s'inscrire et lancer son premier audit sans aide | M |
+| 1 | [EP-08] Onboarding & inscription self-service | Produit | Permettre à un utilisateur de s'inscrire et lancer son premier audit sans aide | M |
+| 2 | [EP-18] Audit des leads & pipelines de prospection | Audit core | Leads bloqués, pipelines de prospection mal configurés, motifs de disqualification, conversion lead→deal | S-M |
 
 ---
 
@@ -64,7 +65,7 @@ Objectif : Étendre la valeur, explorer la monétisation et les cas d'usage avan
 
 - EP-05/05b ajoutent les domaines contacts et companies — les deux objets CRM les plus utilisés, essentiels pour un audit crédible
 - EP-UX-02 résout l'anxiété utilisateur pendant l'exécution de l'audit (30-300s) avec un feedback en temps réel — prérequis UX avant d'ajouter d'autres domaines qui allongent le temps d'audit
-- Le score global intègre désormais 5 domaines (propriétés, workflows, contacts, companies, utilisateurs) au lieu de 2
+- Le score global intègre désormais 6 domaines (propriétés, workflows, contacts, companies, utilisateurs, deals) au lieu de 2, avec pondération renforcée pour les deals (×1.5)
 
 ### Pourquoi EP-UX était en première position de la phase 2 ? (livré)
 
@@ -85,11 +86,24 @@ Objectif : Étendre la valeur, explorer la monétisation et les cas d'usage avan
 - Impact technique faible (pas de nouvelle règle d'audit, principalement du filtrage) avec un impact UX élevé (pertinence perçue du score et du rapport)
 - Prérequis avant d'ajouter de futurs objets CRM (leads, tickets) qui ne seront pas pertinents pour tous les utilisateurs
 
+### Pourquoi EP-06 et EP-17 ont été livrés en priorité ?
+
+- **EP-06** complète la couverture des 3 objets CRM fondamentaux (contacts, companies, deals) — le domaine le plus directement lié au chiffre d'affaires. 15 règles dont l'audit structurel des pipelines (phases sautées, points d'entrée multiples), feature unique sur le marché
+- **EP-17** était un prérequis de qualité avant d'ajouter de nouveaux domaines optionnels (leads) — sans sélection des domaines, chaque nouveau domaine augmente le bruit pour les utilisateurs qui ne l'utilisent pas
+- Les deux epics ont été livrés en 7 phases progressives (EP-17) puis un seul batch (EP-06)
+
+### Pourquoi EP-18 (Leads) maintenant ?
+
+- Les leads sont le prochain objet CRM logique après les deals — ils représentent l'étape pré-deal dans le cycle de vente
+- Beaucoup de règles sont directement adaptables depuis EP-06 (deals/pipelines) avec des seuils ajustés (cycles de prospection plus courts)
+- Le domaine est **obligatoirement optionnel** (décoché par défaut dans EP-17) car beaucoup d'entreprises n'utilisent pas l'objet Lead HubSpot
+- EP-17 pose les fondations techniques pour les domaines optionnels — le travail d'intégration est minimal
+
 ### Pourquoi EP-10 (intégrations), EP-11 (reporting) et EP-07 (PDF) ont été abandonnés ?
 
 - **EP-10 et EP-11** : les API HubSpot n'exposent pas suffisamment les données nécessaires pour auditer les intégrations (connexions, erreurs de sync) et le reporting (dashboards orphelins, rapports non utilisés) — impossible de construire un audit fiable sans accès aux données
 - **EP-07** : l'export PDF n'apporte pas assez de valeur par rapport au lien de partage public déjà en place — le rapport web est plus riche, interactif et toujours à jour
-- Le périmètre d'audit se stabilise à **6 domaines** (propriétés, workflows, contacts, companies, utilisateurs, deals) — suffisant pour un diagnostic HubSpot complet et crédible
+- Le périmètre d'audit se stabilise à **6+1 domaines** (propriétés, workflows, contacts, companies, utilisateurs, deals + leads optionnel) — suffisant pour un diagnostic HubSpot complet et crédible
 
 ---
 

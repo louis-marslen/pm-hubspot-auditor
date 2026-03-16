@@ -79,7 +79,14 @@ Les artefacts PM sont en lecture seule depuis ce mode. Si tu identifies une inco
 | EP-02 | [prd-02-audit-proprietes.md](../product/prd/prd-02-audit-proprietes.md) | Analyse propriétés HubSpot (taux remplissage, doublons…) | ✅ Livré |
 | EP-03 | [prd-03-audit-workflows.md](../product/prd/prd-03-audit-workflows.md) | Analyse workflows HubSpot (inactifs, erreurs, redondances) | ✅ Livré |
 | EP-04 | [prd-04-tableau-de-bord.md](../product/prd/prd-04-tableau-de-bord.md) | Dashboard d'audit, rapport exportable, lien public, LLM summary | ✅ Livré |
-| EP-UX | [prd-ux-design-system.md](../product/prd/prd-ux-design-system.md) | Design system, rattrapage UI/UX, parcours utilisateur | À implémenter |
+| EP-05 | [prd-05-audit-contacts.md](../product/prd/prd-05-audit-contacts.md) | Audit contacts & doublons (12 règles) | ✅ Livré |
+| EP-05b | [prd-05b-audit-companies.md](../product/prd/prd-05b-audit-companies.md) | Audit companies (8 règles) | ✅ Livré |
+| EP-UX | [prd-ux-design-system.md](../product/prd/prd-ux-design-system.md) | Design system, rattrapage UI/UX, parcours utilisateur | ✅ Livré |
+| EP-UX-02 | [prd-progression-audit.md](../product/prd/prd-progression-audit.md) | Progression d'audit en temps réel | ✅ Livré |
+| EP-09 | [prd-09-audit-utilisateurs-equipes.md](../product/prd/prd-09-audit-utilisateurs-equipes.md) | Audit utilisateurs & équipes (7 règles) | ✅ Livré |
+| EP-06 | [prd-06-audit-deals.md](../product/prd/prd-06-audit-deals.md) | Audit deals & pipelines (15 règles, scoring pondéré) | ✅ Livré |
+| EP-17 | [prd-17-selection-domaines-audit.md](../product/prd/prd-17-selection-domaines-audit.md) | Sélection des domaines d'audit, modale pré-launch | ✅ Livré |
+| EP-18 | [prd-18-audit-leads.md](../product/prd/prd-18-audit-leads.md) | Audit leads & pipelines de prospection (14 règles, domaine optionnel) | Spécifié |
 
 ---
 

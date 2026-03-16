@@ -53,6 +53,7 @@ product/
 | EP-09 | [prd-09-audit-utilisateurs-equipes.md](prd/prd-09-audit-utilisateurs-equipes.md) | [ep09-audit-utilisateurs-equipes.md](epics/ep09-audit-utilisateurs-equipes.md) | ✅ Livré |
 | EP-06 | [prd-06-audit-deals.md](prd/prd-06-audit-deals.md) | [ep06-audit-deals.md](epics/ep06-audit-deals.md) | ✅ Livré |
 | EP-17 | [prd-17-selection-domaines-audit.md](prd/prd-17-selection-domaines-audit.md) | [ep17-selection-domaines-audit.md](epics/ep17-selection-domaines-audit.md) | ✅ Livré |
+| EP-18 | [prd-18-audit-leads.md](prd/prd-18-audit-leads.md) | [ep18-audit-leads.md](epics/ep18-audit-leads.md) | En cours |
 | EP-08 | À créer | À créer | À spécifier |
 
 ---

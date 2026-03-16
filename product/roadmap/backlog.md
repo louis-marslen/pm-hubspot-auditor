@@ -23,10 +23,11 @@ Tous les epics identifiés avec leur scoring RICE indicatif et leur statut.
 | EP-05 | Audit des contacts & doublons | 40 | 3 | 70% | 1.5 | 56 | LIVRÉ | ✅ Livré |
 | EP-05b | Audit des companies | 35 | 2 | 70% | 1 | 49 | LIVRÉ | ✅ Livré |
 | EP-UX-02 | Progression d'audit en temps réel | 50 | 3 | 90% | 1 | 135 | LIVRÉ | ✅ Livré |
-| EP-06 | Audit des deals & pipelines | 40 | 2 | 70% | 1.5 | 37 | NOW | Spécifié |
+| EP-06 | Audit des deals & pipelines | 40 | 2 | 70% | 1.5 | 37 | LIVRÉ | ✅ Livré |
 | EP-09 | Audit utilisateurs & équipes | 30 | 2 | 60% | 1 | 36 | LIVRÉ | ✅ Livré |
-| EP-17 | Sélection des domaines d'audit | 50 | 2 | 90% | 0.5 | 180 | NOW | Spécifié |
+| EP-17 | Sélection des domaines d'audit | 50 | 2 | 90% | 0.5 | 180 | LIVRÉ | ✅ Livré |
 | EP-08 | Onboarding self-service | 50 | 3 | 70% | 1 | 105 | NOW | À spécifier |
+| EP-18 | Audit des leads & pipelines de prospection | 25 | 2 | 70% | 1 | 35 | NOW | En cours |
 | ~~EP-10~~ | ~~Audit des intégrations~~ | — | — | — | — | — | — | Abandonné |
 | ~~EP-11~~ | ~~Audit du reporting~~ | — | — | — | — | — | — | Abandonné |
 | ~~EP-07~~ | ~~Export du rapport (PDF)~~ | — | — | — | — | — | — | Abandonné |
@@ -40,7 +41,28 @@ Tous les epics identifiés avec leur scoring RICE indicatif et leur statut.
 
 ---
 
-## Ce qui a été livré en Phase 2
+## Ce qui a été livré en Phase 2 (suite)
+
+### EP-06 — Audit des deals & pipelines
+- **15 règles (D-01 à D-15)** : 4 migrées depuis Properties (D-01 à D-04 ex-P13 à P16), 1 feature phare deals bloqués (D-05), 4 qualité données (D-08 à D-11), 6 audit structurel pipeline (D-06, D-07, D-12 à D-15)
+- **Règles pipeline structurelles** : phases sautées (>20%), points d'entrée multiples (>20%), stages fermés redondants, pipelines inactifs (90j), trop de stages (>8), stages sans activité (90j)
+- **Scoring pondéré** : score Deals avec coefficient ×1.5 dans le score global (domaine le plus lié au CA)
+- **Associations batch** : deals → contacts et deals → companies en chunks de 100 pour performance
+- **Activation conditionnelle** : domaine actif uniquement si ≥ 1 deal dans le workspace
+- Score Deals (0-100) intégré au score global du dashboard — **6 domaines actifs**
+
+### EP-17 — Sélection des domaines d'audit
+- **Livré en 7 phases** : migration DB → modale de sélection → API filtering → LLM scope-aware → progress tracker filtré → bandeau périmètre + tabs filtrés + historique partiel → edge cases + skipped_reasons
+- **Modale de sélection** : 6 domaines (Properties obligatoire, 5 optionnels), opt-out par défaut (tous cochés)
+- **Score global adapté** : recalculé sur les domaines sélectionnés uniquement
+- **Skipped reasons** : domaines sélectionnés mais sans données (`no_contacts`, `no_companies`, `less_than_2_users`, `no_deals`, `no_workflows`)
+- **Bandeau de périmètre** : indication visible dans le rapport si l'audit est partiel
+- **Rétrocompatibilité** : `audit_domains = null` → comportement identique à "tous les domaines"
+- Colonne `audit_domains` jsonb dans `audit_runs` (migration 008)
+
+---
+
+## Ce qui a été livré en Phase 2 (début)
 
 ### EP-09 — Audit des utilisateurs & équipes
 - **7 règles (U-01 à U-07)** : Super Admins en excès (>25% ou >3), rôles non différenciés (tous identiques), utilisateurs sans équipe, équipes vides, utilisateurs inactifs (fallback owners sans objet CRM si non-Enterprise), comptes email générique (admin@, info@…), utilisateurs sans rôle assigné
