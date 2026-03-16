@@ -1,3 +1,66 @@
+// ─── Audit Domain Selection (EP-17) ──────────────────────────────────────────
+
+export type AuditDomainId = 'properties' | 'contacts' | 'companies' | 'workflows' | 'users' | 'deals';
+
+export interface AuditDomainSelection {
+  selected: AuditDomainId[];
+  available: AuditDomainId[];
+  skipped_reasons?: Record<string, string>;
+}
+
+export interface AuditDomainMeta {
+  id: AuditDomainId;
+  label: string;
+  description: string;
+  required: boolean;
+  implemented: boolean;
+}
+
+export const AUDIT_DOMAINS: AuditDomainMeta[] = [
+  {
+    id: 'properties',
+    label: 'Propriétés personnalisées',
+    description: 'Propriétés inutilisées, redondantes, mal typées',
+    required: true,
+    implemented: true,
+  },
+  {
+    id: 'contacts',
+    label: 'Contacts & doublons',
+    description: 'Doublons, emails invalides, contacts stale, attribution',
+    required: false,
+    implemented: true,
+  },
+  {
+    id: 'companies',
+    label: 'Companies',
+    description: 'Doublons, companies orphelines, qualité des données',
+    required: false,
+    implemented: true,
+  },
+  {
+    id: 'workflows',
+    label: 'Workflows',
+    description: 'Workflows inactifs, zombies, sans actions, legacy',
+    required: false,
+    implemented: true,
+  },
+  {
+    id: 'users',
+    label: 'Utilisateurs & Équipes',
+    description: 'Super Admins, rôles, utilisateurs inactifs, équipes',
+    required: false,
+    implemented: true,
+  },
+  {
+    id: 'deals',
+    label: 'Deals & Pipelines',
+    description: 'Deals bloqués, étapes mal configurées, conversions',
+    required: false,
+    implemented: false,
+  },
+];
+
 // ─── Audit Progress (EP-UX-02) ────────────────────────────────────────────
 
 export interface DomainProgress {
