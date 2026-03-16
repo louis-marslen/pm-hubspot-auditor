@@ -21,6 +21,7 @@ interface LeadPipelineStage {
   metadata?: {
     probability?: string;
     isClosed?: string;
+    leadState?: string; // NEW, IN_PROGRESS, QUALIFIED, UNQUALIFIED
   };
 }
 
@@ -55,39 +56,65 @@ export async function fetchOpenLeads(
   }
 
   const baseProps = [
-    "hs_lead_label", "hs_lead_status", "hs_pipeline", "hs_pipeline_stage",
-    "hubspot_owner_id", "createdate", "lastmodifieddate",
+    "hs_lead_name", "hs_lead_status", "hs_pipeline", "hs_pipeline_stage",
+    "hubspot_owner_id", "hs_createdate", "hs_lastmodifieddate",
     "hs_analytics_source", "hs_lead_disqualification_reason",
   ];
   const allProps = [...baseProps, ...dateEnteredProps];
 
+  // Open leads = leads in non-closed stages (isClosed: "false")
+  // Filter by hs_pipeline_stage IN open stage IDs (search API doesn't support hs_lead_status filter)
+  const openStageIds: string[] = [];
+  for (const p of pipelines) {
+    for (const s of p.stages) {
+      if (s.metadata?.isClosed !== "true") {
+        openStageIds.push(s.id);
+      }
+    }
+  }
+
+  if (openStageIds.length === 0) return [];
+
+  // Use multiple filterGroups (OR) — one per open stage
   const allLeads: Record<string, unknown>[] = [];
-  let after: string | undefined;
 
-  do {
-    const body: Record<string, unknown> = {
-      filterGroups: [
-        {
+  // Search API supports multiple filterGroups as OR, but too many can fail.
+  // Batch stage IDs into groups of 5 filterGroups per request.
+  const BATCH_SIZE = 5;
+  for (let i = 0; i < openStageIds.length; i += BATCH_SIZE) {
+    const batchStageIds = openStageIds.slice(i, i + BATCH_SIZE);
+    let after: string | undefined;
+
+    do {
+      const body: Record<string, unknown> = {
+        filterGroups: batchStageIds.map((stageId) => ({
           filters: [
-            { propertyName: "hs_lead_status", operator: "EQ", value: "OPEN" },
+            { propertyName: "hs_pipeline_stage", operator: "EQ", value: stageId },
           ],
-        },
-      ],
-      limit: 100,
-      properties: allProps,
-      sorts: [{ propertyName: "createdate", direction: "ASCENDING" }],
-    };
-    if (after) body.after = after;
+        })),
+        limit: 100,
+        properties: allProps,
+        sorts: [{ propertyName: "hs_createdate", direction: "ASCENDING" }],
+      };
+      if (after) body.after = after;
 
-    const res = await client.post<SearchResponse>(
-      "/crm/v3/objects/leads/search",
-      body,
-    );
-    allLeads.push(...res.results);
-    after = res.paging?.next?.after;
-  } while (after);
+      const res = await client.post<SearchResponse>(
+        "/crm/v3/objects/leads/search",
+        body,
+      );
+      allLeads.push(...res.results);
+      after = res.paging?.next?.after;
+    } while (after);
+  }
 
-  return allLeads;
+  // Deduplicate by ID (unlikely but safe)
+  const seen = new Set<string>();
+  return allLeads.filter((l) => {
+    const id = l.id as string;
+    if (seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
 }
 
 /** Fetch leads in specific stages (for L-11, L-13 — includes non-open leads) */
@@ -106,8 +133,8 @@ export async function fetchLeadsInStages(
   }
 
   const baseProps = [
-    "hs_lead_label", "hs_lead_status", "hs_pipeline", "hs_pipeline_stage",
-    "hubspot_owner_id", "createdate", "lastmodifieddate",
+    "hs_lead_name", "hs_lead_status", "hs_pipeline", "hs_pipeline_stage",
+    "hubspot_owner_id", "hs_createdate", "hs_lastmodifieddate",
     "hs_analytics_source", "hs_lead_disqualification_reason",
   ];
   const allProps = [...baseProps, ...dateEnteredProps];
@@ -129,7 +156,7 @@ export async function fetchLeadsInStages(
         ],
         limit: 100,
         properties: allProps,
-        sorts: [{ propertyName: "createdate", direction: "ASCENDING" }],
+        sorts: [{ propertyName: "hs_createdate", direction: "ASCENDING" }],
       };
       if (after) body.after = after;
 
@@ -154,11 +181,21 @@ export async function fetchLeadsInStages(
 
 /** Count total leads (all statuses) */
 export async function countTotalLeads(client: HubSpotClient): Promise<number> {
+  // Try GET list endpoint first — the search endpoint may return 0 for leads
+  try {
+    const listRes = await client.get<{ total: number; results: unknown[] }>("/crm/v3/objects/leads?limit=1");
+    console.log(`[audit:leads] GET list: total=${listRes.total}, results=${listRes.results?.length}`);
+    return listRes.total;
+  } catch (listErr) {
+    console.log(`[audit:leads] GET list failed, falling back to search:`, listErr instanceof Error ? listErr.message : listErr);
+  }
+  // Fallback to search
   const res = await client.post<SearchResponse>("/crm/v3/objects/leads/search", {
     filterGroups: [],
     limit: 1,
     properties: [],
   });
+  console.log(`[audit:leads] POST search: total=${res.total}`);
   return res.total;
 }
 
@@ -177,7 +214,7 @@ export function runL01(openLeads: Record<string, unknown>[]): LeadIssue[] {
   return openLeads
     .filter((l) => {
       const props = l.properties as Record<string, string | null>;
-      const createdAt = props.createdate;
+      const createdAt = props.hs_createdate;
       if (!createdAt) return false;
       return now - new Date(createdAt).getTime() > thirtyDaysMs;
     })
@@ -219,7 +256,7 @@ export function runL02(
     // Get date entered current stage
     const dateEnteredProp = props[`hs_date_entered_${stageId}`];
     const dateEntered = dateEnteredProp ? new Date(dateEnteredProp).getTime() : null;
-    const fallback = props.lastmodifieddate ? new Date(props.lastmodifieddate).getTime() : null;
+    const fallback = props.hs_lastmodifieddate ? new Date(props.hs_lastmodifieddate).getTime() : null;
     const stageEntryTime = dateEntered ?? fallback;
 
     if (!stageEntryTime) continue;
@@ -228,7 +265,7 @@ export function runL02(
     // Grace period: new leads in first stage
     const firstStage = firstStageByPipeline.get(pipelineId);
     if (stageId === firstStage) {
-      const createdAt = props.createdate ? new Date(props.createdate).getTime() : 0;
+      const createdAt = props.hs_createdate ? new Date(props.hs_createdate).getTime() : 0;
       if (now - createdAt < thirtyDaysMs) continue;
     }
 
@@ -245,7 +282,7 @@ export function runL02(
 
     const lead = toLeadIssue(l);
     lead.daysInStage = Math.floor((now - stageEntryTime) / (1000 * 60 * 60 * 24));
-    lead.dateEnteredStage = dateEnteredProp ?? props.lastmodifieddate ?? null;
+    lead.dateEnteredStage = dateEnteredProp ?? props.hs_lastmodifieddate ?? null;
     groups.get(key)!.leads.push(lead);
   }
 
@@ -404,26 +441,27 @@ export function runL14(openLeads: Record<string, unknown>[]): LeadIssue[] {
 
 function toLeadIssue(l: Record<string, unknown>): LeadIssue {
   const props = l.properties as Record<string, string | null>;
-  const createdAt = props.createdate ?? "";
+  const createdAt = props.hs_createdate ?? (l as { createdAt?: string }).createdAt ?? "";
   const ageInDays = createdAt
     ? Math.floor((Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24))
     : 0;
 
   return {
     id: l.id as string,
-    name: props.hs_lead_label ?? `Lead ${l.id}`,
+    name: props.hs_lead_name ?? `Lead ${l.id}`,
     pipeline: props.hs_pipeline ?? "",
     pipelineLabel: props.hs_pipeline ?? "",
     stage: props.hs_pipeline_stage ?? "",
     stageLabel: props.hs_pipeline_stage ?? "",
     ownerId: props.hubspot_owner_id ?? null,
     createdAt,
-    lastModifiedDate: props.lastmodifieddate ?? null,
+    lastModifiedDate: props.hs_lastmodifieddate ?? (l as { updatedAt?: string }).updatedAt ?? null,
     ageInDays,
     source: props.hs_analytics_source ?? null,
     disqualificationReason: props.hs_lead_disqualification_reason ?? null,
   };
 }
+
 
 /** Batch fetch association counts for leads → target object type */
 async function batchGetLeadAssociationCounts(

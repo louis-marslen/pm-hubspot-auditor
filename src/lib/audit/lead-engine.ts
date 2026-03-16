@@ -34,7 +34,9 @@ export async function runLeadAudit(
   let totalLeads: number;
   try {
     totalLeads = await countTotalLeads(client);
+    console.log(`[audit:leads] countTotalLeads returned: ${totalLeads}`);
   } catch (err: unknown) {
+    console.error(`[audit:leads] countTotalLeads error:`, err);
     const status = (err as { status?: number })?.status;
     const message = err instanceof Error ? err.message : String(err);
 

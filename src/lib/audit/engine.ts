@@ -319,7 +319,9 @@ export async function runFullAudit(
       await emit((p) => completeDomain(p, "leads"));
       return results;
     } catch (err) {
-      await emit((p) => failDomain(p, "leads", err instanceof Error ? err.message : "Erreur inconnue"));
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`[audit:leads] LEAD AUDIT FAILED:`, msg, err);
+      await emit((p) => failDomain(p, "leads", msg));
       return null;
     }
   }

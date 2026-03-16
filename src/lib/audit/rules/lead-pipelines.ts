@@ -17,6 +17,7 @@ interface LeadPipelineStage {
   metadata?: {
     probability?: string;
     isClosed?: string;
+    leadState?: string; // NEW, IN_PROGRESS, QUALIFIED, UNQUALIFIED
   };
 }
 
@@ -284,9 +285,9 @@ export function runL09(
 
   return pipelines
     .map((p) => {
-      // For lead pipelines: "Qualified" stages have probability ~1.0, "Disqualified" have probability 0 + isClosed
+      // For lead pipelines: use metadata.leadState to identify qualified/disqualified stages
       const qualifiedStages = p.stages
-        .filter((s) => parseFloat(s.metadata?.probability ?? "0") === 1.0)
+        .filter((s) => s.metadata?.leadState?.toUpperCase() === "QUALIFIED" || (!s.metadata?.leadState && parseFloat(s.metadata?.probability ?? "0") === 1.0))
         .map((s) => ({
           id: s.id,
           label: s.label,
@@ -295,8 +296,8 @@ export function runL09(
 
       const disqualifiedStages = p.stages
         .filter((s) =>
-          s.metadata?.isClosed === "true" &&
-          parseFloat(s.metadata?.probability ?? "1") === 0
+          s.metadata?.leadState?.toUpperCase() === "UNQUALIFIED" ||
+          (!s.metadata?.leadState && s.metadata?.isClosed === "true" && parseFloat(s.metadata?.probability ?? "1") === 0)
         )
         .map((s) => ({
           id: s.id,
@@ -382,7 +383,9 @@ export function runL10(
   return results;
 }
 
-/** Helper to get stage IDs by type (qualified/disqualified) from pipelines */
+/** Helper to get stage IDs by type (qualified/disqualified) from pipelines.
+ *  Uses metadata.leadState (QUALIFIED / UNQUALIFIED) which is specific to lead pipelines.
+ *  Falls back to probability-based detection for compatibility. */
 export function getStageIdsByType(
   pipelines: LeadPipelineData[],
   type: "qualified" | "disqualified",
@@ -390,12 +393,13 @@ export function getStageIdsByType(
   const stageIds: string[] = [];
   for (const p of pipelines) {
     for (const s of p.stages) {
+      const leadState = s.metadata?.leadState?.toUpperCase();
       if (type === "qualified") {
-        if (parseFloat(s.metadata?.probability ?? "0") === 1.0) {
+        if (leadState === "QUALIFIED" || (!leadState && parseFloat(s.metadata?.probability ?? "0") === 1.0)) {
           stageIds.push(s.id);
         }
       } else {
-        if (s.metadata?.isClosed === "true" && parseFloat(s.metadata?.probability ?? "1") === 0) {
+        if (leadState === "UNQUALIFIED" || (!leadState && s.metadata?.isClosed === "true" && parseFloat(s.metadata?.probability ?? "1") === 0)) {
           stageIds.push(s.id);
         }
       }

@@ -489,7 +489,7 @@ export function AuditResultsView({
     ...(isDomainAudited("contacts") && c?.hasContacts ? [{ id: "contacts", label: "Contacts", count: contactCount > 0 ? contactCount : undefined }] : []),
     ...(isDomainAudited("companies") && co?.hasCompanies ? [{ id: "companies", label: "Companies", count: companyCount > 0 ? companyCount : undefined }] : []),
     ...(isDomainAudited("deals") && d?.hasDeals ? [{ id: "deals", label: "Deals & Pipelines", count: dealCount > 0 ? dealCount : undefined }] : []),
-    ...(isDomainAudited("leads") && l?.hasLeads && !l.scopeError ? [{ id: "leads", label: "Leads & Prospection", count: leadCount > 0 ? leadCount : undefined }] : []),
+    ...(isDomainAudited("leads") ? [{ id: "leads", label: "Leads & Prospection", count: leadCount > 0 ? leadCount : undefined }] : []),
     ...(isDomainAudited("workflows") && w?.hasWorkflows ? [{ id: "workflows", label: "Workflows", count: workflowCount > 0 ? workflowCount : undefined }] : []),
     ...(isDomainAudited("users") && u?.hasUsers ? [{ id: "users", label: "Utilisateurs & Équipes", count: userCount > 0 ? userCount : undefined }] : []),
   ];
@@ -1213,15 +1213,41 @@ export function AuditResultsView({
       )}
 
       {/* Leads & Prospection (EP-18) */}
-      {l !== undefined && l !== null && l.hasLeads && !l.scopeError && (
+      {isDomainAudited("leads") && (
         <section id="section-leads" className="scroll-mt-16 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-100">Leads &amp; Prospection</h2>
-            <ScoreCircle score={l.score} size="sm" />
+            {l?.hasLeads && !l.scopeError && <ScoreCircle score={l.score} size="sm" />}
           </div>
 
+          {/* Scope error alert */}
+          {l?.scopeError && (
+            <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-5 py-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-red-400 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-red-400">{l.scopeError}</p>
+                  <p className="text-xs text-red-400/70 mt-1">
+                    Rendez-vous dans Dashboard → Connexions HubSpot pour re-autoriser l&apos;application.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* No leads message */}
+          {(!l || (!l.scopeError && !l.hasLeads)) && (
+            <div className="rounded-lg bg-gray-800/50 border border-gray-700 px-5 py-4">
+              <p className="text-sm text-gray-400">
+                Aucun lead détecté dans ce workspace. Ce domaine nécessite l&apos;utilisation des objets Leads dans HubSpot (Sales Hub).
+              </p>
+            </div>
+          )}
+
+          {l?.hasLeads && !l.scopeError && (
+          <>
           <div className="text-sm text-gray-400 mb-2">
-            {l.totalLeads.toLocaleString("fr-FR")} leads · {l.totalPipelines} pipeline{l.totalPipelines !== 1 ? "s" : ""} de prospection
+            {(l.totalLeads ?? 0).toLocaleString("fr-FR")} leads · {l.totalPipelines ?? 0} pipeline{(l.totalPipelines ?? 0) !== 1 ? "s" : ""} de prospection
           </div>
 
           {/* Qualité données leads */}
@@ -1502,6 +1528,8 @@ export function AuditResultsView({
               )}
             />
           </RuleCard>
+          </>
+          )}
         </section>
       )}
 

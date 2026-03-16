@@ -17,6 +17,7 @@ import {
   RefreshCw,
   Shield,
   TrendingUp,
+  UserPlus,
 } from "lucide-react";
 import type { DomainProgress } from "@/lib/audit/types";
 
@@ -51,6 +52,7 @@ const DOMAIN_CONFIG: Record<
   contacts: { icon: Users, label: "Contacts" },
   companies: { icon: Building2, label: "Companies" },
   deals: { icon: TrendingUp, label: "Deals & Pipelines" },
+  leads: { icon: UserPlus, label: "Leads & Prospection" },
   workflows: { icon: Workflow, label: "Workflows" },
   users: { icon: Shield, label: "Utilisateurs & Équipes" },
 };
@@ -61,7 +63,7 @@ const STEP_LABELS: Record<string, string> = {
   scoring: "Scoring et recommandations",
 };
 
-const DOMAIN_ORDER = ["properties", "contacts", "companies", "deals", "workflows", "users"];
+const DOMAIN_ORDER = ["properties", "contacts", "companies", "deals", "leads", "workflows", "users"];
 
 function formatCount(count: number): string {
   return count.toLocaleString("fr-FR");
@@ -228,8 +230,8 @@ function DomainRow({
       {/* Domain header */}
       <div className="flex items-center gap-3">
         <StepIcon status={status} />
-        <Icon className="h-5 w-5 text-gray-400" />
-        <span className="text-sm text-gray-200 font-medium">{label}</span>
+        <Icon className={`h-5 w-5 ${status === "completed" && !isExcluded ? "text-green-500" : "text-gray-400"}`} />
+        <span className={`text-sm font-medium ${status === "completed" && !isExcluded ? "text-green-500" : "text-gray-200"}`}>{label}</span>
         {status === "completed" && !isExcluded && (
           <span className="text-xs text-green-500 ml-auto">OK</span>
         )}

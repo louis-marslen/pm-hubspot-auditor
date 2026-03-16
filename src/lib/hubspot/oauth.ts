@@ -8,6 +8,7 @@ const SCOPES = [
   "crm.objects.contacts.read",
   "crm.objects.companies.read",
   "crm.objects.deals.read",
+  "crm.objects.leads.read",
   "crm.schemas.contacts.read",
   "crm.schemas.companies.read",
   "crm.schemas.deals.read",
