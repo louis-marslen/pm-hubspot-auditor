@@ -12,6 +12,7 @@ const SCOPES = [
   "crm.schemas.companies.read",
   "crm.schemas.deals.read",
   "automation",
+  "oauth",
   "settings.users.read",
   "crm.objects.owners.read",
   "account-info.security.read",

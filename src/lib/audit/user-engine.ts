@@ -67,7 +67,12 @@ export async function runUserAudit(
   }
   t("fetch users", t0);
 
-  // Condition d'activation : ≥ 2 utilisateurs
+  // Exclure les comptes de service (apps HubSpot) — pas de vrais utilisateurs
+  users = users.filter(
+    (u) => !u.email.includes("@appserviceaccount.") && !u.email.endsWith(".hubspot.com"),
+  );
+
+  // Condition d'activation : ≥ 2 utilisateurs (hors apps)
   if (users.length < 2) {
     return null;
   }

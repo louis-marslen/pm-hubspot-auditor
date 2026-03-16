@@ -281,6 +281,8 @@ export async function runFullAudit(
         return completeDomain(updated, "users");
       });
     } else {
+      await emit((p) => updateDomainStep(p, "users", "analyzing", userResults.totalUsers));
+      await emit((p) => updateDomainStep(p, "users", "scoring"));
       await emit((p) => completeDomain(p, "users"));
     }
   } catch (err) {
