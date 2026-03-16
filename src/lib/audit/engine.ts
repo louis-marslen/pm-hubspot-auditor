@@ -1,9 +1,16 @@
 import { HubSpotClient } from "@/lib/hubspot/api-client";
-import { AuditResults, WorkflowAuditResults, GlobalAuditResults } from "@/lib/audit/types";
+import { AuditResults, WorkflowAuditResults, GlobalAuditResults, AuditProgress } from "@/lib/audit/types";
 import { runWorkflowRules } from "@/lib/audit/rules/workflows";
 import { runContactAudit } from "@/lib/audit/contact-engine";
 import { runCompanyAudit } from "@/lib/audit/company-engine";
 import { calculateGlobalScore } from "@/lib/audit/global-score";
+import {
+  initProgress,
+  updateDomainStep,
+  completeDomain,
+  failDomain,
+  persistProgress,
+} from "@/lib/audit/progress";
 import {
   getCustomProperties,
   computeFillRates,
@@ -172,18 +179,87 @@ export async function runWorkflowAudit(accessToken: string): Promise<WorkflowAud
 /**
  * Audit complet : propriétés + workflows en parallèle → score global.
  * runAudit() reste intacte pour rétrocompatibilité.
+ *
+ * Quand auditId est fourni, émet la progression domaine par domaine
+ * et la persiste en base pour le polling frontend.
  */
-export async function runFullAudit(accessToken: string): Promise<GlobalAuditResults> {
-  const [propertyResults, workflowResults] = await Promise.all([
-    runAudit(accessToken),
-    runWorkflowAudit(accessToken),
-  ]);
+export async function runFullAudit(
+  accessToken: string,
+  auditId?: string,
+): Promise<GlobalAuditResults> {
+  // Domaines dans l'ordre d'affichage du tracker
+  const DOMAIN_KEYS = ["properties", "contacts", "companies", "workflows"];
 
-  // Les audits contacts et companies utilisent les counts déjà disponibles dans propertyResults
+  let progress: AuditProgress | null = auditId
+    ? initProgress(DOMAIN_KEYS)
+    : null;
+
+  // Helper : met à jour et persiste la progression (no-op si pas de tracking)
+  async function emit(updater: (p: AuditProgress) => AuditProgress) {
+    if (!progress || !auditId) return;
+    progress = updater(progress);
+    await persistProgress(auditId, progress);
+  }
+
+  // ── Propriétés ──────────────────────────────────────────────────────────
+  let propertyResults: AuditResults;
+  try {
+    await emit((p) => updateDomainStep(p, "properties", "fetching"));
+    // runAudit fait tout en interne (fetch + analyse + score)
+    // On émet les étapes intermédiaires au mieux
+    propertyResults = await runAudit(accessToken);
+    await emit((p) => completeDomain(p, "properties"));
+  } catch (err) {
+    await emit((p) => failDomain(p, "properties", err instanceof Error ? err.message : "Erreur inconnue"));
+    throw err;
+  }
+
+  // ── Workflows ───────────────────────────────────────────────────────────
+  let workflowResults: WorkflowAuditResults | null = null;
+  try {
+    await emit((p) => updateDomainStep(p, "workflows", "fetching"));
+    workflowResults = await runWorkflowAudit(accessToken);
+    await emit((p) => completeDomain(p, "workflows"));
+  } catch (err) {
+    await emit((p) => failDomain(p, "workflows", err instanceof Error ? err.message : "Erreur inconnue"));
+    // Workflow errors are non-fatal — continue with null
+    workflowResults = null;
+  }
+
+  // ── Contacts ────────────────────────────────────────────────────────────
   const totalContacts = propertyResults.objectCounts.contacts ?? 0;
   const totalCompanies = propertyResults.objectCounts.companies ?? 0;
-  const contactResults = await runContactAudit(accessToken, totalContacts, totalCompanies);
-  const companyResults = await runCompanyAudit(accessToken, totalCompanies);
+  let contactResults: ReturnType<typeof runContactAudit> extends Promise<infer T> ? T : never = null;
+
+  if (totalContacts === 0) {
+    // Domaine exclu — marquer completed directement
+    await emit((p) => completeDomain(p, "contacts"));
+  } else {
+    try {
+      await emit((p) => updateDomainStep(p, "contacts", "fetching", totalContacts));
+      contactResults = await runContactAudit(accessToken, totalContacts, totalCompanies);
+      await emit((p) => completeDomain(p, "contacts"));
+    } catch (err) {
+      await emit((p) => failDomain(p, "contacts", err instanceof Error ? err.message : "Erreur inconnue"));
+      contactResults = null;
+    }
+  }
+
+  // ── Companies ───────────────────────────────────────────────────────────
+  let companyResults: ReturnType<typeof runCompanyAudit> extends Promise<infer T> ? T : never = null;
+
+  if (totalCompanies === 0) {
+    await emit((p) => completeDomain(p, "companies"));
+  } else {
+    try {
+      await emit((p) => updateDomainStep(p, "companies", "fetching", totalCompanies));
+      companyResults = await runCompanyAudit(accessToken, totalCompanies);
+      await emit((p) => completeDomain(p, "companies"));
+    } catch (err) {
+      await emit((p) => failDomain(p, "companies", err instanceof Error ? err.message : "Erreur inconnue"));
+      companyResults = null;
+    }
+  }
 
   return calculateGlobalScore(propertyResults, workflowResults, contactResults, companyResults);
 }
