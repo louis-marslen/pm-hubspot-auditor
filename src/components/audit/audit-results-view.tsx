@@ -332,6 +332,84 @@ interface AuditResultsViewProps {
   auditDomains?: AuditDomainSelection | null;
 }
 
+// ─── Triggered rule counting (rules, not items) ─────────────────────────────
+
+type Sev = "critique" | "avertissement" | "info";
+interface TriggeredCounts { critiques: number; avertissements: number; infos: number; total: number }
+
+function isTriggered(v: unknown): boolean {
+  if (v === null || v === undefined) return false;
+  if (Array.isArray(v)) return v.length > 0;
+  if (typeof v === "object" && "triggered" in v) return !!(v as { triggered: boolean }).triggered;
+  if (typeof v === "object" && "count" in v) return (v as { count: number }).count > 0;
+  if (typeof v === "object" && "disabled" in v && "deals" in v) {
+    const obj = v as { disabled: boolean; deals: unknown[] };
+    return !obj.disabled && obj.deals.length > 0;
+  }
+  if (typeof v === "object" && "inactiveUsers" in v) return (v as { inactiveUsers: unknown[] }).inactiveUsers.length > 0;
+  return false;
+}
+
+function countTriggered(rules: [unknown, Sev][]): TriggeredCounts {
+  let critiques = 0, avertissements = 0, infos = 0;
+  for (const [val, sev] of rules) {
+    if (!isTriggered(val)) continue;
+    if (sev === "critique") critiques++;
+    else if (sev === "avertissement") avertissements++;
+    else infos++;
+  }
+  return { critiques, avertissements, infos, total: critiques + avertissements + infos };
+}
+
+function countPropertyRules(r: AuditResults): TriggeredCounts {
+  return countTriggered([
+    [r.p1, "critique"], [r.p2, "avertissement"], [r.p3, "avertissement"],
+    [r.p4, "info"], [r.p5, "info"], [r.p6, "avertissement"],
+  ]);
+}
+
+function countContactRules(c: ContactAuditResults): TriggeredCounts {
+  return countTriggered([
+    [c.c01, "critique"], [c.c02, "critique"], [c.c03, "avertissement"],
+    [c.c04a, "avertissement"], [c.c04b, "info"], [c.c04c, "avertissement"], [c.c04d, "info"],
+    [c.c05, "info"], [c.c06, "critique"], [c.c07, "avertissement"], [c.c08, "avertissement"],
+    [c.c09, "avertissement"], [c.c10, "info"], [c.c11, "info"], [c.c12, "info"],
+  ]);
+}
+
+function countCompanyRules(co: CompanyAuditResults): TriggeredCounts {
+  return countTriggered([
+    [co.co01, "critique"], [co.co02, "critique"], [co.co03, "avertissement"],
+    [co.co04, "avertissement"], [co.co05, "info"], [co.co06, "info"],
+    [co.co07, "info"], [co.co08, "info"],
+  ]);
+}
+
+function countDealRules(d: DealAuditResults): TriggeredCounts {
+  return countTriggered([
+    [d.d01, "critique"], [d.d02, "critique"], [d.d03, "avertissement"],
+    [d.d04.reduce((s, g) => s + g.deals.length, 0) > 0 ? { triggered: true } : { triggered: false }, "critique"],
+    [d.d05.reduce((s, g) => s + g.deals.length, 0) > 0 ? { triggered: true } : { triggered: false }, "avertissement"],
+    [d.d06, "info"], [d.d07, "info"],
+    [d.d08, "info"], [d.d09, "avertissement"], [d.d10, "info"], [d.d11, "avertissement"],
+    [d.d12, "avertissement"], [d.d13, "avertissement"], [d.d14, "avertissement"], [d.d15, "info"],
+  ]);
+}
+
+function countWorkflowRules(w: WorkflowAuditResults): TriggeredCounts {
+  return countTriggered([
+    [w.w1, "critique"], [w.w2, "critique"], [w.w3, "avertissement"],
+    [w.w4, "avertissement"], [w.w5, "info"], [w.w6, "info"], [w.w7, "info"],
+  ]);
+}
+
+function countUserRules(u: UserAuditResults): TriggeredCounts {
+  return countTriggered([
+    [u.u01, "avertissement"], [u.u02, "critique"], [u.u03, "avertissement"],
+    [u.u04, "avertissement"], [u.u05, "critique"], [u.u06, "info"], [u.u07, "info"],
+  ]);
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function AuditResultsView({
@@ -351,22 +429,29 @@ export function AuditResultsView({
     }).catch(() => {});
   }
 
-  const totalCritiques = r.totalCritiques + (c?.totalCritiques ?? 0) + (co?.totalCritiques ?? 0) + (d?.totalCritiques ?? 0) + (w?.totalCritiques ?? 0) + (u?.totalCritiques ?? 0);
-  const totalAvertissements = r.totalAvertissements + (c?.totalAvertissements ?? 0) + (co?.totalAvertissements ?? 0) + (d?.totalAvertissements ?? 0) + (w?.totalAvertissements ?? 0) + (u?.totalAvertissements ?? 0);
-  const totalInfos = r.totalInfos + (c?.totalInfos ?? 0) + (co?.totalInfos ?? 0) + (d?.totalInfos ?? 0) + (w?.totalInfos ?? 0) + (u?.totalInfos ?? 0);
+  // Compter les règles déclenchées (pas les occurrences individuelles)
+  const propRules = countPropertyRules(r);
+  const contactRules = c?.hasContacts ? countContactRules(c) : { critiques: 0, avertissements: 0, infos: 0, total: 0 };
+  const companyRules = co?.hasCompanies ? countCompanyRules(co) : { critiques: 0, avertissements: 0, infos: 0, total: 0 };
+  const dealRules = d?.hasDeals ? countDealRules(d) : { critiques: 0, avertissements: 0, infos: 0, total: 0 };
+  const workflowRules = w?.hasWorkflows ? countWorkflowRules(w) : { critiques: 0, avertissements: 0, infos: 0, total: 0 };
+  const userRules = u?.hasUsers && !u.scopeError ? countUserRules(u) : { critiques: 0, avertissements: 0, infos: 0, total: 0 };
+
+  const totalCritiques = propRules.critiques + contactRules.critiques + companyRules.critiques + dealRules.critiques + workflowRules.critiques + userRules.critiques;
+  const totalAvertissements = propRules.avertissements + contactRules.avertissements + companyRules.avertissements + dealRules.avertissements + workflowRules.avertissements + userRules.avertissements;
+  const totalInfos = propRules.infos + contactRules.infos + companyRules.infos + dealRules.infos + workflowRules.infos + userRules.infos;
 
   const dateStr = new Date(startedAt).toLocaleDateString("fr-FR", {
     day: "numeric", month: "long", year: "numeric",
   });
 
-  // Tab counts
-  const propCount = r.totalCritiques + r.totalAvertissements + r.totalInfos;
-  const contactCount = c ? (c.totalCritiques + c.totalAvertissements + c.totalInfos) : 0;
-  const companyCount = co ? (co.totalCritiques + co.totalAvertissements + co.totalInfos) : 0;
-  const workflowCount = w ? (w.totalCritiques + w.totalAvertissements + w.totalInfos) : 0;
-
-  const dealCount = d?.hasDeals ? (d.totalCritiques + d.totalAvertissements + d.totalInfos) : 0;
-  const userCount = u?.hasUsers ? (u.totalCritiques + u.totalAvertissements + u.totalInfos) : 0;
+  // Tab counts (nombre de règles déclenchées par domaine)
+  const propCount = propRules.total;
+  const contactCount = contactRules.total;
+  const companyCount = companyRules.total;
+  const dealCount = dealRules.total;
+  const workflowCount = workflowRules.total;
+  const userCount = userRules.total;
 
   // Determine if a domain was audited (selected or full audit)
   const isDomainAudited = (domainId: string) => !auditDomains || auditDomains.selected.includes(domainId as never);
@@ -420,7 +505,7 @@ export function AuditResultsView({
             <h1 className="text-2xl font-semibold text-gray-100 mb-1">{displayLabel}</h1>
             <div className="flex gap-3 text-sm mt-2 flex-wrap">
               {totalCritiques > 0 && (
-                <span className="text-red-400 font-medium">{totalCritiques} critique{totalCritiques !== 1 ? "s" : ""}</span>
+                <span className="text-red-400 font-medium">{totalCritiques} règle{totalCritiques !== 1 ? "s" : ""} critique{totalCritiques !== 1 ? "s" : ""}</span>
               )}
               {totalAvertissements > 0 && (
                 <span className="text-amber-400 font-medium">{totalAvertissements} avertissement{totalAvertissements !== 1 ? "s" : ""}</span>
