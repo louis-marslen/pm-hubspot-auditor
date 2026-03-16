@@ -25,6 +25,7 @@ interface AuditRun {
   id: string;
   status: string;
   score: number | null;
+  global_score: number | null;
   total_critiques: number;
   total_avertissements: number;
   started_at: string;
@@ -65,7 +66,7 @@ function DashboardContent() {
           .order("connected_at", { ascending: false }),
         supabase
           .from("audit_runs")
-          .select("id, status, score, total_critiques, total_avertissements, started_at, connection_id")
+          .select("id, status, score, global_score, total_critiques, total_avertissements, started_at, connection_id")
           .eq("user_id", user.id)
           .order("started_at", { ascending: false })
           .limit(10),
@@ -201,11 +202,11 @@ function DashboardContent() {
                   <p className="text-xs text-gray-500 mb-4">{ws.hub_domain}</p>
                 )}
 
-                {lastAudit && lastAudit.score !== null && (
+                {lastAudit && (lastAudit.global_score ?? lastAudit.score) !== null && (
                   <div className="flex items-center gap-3 mb-4 p-3 rounded-md bg-gray-800/50">
-                    <ScoreCircle score={lastAudit.score} size="sm" />
+                    <ScoreCircle score={(lastAudit.global_score ?? lastAudit.score)!} size="sm" />
                     <div>
-                      <p className="text-sm font-medium text-gray-200">{lastAudit.score}/100</p>
+                      <p className="text-sm font-medium text-gray-200">{lastAudit.global_score ?? lastAudit.score}/100</p>
                       <p className="text-xs text-gray-500">
                         {new Date(lastAudit.started_at).toLocaleDateString("fr-FR", {
                           day: "numeric", month: "short",
@@ -283,15 +284,15 @@ function DashboardContent() {
                         </span>
                       ) : audit.status === "failed" ? (
                         <Badge variant="critique">Échoué</Badge>
-                      ) : audit.score !== null ? (
+                      ) : (audit.global_score ?? audit.score) !== null ? (
                         <Badge
                           variant={
-                            audit.score <= 49 ? "critique" :
-                            audit.score <= 69 ? "avertissement" :
+                            (audit.global_score ?? audit.score)! <= 49 ? "critique" :
+                            (audit.global_score ?? audit.score)! <= 69 ? "avertissement" :
                             "succes"
                           }
                         >
-                          {audit.score}/100
+                          {audit.global_score ?? audit.score}/100
                         </Badge>
                       ) : null}
                     </td>

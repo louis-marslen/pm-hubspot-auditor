@@ -430,7 +430,7 @@ export function AuditResultsView({
 
       {/* Executive summary */}
       {llmSummary && (
-        <section id="section-resume">
+        <section id="section-resume" className="scroll-mt-16">
           <Card>
             <div className="flex items-start gap-3">
               <Sparkles className="h-5 w-5 text-brand-400 mt-0.5 shrink-0" />
@@ -443,54 +443,8 @@ export function AuditResultsView({
         </section>
       )}
 
-      {/* Workflows */}
-      {w !== undefined && w !== null && w.hasWorkflows && (
-        <section id="section-workflows" className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-100">Workflows</h2>
-            {w.score !== null && (
-              <ScoreCircle score={w.score} size="sm" />
-            )}
-          </div>
-
-          {w.notAnalyzed.length > 0 && (
-            <div className="rounded-lg bg-[rgba(245,158,11,0.08)] border border-[rgba(245,158,11,0.15)] px-4 py-3 text-sm text-amber-300">
-              {w.notAnalyzed.length} workflow{w.notAnalyzed.length > 1 ? "s" : ""} n&apos;ont pas pu être analysés.
-            </div>
-          )}
-
-          <RuleCard title="Workflows actifs avec taux d'erreur > 10%" ruleKey="w1" severity="critique" isEmpty={w.w1.length === 0} count={w.w1.length} defaultOpen={w.w1.length > 0}>
-            <PaginatedList items={w.w1} renderItem={(wf: WorkflowIssue) => <WorkflowIssueRow key={wf.id} wf={wf} />} />
-          </RuleCard>
-
-          <RuleCard title="Workflows actifs sans actions configurées" ruleKey="w2" severity="critique" isEmpty={w.w2.length === 0} count={w.w2.length} defaultOpen={w.w2.length > 0}>
-            <PaginatedList items={w.w2} renderItem={(wf: WorkflowIssue) => <WorkflowIssueRow key={wf.id} wf={wf} />} />
-          </RuleCard>
-
-          <RuleCard title="Workflows actifs sans enrôlement récent (> 90j)" ruleKey="w3" severity="avertissement" isEmpty={w.w3.length === 0} count={w.w3.length}>
-            <PaginatedList items={w.w3} renderItem={(wf: WorkflowIssue) => <WorkflowIssueRow key={wf.id} wf={wf} />} />
-          </RuleCard>
-
-          <RuleCard title="Workflows inactifs depuis plus de 90 jours" ruleKey="w4" severity="avertissement" isEmpty={w.w4.length === 0} count={w.w4.length}>
-            <PaginatedList items={w.w4} renderItem={(wf: WorkflowIssue) => <WorkflowIssueRow key={wf.id} wf={wf} />} />
-          </RuleCard>
-
-          <RuleCard title="Workflows récemment désactivés" ruleKey="w5" severity="info" isEmpty={w.w5.length === 0} count={w.w5.length}>
-            <PaginatedList items={w.w5} renderItem={(wf: WorkflowIssue) => <WorkflowIssueRow key={wf.id} wf={wf} />} />
-          </RuleCard>
-
-          <RuleCard title="Workflows avec noms non descriptifs" ruleKey="w6" severity="info" isEmpty={w.w6.length === 0} count={w.w6.length}>
-            <PaginatedList items={w.w6} renderItem={(wf: WorkflowIssue) => <WorkflowIssueRow key={wf.id} wf={wf} />} />
-          </RuleCard>
-
-          <RuleCard title="Workflows sans dossier" ruleKey="w7" severity="info" isEmpty={w.w7.length === 0} count={w.w7.length}>
-            <PaginatedList items={w.w7} renderItem={(wf: WorkflowIssue) => <WorkflowIssueRow key={wf.id} wf={wf} />} />
-          </RuleCard>
-        </section>
-      )}
-
       {/* Properties */}
-      <section id="section-properties" className="space-y-4">
+      <section id="section-properties" className="scroll-mt-16 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-100">Propriétés custom</h2>
           <ScoreCircle score={r.score} size="sm" />
@@ -602,7 +556,7 @@ export function AuditResultsView({
 
       {/* Contacts (EP-05) */}
       {c?.hasContacts && (
-        <section id="section-contacts" className="space-y-4">
+        <section id="section-contacts" className="scroll-mt-16 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-100">Contacts</h2>
             <ScoreCircle score={c.score} size="sm" />
@@ -727,7 +681,7 @@ export function AuditResultsView({
 
       {/* Companies (EP-05b) */}
       {co?.hasCompanies && (
-        <section id="section-companies" className="space-y-4">
+        <section id="section-companies" className="scroll-mt-16 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-100">Companies</h2>
             <ScoreCircle score={co.score} size="sm" />
@@ -800,7 +754,7 @@ export function AuditResultsView({
       )}
 
       {/* Deals */}
-      <section id="section-deals" className="space-y-4">
+      <section id="section-deals" className="scroll-mt-16 space-y-4">
         <h2 className="text-lg font-semibold text-gray-100">Deals</h2>
 
         <RuleCard title="Taux de deals avec montant renseigné" ruleKey="p13" severity="critique" isEmpty={!r.p13.triggered} defaultOpen={r.p13.triggered} rateResult={r.p13}>
@@ -843,6 +797,52 @@ export function AuditResultsView({
           />
         </RuleCard>
       </section>
+
+      {/* Workflows */}
+      {w !== undefined && w !== null && w.hasWorkflows && (
+        <section id="section-workflows" className="scroll-mt-16 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-100">Workflows</h2>
+            {w.score !== null && (
+              <ScoreCircle score={w.score} size="sm" />
+            )}
+          </div>
+
+          {w.notAnalyzed.length > 0 && (
+            <div className="rounded-lg bg-[rgba(245,158,11,0.08)] border border-[rgba(245,158,11,0.15)] px-4 py-3 text-sm text-amber-300">
+              {w.notAnalyzed.length} workflow{w.notAnalyzed.length > 1 ? "s" : ""} n&apos;ont pas pu être analysés.
+            </div>
+          )}
+
+          <RuleCard title="Workflows actifs avec taux d'erreur > 10%" ruleKey="w1" severity="critique" isEmpty={w.w1.length === 0} count={w.w1.length} defaultOpen={w.w1.length > 0}>
+            <PaginatedList items={w.w1} renderItem={(wf: WorkflowIssue) => <WorkflowIssueRow key={wf.id} wf={wf} />} />
+          </RuleCard>
+
+          <RuleCard title="Workflows actifs sans actions configurées" ruleKey="w2" severity="critique" isEmpty={w.w2.length === 0} count={w.w2.length} defaultOpen={w.w2.length > 0}>
+            <PaginatedList items={w.w2} renderItem={(wf: WorkflowIssue) => <WorkflowIssueRow key={wf.id} wf={wf} />} />
+          </RuleCard>
+
+          <RuleCard title="Workflows actifs sans enrôlement récent (> 90j)" ruleKey="w3" severity="avertissement" isEmpty={w.w3.length === 0} count={w.w3.length}>
+            <PaginatedList items={w.w3} renderItem={(wf: WorkflowIssue) => <WorkflowIssueRow key={wf.id} wf={wf} />} />
+          </RuleCard>
+
+          <RuleCard title="Workflows inactifs depuis plus de 90 jours" ruleKey="w4" severity="avertissement" isEmpty={w.w4.length === 0} count={w.w4.length}>
+            <PaginatedList items={w.w4} renderItem={(wf: WorkflowIssue) => <WorkflowIssueRow key={wf.id} wf={wf} />} />
+          </RuleCard>
+
+          <RuleCard title="Workflows récemment désactivés" ruleKey="w5" severity="info" isEmpty={w.w5.length === 0} count={w.w5.length}>
+            <PaginatedList items={w.w5} renderItem={(wf: WorkflowIssue) => <WorkflowIssueRow key={wf.id} wf={wf} />} />
+          </RuleCard>
+
+          <RuleCard title="Workflows avec noms non descriptifs" ruleKey="w6" severity="info" isEmpty={w.w6.length === 0} count={w.w6.length}>
+            <PaginatedList items={w.w6} renderItem={(wf: WorkflowIssue) => <WorkflowIssueRow key={wf.id} wf={wf} />} />
+          </RuleCard>
+
+          <RuleCard title="Workflows sans dossier" ruleKey="w7" severity="info" isEmpty={w.w7.length === 0} count={w.w7.length}>
+            <PaginatedList items={w.w7} renderItem={(wf: WorkflowIssue) => <WorkflowIssueRow key={wf.id} wf={wf} />} />
+          </RuleCard>
+        </section>
+      )}
 
       {/* Footer */}
       <footer className="text-center py-6 border-t border-gray-700">

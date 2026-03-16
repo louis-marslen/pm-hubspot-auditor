@@ -35,7 +35,7 @@ export function Tabs({ tabs, activeTab, onTabChange, sticky = false }: TabsProps
     <div
       ref={containerRef}
       className={`relative flex items-center gap-1 border-b border-gray-700 overflow-x-auto ${
-        sticky ? "sticky top-14 z-30 bg-gray-950 py-0" : ""
+        sticky ? "sticky top-0 z-30 bg-gray-950 py-0 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.4)]" : ""
       }`}
     >
       {tabs.map((tab) => (
