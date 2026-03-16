@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import {
-  AuditResults, WorkflowAuditResults, ContactAuditResults, CompanyAuditResults, UserAuditResults, DealAuditResults,
+  AuditResults, WorkflowAuditResults, ContactAuditResults, CompanyAuditResults, UserAuditResults, DealAuditResults, LeadAuditResults,
   WorkflowIssue, PropertyIssue, PropertyPair, TypingIssue, DealIssue, PipelineStageIssue,
   RateResult, ContactIssue, DuplicateCluster, CompanyIssue, CompanyDuplicateCluster,
   UserIssue, TeamIssue, RoleDistribution,
   DealDetailIssue, BlockedDealGroup, PipelineRuleResult, StageRuleResult,
+  LeadIssue, LeadBlockedGroup, LeadPipelineRuleResult, LeadStageRuleResult,
   AUDIT_DOMAINS, type AuditDomainSelection,
 } from "@/lib/audit/types";
 import { BUSINESS_IMPACTS } from "@/lib/audit/business-impact";
@@ -321,6 +322,7 @@ interface AuditResultsViewProps {
   co?: CompanyAuditResults | null;
   u?: UserAuditResults | null;
   d?: DealAuditResults | null;
+  l?: LeadAuditResults | null;
   globalScore?: number;
   globalScoreLabel?: string;
   llmSummary?: string | null;
@@ -396,6 +398,19 @@ function countDealRules(d: DealAuditResults): TriggeredCounts {
   ]);
 }
 
+function countLeadRules(l: LeadAuditResults): TriggeredCounts {
+  return countTriggered([
+    [l.l01, "avertissement"], [l.l02.reduce((s, g) => s + g.leads.length, 0) > 0 ? { triggered: true } : { triggered: false }, "avertissement"],
+    [l.l03, "info"], [l.l04, "critique"],
+    [l.l05, "info"], [l.l06, "info"],
+    [l.l07, "avertissement"], [l.l08, "avertissement"], [l.l09, "avertissement"], [l.l10, "info"],
+    [l.l11.triggered ? { triggered: true } : { triggered: false }, "avertissement"],
+    [l.l12.triggered && !l.l12.disabled ? { triggered: true } : { triggered: false }, "info"],
+    [l.l13.triggered ? { triggered: true } : { triggered: false }, "critique"],
+    [l.l14, "avertissement"],
+  ]);
+}
+
 function countWorkflowRules(w: WorkflowAuditResults): TriggeredCounts {
   return countTriggered([
     [w.w1, "critique"], [w.w2, "critique"], [w.w3, "avertissement"],
@@ -413,7 +428,7 @@ function countUserRules(u: UserAuditResults): TriggeredCounts {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function AuditResultsView({
-  r, w, c, co, u, d, globalScore, globalScoreLabel, llmSummary,
+  r, w, c, co, u, d, l, globalScore, globalScoreLabel, llmSummary,
   shareToken, isPublic, portalName, startedAt, executionDurationMs, auditDomains,
 }: AuditResultsViewProps) {
   const displayScore = globalScore ?? r.score;
@@ -434,12 +449,13 @@ export function AuditResultsView({
   const contactRules = c?.hasContacts ? countContactRules(c) : { critiques: 0, avertissements: 0, infos: 0, total: 0 };
   const companyRules = co?.hasCompanies ? countCompanyRules(co) : { critiques: 0, avertissements: 0, infos: 0, total: 0 };
   const dealRules = d?.hasDeals ? countDealRules(d) : { critiques: 0, avertissements: 0, infos: 0, total: 0 };
+  const leadRules = l?.hasLeads && !l.scopeError ? countLeadRules(l) : { critiques: 0, avertissements: 0, infos: 0, total: 0 };
   const workflowRules = w?.hasWorkflows ? countWorkflowRules(w) : { critiques: 0, avertissements: 0, infos: 0, total: 0 };
   const userRules = u?.hasUsers && !u.scopeError ? countUserRules(u) : { critiques: 0, avertissements: 0, infos: 0, total: 0 };
 
-  const totalCritiques = propRules.critiques + contactRules.critiques + companyRules.critiques + dealRules.critiques + workflowRules.critiques + userRules.critiques;
-  const totalAvertissements = propRules.avertissements + contactRules.avertissements + companyRules.avertissements + dealRules.avertissements + workflowRules.avertissements + userRules.avertissements;
-  const totalInfos = propRules.infos + contactRules.infos + companyRules.infos + dealRules.infos + workflowRules.infos + userRules.infos;
+  const totalCritiques = propRules.critiques + contactRules.critiques + companyRules.critiques + dealRules.critiques + leadRules.critiques + workflowRules.critiques + userRules.critiques;
+  const totalAvertissements = propRules.avertissements + contactRules.avertissements + companyRules.avertissements + dealRules.avertissements + leadRules.avertissements + workflowRules.avertissements + userRules.avertissements;
+  const totalInfos = propRules.infos + contactRules.infos + companyRules.infos + dealRules.infos + leadRules.infos + workflowRules.infos + userRules.infos;
 
   const dateStr = new Date(startedAt).toLocaleDateString("fr-FR", {
     day: "numeric", month: "long", year: "numeric",
@@ -450,6 +466,7 @@ export function AuditResultsView({
   const contactCount = contactRules.total;
   const companyCount = companyRules.total;
   const dealCount = dealRules.total;
+  const leadCount = leadRules.total;
   const workflowCount = workflowRules.total;
   const userCount = userRules.total;
 
@@ -472,6 +489,7 @@ export function AuditResultsView({
     ...(isDomainAudited("contacts") && c?.hasContacts ? [{ id: "contacts", label: "Contacts", count: contactCount > 0 ? contactCount : undefined }] : []),
     ...(isDomainAudited("companies") && co?.hasCompanies ? [{ id: "companies", label: "Companies", count: companyCount > 0 ? companyCount : undefined }] : []),
     ...(isDomainAudited("deals") && d?.hasDeals ? [{ id: "deals", label: "Deals & Pipelines", count: dealCount > 0 ? dealCount : undefined }] : []),
+    ...(isDomainAudited("leads") && l?.hasLeads && !l.scopeError ? [{ id: "leads", label: "Leads & Prospection", count: leadCount > 0 ? leadCount : undefined }] : []),
     ...(isDomainAudited("workflows") && w?.hasWorkflows ? [{ id: "workflows", label: "Workflows", count: workflowCount > 0 ? workflowCount : undefined }] : []),
     ...(isDomainAudited("users") && u?.hasUsers ? [{ id: "users", label: "Utilisateurs & Équipes", count: userCount > 0 ? userCount : undefined }] : []),
   ];
@@ -548,6 +566,12 @@ export function AuditResultsView({
                 <div>
                   <ScoreCircle score={d.score} size="md" />
                   <p className="text-xs text-gray-500 mt-1">Deals</p>
+                </div>
+              )}
+              {l?.hasLeads && !l.scopeError && (
+                <div>
+                  <ScoreCircle score={l.score} size="md" />
+                  <p className="text-xs text-gray-500 mt-1">Leads</p>
                 </div>
               )}
               {w?.hasWorkflows && w.score !== null && (
@@ -1170,6 +1194,299 @@ export function AuditResultsView({
             <PaginatedList
               items={d.d15}
               renderItem={(item: StageRuleResult) => (
+                <div key={`${item.pipelineId}-${item.stageId}`} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm flex items-center justify-between">
+                  <div>
+                    <span className="font-medium text-gray-200">{item.pipelineLabel}</span>
+                    <span className="mx-1 text-gray-600">→</span>
+                    <span className="text-gray-300">{item.stageLabel}</span>
+                  </div>
+                  {item.lastActivity && (
+                    <span className="text-xs text-gray-500">
+                      Dernière activité : {new Date(item.lastActivity).toLocaleDateString("fr-FR")}
+                    </span>
+                  )}
+                </div>
+              )}
+            />
+          </RuleCard>
+        </section>
+      )}
+
+      {/* Leads & Prospection (EP-18) */}
+      {l !== undefined && l !== null && l.hasLeads && !l.scopeError && (
+        <section id="section-leads" className="scroll-mt-16 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-100">Leads &amp; Prospection</h2>
+            <ScoreCircle score={l.score} size="sm" />
+          </div>
+
+          <div className="text-sm text-gray-400 mb-2">
+            {l.totalLeads.toLocaleString("fr-FR")} leads · {l.totalPipelines} pipeline{l.totalPipelines !== 1 ? "s" : ""} de prospection
+          </div>
+
+          {/* Qualité données leads */}
+          <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide pt-2">Qualité des données leads</h3>
+
+          {/* L-01 : Leads anciens */}
+          <RuleCard title="Leads ouverts depuis plus de 30 jours" ruleKey="l01" severity="avertissement" isEmpty={l.l01.length === 0} count={l.l01.length} defaultOpen={l.l01.length > 0}>
+            <PaginatedList
+              items={l.l01}
+              renderItem={(item: LeadIssue) => (
+                <div key={item.id} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm flex items-center justify-between">
+                  <div>
+                    <span className="font-medium text-gray-200">{item.name}</span>
+                    <span className="ml-2 text-xs text-gray-500">{item.pipelineLabel} → {item.stageLabel}</span>
+                  </div>
+                  <span className="text-xs text-red-400 font-medium">{item.ageInDays}j</span>
+                </div>
+              )}
+            />
+          </RuleCard>
+
+          {/* L-03 : Sans owner */}
+          <RuleCard title="Leads sans propriétaire assigné" ruleKey="l03" severity="info" isEmpty={l.l03.length === 0} count={l.l03.length}>
+            <PaginatedList
+              items={l.l03}
+              renderItem={(item: LeadIssue) => (
+                <div key={item.id} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm flex items-center justify-between">
+                  <span className="font-medium text-gray-200">{item.name}</span>
+                  <span className="text-xs text-gray-500">{item.pipelineLabel}</span>
+                </div>
+              )}
+            />
+          </RuleCard>
+
+          {/* L-04 : Sans contact — Critique */}
+          <RuleCard title="Leads sans contact associé" ruleKey="l04" severity="critique" isEmpty={l.l04.length === 0} count={l.l04.length} defaultOpen={l.l04.length > 0}>
+            <PaginatedList
+              items={l.l04}
+              renderItem={(item: LeadIssue) => (
+                <div key={item.id} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm flex items-center justify-between">
+                  <div>
+                    <span className="font-medium text-gray-200">{item.name}</span>
+                    <span className="ml-2 text-xs text-gray-500">{item.pipelineLabel} → {item.stageLabel}</span>
+                  </div>
+                  <span className="text-xs text-gray-500">{item.createdAt ? new Date(item.createdAt).toLocaleDateString("fr-FR") : "—"}</span>
+                </div>
+              )}
+            />
+          </RuleCard>
+
+          {/* L-14 : Sans source */}
+          <RuleCard title="Leads sans source d'origine" ruleKey="l14" severity="avertissement" isEmpty={l.l14.length === 0} count={l.l14.length}>
+            <PaginatedList
+              items={l.l14}
+              renderItem={(item: LeadIssue) => (
+                <div key={item.id} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm flex items-center justify-between">
+                  <div>
+                    <span className="font-medium text-gray-200">{item.name}</span>
+                    <span className="ml-2 text-xs text-gray-500">{item.pipelineLabel} → {item.stageLabel}</span>
+                  </div>
+                  <span className="text-xs text-gray-500">{item.createdAt ? new Date(item.createdAt).toLocaleDateString("fr-FR") : "—"}</span>
+                </div>
+              )}
+            />
+          </RuleCard>
+
+          {/* Leads bloqués */}
+          <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mt-6">Leads bloqués</h3>
+
+          {/* L-02 : Leads bloqués dans un stage */}
+          <RuleCard title="Leads bloqués dans un stage (> 30 jours)" ruleKey="l02" severity="avertissement" isEmpty={l.l02.reduce((s, g) => s + g.leads.length, 0) === 0} count={l.l02.reduce((s, g) => s + g.leads.length, 0)} defaultOpen={l.l02.length > 0}>
+            <PaginatedList
+              items={l.l02}
+              renderItem={(group: LeadBlockedGroup) => (
+                <div key={`${group.pipelineId}-${group.stageId}`} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-medium text-gray-200">{group.pipelineLabel} → {group.stageLabel}</span>
+                    <span className="text-xs text-amber-400">{group.leads.length} lead{group.leads.length !== 1 ? "s" : ""}</span>
+                  </div>
+                  <div className="space-y-1">
+                    {group.leads.slice(0, 5).map((lead) => (
+                      <div key={lead.id} className="text-xs text-gray-400 flex justify-between">
+                        <span>{lead.name}</span>
+                        <span className="text-red-400">{lead.daysInStage}j dans ce stage</span>
+                      </div>
+                    ))}
+                    {group.leads.length > 5 && (
+                      <p className="text-xs text-gray-500">+ {group.leads.length - 5} autres</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            />
+          </RuleCard>
+
+          {/* Processus de disqualification */}
+          <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mt-6">Processus de disqualification</h3>
+
+          {/* L-11 : Disqualifié sans motif */}
+          <RuleCard title="Leads disqualifiés sans motif" ruleKey="l11" severity="avertissement" isEmpty={!l.l11.triggered} count={l.l11.withoutReason} defaultOpen={l.l11.triggered}>
+            <div>
+              {l.l11.triggered && (
+                <p className="text-sm text-gray-300 mb-2">
+                  <span className="font-semibold text-amber-400">{l.l11.withoutReason}</span> leads sans motif
+                  sur <span className="font-medium text-gray-200">{l.l11.totalDisqualified}</span> disqualifiés
+                  ({Math.round(l.l11.rate * 100)}%)
+                </p>
+              )}
+              <PaginatedList
+                items={l.l11.leads}
+                renderItem={(item: LeadIssue) => (
+                  <div key={item.id} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm flex items-center justify-between">
+                    <span className="font-medium text-gray-200">{item.name}</span>
+                    <span className="text-xs text-gray-500">{item.pipelineLabel}</span>
+                  </div>
+                )}
+              />
+            </div>
+          </RuleCard>
+
+          {/* L-12 : Motif non structuré */}
+          {!l.l12.disabled && (
+            <RuleCard title="Motif de disqualification non structuré" ruleKey="l12" severity="info" isEmpty={!l.l12.triggered} count={l.l12.triggered ? 1 : 0}>
+              <div>
+                {l.l12.triggered && l.l12.propertyName && (
+                  <div className="text-sm text-gray-300">
+                    <p className="mb-2">
+                      La propriété <span className="font-mono text-amber-400">{l.l12.propertyName}</span> est de type <span className="font-mono text-amber-400">{l.l12.propertyType}</span>.
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      Recommandation : convertir en type <span className="font-medium text-gray-200">enumeration</span> avec des valeurs prédéfinies
+                      (ex. : Budget insuffisant, Pas le bon timing, Concurrent retenu, Pas de besoin identifié, Mauvais contact, Autre).
+                    </p>
+                  </div>
+                )}
+              </div>
+            </RuleCard>
+          )}
+          {l.l12.disabled && l.l12.disabledReason && (
+            <div className="rounded-lg bg-gray-850 border border-gray-700 px-4 py-3 text-sm text-gray-400">
+              L-11 / L-12 : {l.l12.disabledReason}
+            </div>
+          )}
+
+          {/* Handoff lead → deal */}
+          <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mt-6">Handoff lead → deal</h3>
+
+          {/* L-13 : Qualifié sans deal — Critique */}
+          <RuleCard title="Leads qualifiés sans deal associé" ruleKey="l13" severity="critique" isEmpty={!l.l13.triggered} count={l.l13.withoutDeal} defaultOpen={l.l13.triggered}>
+            <div>
+              {l.l13.triggered && (
+                <p className="text-sm text-gray-300 mb-2">
+                  <span className="font-semibold text-red-400">{l.l13.withoutDeal}</span> leads sans deal
+                  sur <span className="font-medium text-gray-200">{l.l13.totalQualified}</span> qualifiés
+                  ({Math.round(l.l13.rate * 100)}%)
+                </p>
+              )}
+              <PaginatedList
+                items={l.l13.leads}
+                renderItem={(item: LeadIssue) => (
+                  <div key={item.id} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm flex items-center justify-between">
+                    <div>
+                      <span className="font-medium text-gray-200">{item.name}</span>
+                      <span className="ml-2 text-xs text-gray-500">{item.pipelineLabel} → {item.stageLabel}</span>
+                    </div>
+                    <span className="text-xs text-gray-500">{item.createdAt ? new Date(item.createdAt).toLocaleDateString("fr-FR") : "—"}</span>
+                  </div>
+                )}
+              />
+            </div>
+          </RuleCard>
+
+          {/* Santé des pipelines de prospection */}
+          <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mt-6">Santé des pipelines de prospection</h3>
+
+          {/* L-05 : Pipeline sans activité */}
+          <RuleCard title="Pipelines de prospection sans activité récente" ruleKey="l05" severity="info" isEmpty={l.l05.length === 0} count={l.l05.length}>
+            <PaginatedList
+              items={l.l05}
+              renderItem={(item: LeadPipelineRuleResult) => (
+                <div key={item.pipelineId} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm flex items-center justify-between">
+                  <span className="font-medium text-gray-200">{item.pipelineLabel}</span>
+                  <span className="text-xs text-gray-500">{item.stageCount} stages</span>
+                </div>
+              )}
+            />
+          </RuleCard>
+
+          {/* L-06 : Trop de stages */}
+          <RuleCard title="Pipelines de prospection avec trop de stages (> 5)" ruleKey="l06" severity="info" isEmpty={l.l06.length === 0} count={l.l06.length}>
+            <PaginatedList
+              items={l.l06}
+              renderItem={(item: LeadPipelineRuleResult) => (
+                <div key={item.pipelineId} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm flex items-center justify-between">
+                  <span className="font-medium text-gray-200">{item.pipelineLabel}</span>
+                  <span className="text-xs text-amber-400">{item.activeStageCount} stages actifs</span>
+                </div>
+              )}
+            />
+          </RuleCard>
+
+          {/* L-07 : Phases sautées */}
+          <RuleCard title="Pipelines avec phases fréquemment sautées" ruleKey="l07" severity="avertissement" isEmpty={l.l07.length === 0} count={l.l07.length}>
+            <PaginatedList
+              items={l.l07}
+              renderItem={(item: LeadPipelineRuleResult) => (
+                <div key={item.pipelineId} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-gray-200">{item.pipelineLabel}</span>
+                    <span className="text-xs text-amber-400">{Math.round((item.skippedRate ?? 0) * 100)}% des leads</span>
+                  </div>
+                  {item.topSkippedStages && item.topSkippedStages.length > 0 && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Stages les plus sautés : {item.topSkippedStages.map((s) => s.stageLabel).join(", ")}
+                    </p>
+                  )}
+                </div>
+              )}
+            />
+          </RuleCard>
+
+          {/* L-08 : Points d'entrée multiples */}
+          <RuleCard title="Pipelines avec points d'entrée multiples" ruleKey="l08" severity="avertissement" isEmpty={l.l08.length === 0} count={l.l08.length}>
+            <PaginatedList
+              items={l.l08}
+              renderItem={(item: LeadPipelineRuleResult) => (
+                <div key={item.pipelineId} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-gray-200">{item.pipelineLabel}</span>
+                    <span className="text-xs text-amber-400">{Math.round((item.nonStandardEntryRate ?? 0) * 100)}% hors 1ère étape</span>
+                  </div>
+                </div>
+              )}
+            />
+          </RuleCard>
+
+          {/* L-09 : Stages fermés redondants */}
+          <RuleCard title="Pipelines avec stages fermés redondants" ruleKey="l09" severity="avertissement" isEmpty={l.l09.length === 0} count={l.l09.length}>
+            <PaginatedList
+              items={l.l09}
+              renderItem={(item: LeadPipelineRuleResult) => (
+                <div key={item.pipelineId} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-gray-200">{item.pipelineLabel}</span>
+                  </div>
+                  {item.qualifiedStages && item.qualifiedStages.length > 1 && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Qualified : {item.qualifiedStages.map((s) => s.label).join(", ")}
+                    </p>
+                  )}
+                  {item.disqualifiedStages && item.disqualifiedStages.length > 1 && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Disqualified : {item.disqualifiedStages.map((s) => s.label).join(", ")}
+                    </p>
+                  )}
+                </div>
+              )}
+            />
+          </RuleCard>
+
+          {/* L-10 : Stages sans activité */}
+          <RuleCard title="Stages sans activité depuis 60 jours" ruleKey="l10" severity="info" isEmpty={l.l10.length === 0} count={l.l10.length}>
+            <PaginatedList
+              items={l.l10}
+              renderItem={(item: LeadStageRuleResult) => (
                 <div key={`${item.pipelineId}-${item.stageId}`} className="rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm flex items-center justify-between">
                   <div>
                     <span className="font-medium text-gray-200">{item.pipelineLabel}</span>

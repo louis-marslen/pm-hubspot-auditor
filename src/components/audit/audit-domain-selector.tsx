@@ -16,6 +16,7 @@ import {
   Workflow,
   Shield,
   TrendingUp,
+  UserPlus,
   Check,
   Minus,
 } from "lucide-react";
@@ -27,6 +28,7 @@ const DOMAIN_ICONS: Record<AuditDomainId, typeof ListTree> = {
   workflows: Workflow,
   users: Shield,
   deals: TrendingUp,
+  leads: UserPlus,
 };
 
 interface AuditDomainSelectorProps {
@@ -42,11 +44,11 @@ export function AuditDomainSelector({
   onLaunch,
   loading = false,
 }: AuditDomainSelectorProps) {
-  // Initialize with all implemented domains selected
+  // Initialize with all implemented domains selected, except those with defaultSelected: false
   const [selected, setSelected] = useState<Set<AuditDomainId>>(() => {
     const initial = new Set<AuditDomainId>();
     for (const d of AUDIT_DOMAINS) {
-      if (d.implemented) initial.add(d.id);
+      if (d.implemented && d.defaultSelected !== false) initial.add(d.id);
     }
     return initial;
   });
@@ -193,6 +195,9 @@ function DomainCheckbox({
           )}
         </div>
         <p className="text-xs text-gray-500 mt-0.5 ml-6">{domain.description}</p>
+        {domain.tooltip && (
+          <p className="text-xs text-amber-400/70 mt-0.5 ml-6">{domain.tooltip}</p>
+        )}
       </div>
     </label>
   );

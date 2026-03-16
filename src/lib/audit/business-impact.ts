@@ -405,6 +405,92 @@ export const BUSINESS_IMPACTS: Record<string, BusinessImpact> = {
     urgence: "faible",
   },
 
+  // Leads L-01 à L-14 (EP-18)
+  l01: {
+    titre: "Leads en stagnation dans le pipeline",
+    estimation:
+      "Des leads ouverts depuis plus de 30 jours représentent des prospects identifiés mais non traités. Le coût d'acquisition est engagé, les SDR perdent du temps sur des leads morts, et les prospects refroidissent irréversiblement.",
+    urgence: "élevée",
+  },
+  l02: {
+    titre: "Leads en stagnation dans le pipeline",
+    estimation:
+      "Des leads bloqués dans un stage depuis plus de 30 jours représentent des prospects identifiés mais non traités. Le coût d'acquisition est engagé, les SDR perdent du temps sur des leads morts, et les prospects refroidissent irréversiblement.",
+    urgence: "élevée",
+  },
+  l03: {
+    titre: "Leads sans responsable identifié",
+    estimation:
+      "Des leads sans propriétaire ne sont suivis par personne. Aucun SDR n'est responsable de leur qualification, ce qui garantit leur stagnation.",
+    urgence: "modérée",
+  },
+  l04: {
+    titre: "Leads sans prospect identifié",
+    estimation:
+      "Des leads sans contact associé sont des opportunités fantômes — impossible de contacter le prospect, de suivre les interactions, ou de mesurer le taux de conversion. C'est une anomalie structurelle qui indique un problème de process de création des leads.",
+    urgence: "élevée",
+  },
+  l05: {
+    titre: "Pipelines et stages de prospection obsolètes",
+    estimation:
+      "Des pipelines sans activité et des stages jamais utilisés encombrent l'interface, créent de la confusion pour les SDR et faussent les métriques de pipeline.",
+    urgence: "faible",
+  },
+  l06: {
+    titre: "Pipeline de prospection trop complexe",
+    estimation:
+      "Un pipeline de prospection avec plus de 5 stages ralentit les SDR qui traitent un volume élevé de leads. La simplicité corrèle avec la vélocité de traitement.",
+    urgence: "modérée",
+  },
+  l07: {
+    titre: "Process de qualification contourné",
+    estimation:
+      "Plus de 20% des leads sautent des étapes du pipeline — le processus de qualification n'est pas adapté ou les SDR ne voient pas la valeur des stages intermédiaires.",
+    urgence: "élevée",
+  },
+  l08: {
+    titre: "Pipeline de prospection sans point d'entrée unique",
+    estimation:
+      "Les leads sont créés dans différents stages, ce qui rend impossible le calcul du taux de conversion par stage et fausse l'analyse de la vélocité de prospection.",
+    urgence: "modérée",
+  },
+  l09: {
+    titre: "Stages de qualification redondants",
+    estimation:
+      "Plusieurs stages Qualified ou Disqualified compliquent le reporting et empêchent un calcul propre du taux de conversion lead → deal.",
+    urgence: "modérée",
+  },
+  l10: {
+    titre: "Pipelines et stages de prospection obsolètes",
+    estimation:
+      "Des stages sans aucun lead ni activité depuis 60 jours sont probablement obsolètes. Ils encombrent la vue pipeline et complexifient inutilement le processus.",
+    urgence: "faible",
+  },
+  l11: {
+    titre: "Disqualifications non documentées",
+    estimation:
+      "Des leads disqualifiés sans motif rendent impossible l'analyse des patterns de rejet. Le marketing ne peut pas ajuster le ciblage car il ne sait pas pourquoi les leads sont rejetés.",
+    urgence: "élevée",
+  },
+  l12: {
+    titre: "Motifs de disqualification non exploitables",
+    estimation:
+      "Un champ texte libre pour le motif de disqualification génère des données inconsistantes impossibles à analyser en masse. Passer à des valeurs prédéfinies permet de piloter le ciblage marketing.",
+    urgence: "modérée",
+  },
+  l13: {
+    titre: "Rupture du handoff SDR → AE",
+    estimation:
+      "Des leads qualifiés sans deal associé représentent la fuite la plus coûteuse du funnel — le travail de prospection est fait mais l'opportunité n'est jamais traitée commercialement. Chaque lead qualifié perdu est un coût d'acquisition gaspillé.",
+    urgence: "élevée",
+  },
+  l14: {
+    titre: "Attribution marketing impossible",
+    estimation:
+      "Des leads sans source d'origine rendent impossible le calcul du ROI par canal marketing. Le CMO ne peut pas arbitrer les investissements entre paid, organic, outbound et referral.",
+    urgence: "modérée",
+  },
+
   // Workflows W1-W7
   w1: {
     titre: "Workflows actifs avec un fort taux d'erreur",

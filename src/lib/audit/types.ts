@@ -1,6 +1,6 @@
 // ─── Audit Domain Selection (EP-17) ──────────────────────────────────────────
 
-export type AuditDomainId = 'properties' | 'contacts' | 'companies' | 'workflows' | 'users' | 'deals';
+export type AuditDomainId = 'properties' | 'contacts' | 'companies' | 'workflows' | 'users' | 'deals' | 'leads';
 
 export interface AuditDomainSelection {
   selected: AuditDomainId[];
@@ -14,6 +14,8 @@ export interface AuditDomainMeta {
   description: string;
   required: boolean;
   implemented: boolean;
+  defaultSelected?: boolean;
+  tooltip?: string;
 }
 
 export const AUDIT_DOMAINS: AuditDomainMeta[] = [
@@ -58,6 +60,15 @@ export const AUDIT_DOMAINS: AuditDomainMeta[] = [
     description: 'Deals bloqués, étapes mal configurées, conversions',
     required: false,
     implemented: true,
+  },
+  {
+    id: 'leads',
+    label: 'Leads & Prospection',
+    description: 'Leads bloqués, disqualifications, handoff lead → deal, pipelines de prospection',
+    required: false,
+    implemented: true,
+    defaultSelected: false,
+    tooltip: 'Activez si votre équipe utilise l\'objet Lead HubSpot pour gérer la prospection.',
   },
 ];
 
@@ -119,6 +130,7 @@ export interface GlobalAuditResults {
   companyResults: CompanyAuditResults | null;
   userResults: UserAuditResults | null;
   dealResults: DealAuditResults | null;
+  leadResults: LeadAuditResults | null;
   globalScore: number;
   globalScoreLabel: string;
   propertyWeight: number;
@@ -127,6 +139,7 @@ export interface GlobalAuditResults {
   companyWeight: number;
   userWeight: number;
   dealWeight: number;
+  leadWeight: number;
 }
 
 // ─── Users & Teams domain (EP-09) ─────────────────────────────────────────
@@ -473,6 +486,128 @@ export interface DealAuditResults {
   totalCritiques: number;
   totalAvertissements: number;
   totalInfos: number;
+}
+
+// ─── Leads & Pipelines de prospection domain (EP-18) ─────────────────────
+
+export interface LeadIssue {
+  id: string;
+  name: string;
+  pipeline: string;
+  pipelineLabel: string;
+  stage: string;
+  stageLabel: string;
+  ownerId: string | null;
+  createdAt: string;
+  lastModifiedDate: string | null;
+  ageInDays: number;
+  daysInStage?: number;
+  dateEnteredStage?: string | null;
+  contactCount?: number;
+  dealCount?: number;
+  source?: string | null;
+  disqualificationReason?: string | null;
+}
+
+export interface LeadBlockedGroup {
+  pipelineId: string;
+  pipelineLabel: string;
+  stageId: string;
+  stageLabel: string;
+  leads: LeadIssue[];
+}
+
+export interface LeadPipelineRuleResult {
+  pipelineId: string;
+  pipelineLabel: string;
+  triggered: boolean;
+  // L-05
+  totalLeads?: number;
+  lastLeadCreatedAt?: string | null;
+  stageCount?: number;
+  // L-06
+  activeStageCount?: number;
+  stages?: PipelineStageInfo[];
+  // L-07
+  skippedRate?: number;
+  leadsWithSkips?: number;
+  totalAnalyzed?: number;
+  topSkippedStages?: SkippedStageInfo[];
+  // L-08
+  nonStandardEntryRate?: number;
+  nonStandardEntries?: number;
+  entryDistribution?: { stageId: string; stageLabel: string; count: number }[];
+  // L-09
+  qualifiedStages?: { id: string; label: string; leadCount: number }[];
+  disqualifiedStages?: { id: string; label: string; leadCount: number }[];
+}
+
+export interface LeadStageRuleResult {
+  pipelineId: string;
+  pipelineLabel: string;
+  stageId: string;
+  stageLabel: string;
+  displayOrder: number;
+  lastActivity: string | null;
+}
+
+export interface LeadDisqualificationResult {
+  triggered: boolean;
+  totalDisqualified: number;
+  withoutReason: number;
+  rate: number;
+  leads: LeadIssue[];
+}
+
+export interface LeadDisqualificationPropertyResult {
+  triggered: boolean;
+  disabled: boolean;
+  disabledReason: string | null;
+  propertyName: string | null;
+  propertyType: string | null;
+}
+
+export interface LeadHandoffResult {
+  triggered: boolean;
+  totalQualified: number;
+  withoutDeal: number;
+  rate: number;
+  leads: LeadIssue[];
+}
+
+export interface LeadAuditResults {
+  totalLeads: number;
+  totalOpenLeads: number;
+  totalPipelines: number;
+  hasLeads: boolean;
+
+  // Qualité données leads
+  l01: LeadIssue[];                     // Lead ouvert ancien 30j+ — avertissement
+  l02: LeadBlockedGroup[];              // Lead bloqué dans un stage — avertissement
+  l03: LeadIssue[];                     // Lead sans propriétaire — info
+  l04: LeadIssue[];                     // Lead sans contact — critique
+
+  // Pipeline config
+  l05: LeadPipelineRuleResult[];        // Pipeline sans activité — info
+  l06: LeadPipelineRuleResult[];        // Pipeline trop de stages — info
+  l07: LeadPipelineRuleResult[];        // Phases sautées — avertissement
+  l08: LeadPipelineRuleResult[];        // Points d'entrée multiples — avertissement
+  l09: LeadPipelineRuleResult[];        // Stages fermés redondants — avertissement
+  l10: LeadStageRuleResult[];           // Stage sans activité 60j — info
+
+  // Spécifiques leads
+  l11: LeadDisqualificationResult;      // Disqualifié sans motif — avertissement
+  l12: LeadDisqualificationPropertyResult; // Motif non structuré — info
+  l13: LeadHandoffResult;               // Qualifié sans deal — critique
+  l14: LeadIssue[];                     // Lead sans source — avertissement
+
+  score: number;
+  scoreLabel: string;
+  totalCritiques: number;
+  totalAvertissements: number;
+  totalInfos: number;
+
+  scopeError?: string | null;
 }
 
 export interface PropertyIssue {

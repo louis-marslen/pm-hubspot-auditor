@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
   }
 
   // 4. Création de l'audit run en status 'running' avec progression initiale
-  const domainsToInit = selectedDomains ?? ["properties", "contacts", "companies", "deals", "workflows", "users"];
+  const domainsToInit = selectedDomains ?? ["properties", "contacts", "companies", "deals", "leads", "workflows", "users"];
   const initialProgress = initProgress(domainsToInit);
 
   // Construire la sélection persistée (null si tous les domaines = rétrocompatibilité)
@@ -130,7 +130,7 @@ async function runAuditInBackground(
   selectedDomains?: AuditDomainId[],
 ) {
   const startedAt = Date.now();
-  const domainsToInit = selectedDomains ?? ["properties", "contacts", "companies", "deals", "workflows", "users"];
+  const domainsToInit = selectedDomains ?? ["properties", "contacts", "companies", "deals", "leads", "workflows", "users"];
 
   try {
     const global = await runFullAudit(accessToken, auditId, selectedDomains);
@@ -168,21 +168,24 @@ async function runAuditInBackground(
       (global.companyResults?.totalCritiques ?? 0) +
       (global.dealResults?.totalCritiques ?? 0) +
       (global.workflowResults?.totalCritiques ?? 0) +
-      (global.userResults?.totalCritiques ?? 0);
+      (global.userResults?.totalCritiques ?? 0) +
+      (global.leadResults?.totalCritiques ?? 0);
     const totalAvertissements =
       global.propertyResults.totalAvertissements +
       (global.contactResults?.totalAvertissements ?? 0) +
       (global.companyResults?.totalAvertissements ?? 0) +
       (global.dealResults?.totalAvertissements ?? 0) +
       (global.workflowResults?.totalAvertissements ?? 0) +
-      (global.userResults?.totalAvertissements ?? 0);
+      (global.userResults?.totalAvertissements ?? 0) +
+      (global.leadResults?.totalAvertissements ?? 0);
     const totalInfos =
       global.propertyResults.totalInfos +
       (global.contactResults?.totalInfos ?? 0) +
       (global.companyResults?.totalInfos ?? 0) +
       (global.dealResults?.totalInfos ?? 0) +
       (global.workflowResults?.totalInfos ?? 0) +
-      (global.userResults?.totalInfos ?? 0);
+      (global.userResults?.totalInfos ?? 0) +
+      (global.leadResults?.totalInfos ?? 0);
 
     // Build skipped_reasons for domains that were selected but returned no results
     const skippedReasons: Record<string, string> = {};
@@ -200,6 +203,9 @@ async function runAuditInBackground(
     }
     if (selectedDomains?.includes("workflows") && !global.workflowResults) {
       skippedReasons.workflows = "no_workflows";
+    }
+    if (selectedDomains?.includes("leads") && !global.leadResults) {
+      skippedReasons.leads = "no_leads";
     }
 
     // Update audit_domains with skipped_reasons if any
@@ -221,6 +227,7 @@ async function runAuditInBackground(
         company_results: global.companyResults,
         user_results: global.userResults,
         deal_results: global.dealResults,
+        lead_results: global.leadResults,
         llm_summary: llmSummary,
         score: global.propertyResults.score,
         property_score: global.propertyResults.score,
@@ -229,6 +236,7 @@ async function runAuditInBackground(
         company_score: global.companyResults?.score ?? null,
         user_score: global.userResults?.score ?? null,
         deal_score: global.dealResults?.score ?? null,
+        lead_score: global.leadResults?.score ?? null,
         global_score: global.globalScore,
         total_critiques: totalCritiques,
         total_avertissements: totalAvertissements,

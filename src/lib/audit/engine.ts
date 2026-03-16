@@ -5,6 +5,7 @@ import { runContactAudit } from "@/lib/audit/contact-engine";
 import { runCompanyAudit } from "@/lib/audit/company-engine";
 import { runUserAudit } from "@/lib/audit/user-engine";
 import { runDealAudit } from "@/lib/audit/deal-engine";
+import { runLeadAudit } from "@/lib/audit/lead-engine";
 import { calculateGlobalScore } from "@/lib/audit/global-score";
 import {
   initProgress,
@@ -192,7 +193,7 @@ export async function runFullAudit(
 ): Promise<GlobalAuditResults> {
   // Domaines dans l'ordre d'affichage du tracker
   // Si selectedDomains est fourni, filtrer ; sinon tous les domaines
-  const ALL_DOMAIN_KEYS = ["properties", "contacts", "companies", "deals", "workflows", "users"];
+  const ALL_DOMAIN_KEYS = ["properties", "contacts", "companies", "deals", "leads", "workflows", "users"];
   const DOMAIN_KEYS = selectedDomains
     ? ALL_DOMAIN_KEYS.filter((d) => selectedDomains.includes(d as AuditDomainId))
     : ALL_DOMAIN_KEYS;
@@ -301,6 +302,28 @@ export async function runFullAudit(
     }
   }
 
+  // Leads task
+  async function runLeadsTask(): Promise<Awaited<ReturnType<typeof runLeadAudit>>> {
+    try {
+      await emit((p) => updateDomainStep(p, "leads", "fetching"));
+      const results = await runLeadAudit(accessToken);
+      if (results === null) {
+        await emit((p) => {
+          const updated = updateDomainStep(p, "leads", "fetching", 0);
+          return completeDomain(updated, "leads");
+        });
+        return null;
+      }
+      await emit((p) => updateDomainStep(p, "leads", "analyzing", results.totalLeads));
+      await emit((p) => updateDomainStep(p, "leads", "scoring"));
+      await emit((p) => completeDomain(p, "leads"));
+      return results;
+    } catch (err) {
+      await emit((p) => failDomain(p, "leads", err instanceof Error ? err.message : "Erreur inconnue"));
+      return null;
+    }
+  }
+
   // Users task
   async function runUsersTask(): Promise<Awaited<ReturnType<typeof runUserAudit>>> {
     try {
@@ -326,13 +349,14 @@ export async function runFullAudit(
   // Lancement parallèle des domaines sélectionnés
   const shouldRun = (domain: string) => DOMAIN_KEYS.includes(domain);
 
-  const [workflowResults, contactResults, companyResults, dealResults, userResults] = await Promise.all([
+  const [workflowResults, contactResults, companyResults, dealResults, leadResults, userResults] = await Promise.all([
     shouldRun("workflows") ? runWorkflowsTask() : Promise.resolve(null),
     shouldRun("contacts") ? runContactsTask() : Promise.resolve(null),
     shouldRun("companies") ? runCompaniesTask() : Promise.resolve(null),
     shouldRun("deals") ? runDealsTask() : Promise.resolve(null),
+    shouldRun("leads") ? runLeadsTask() : Promise.resolve(null),
     shouldRun("users") ? runUsersTask() : Promise.resolve(null),
   ]);
 
-  return calculateGlobalScore(propertyResults, workflowResults, contactResults, companyResults, userResults, dealResults);
+  return calculateGlobalScore(propertyResults, workflowResults, contactResults, companyResults, userResults, dealResults, leadResults);
 }
