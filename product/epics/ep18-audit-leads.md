@@ -2,7 +2,7 @@
 
 **PRD associé :** [prd-18-audit-leads.md](../prd/prd-18-audit-leads.md)
 **Date de création :** 2026-03-16
-**Statut :** Spécifié
+**Statut :** ✅ Livré
 
 ---
 

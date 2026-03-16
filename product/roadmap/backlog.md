@@ -26,8 +26,9 @@ Tous les epics identifiés avec leur scoring RICE indicatif et leur statut.
 | EP-06 | Audit des deals & pipelines | 40 | 2 | 70% | 1.5 | 37 | LIVRÉ | ✅ Livré |
 | EP-09 | Audit utilisateurs & équipes | 30 | 2 | 60% | 1 | 36 | LIVRÉ | ✅ Livré |
 | EP-17 | Sélection des domaines d'audit | 50 | 2 | 90% | 0.5 | 180 | LIVRÉ | ✅ Livré |
+| EP-UX-03 | Refonte page rapport d'audit | 50 | 3 | 90% | 1 | 135 | NOW | Spécifié |
 | EP-08 | Onboarding self-service | 50 | 3 | 70% | 1 | 105 | NOW | À spécifier |
-| EP-18 | Audit des leads & pipelines de prospection | 25 | 2 | 70% | 1 | 35 | NOW | En cours |
+| EP-18 | Audit des leads & pipelines de prospection | 25 | 2 | 70% | 1 | 35 | LIVRÉ | ✅ Livré |
 | ~~EP-10~~ | ~~Audit des intégrations~~ | — | — | — | — | — | — | Abandonné |
 | ~~EP-11~~ | ~~Audit du reporting~~ | — | — | — | — | — | — | Abandonné |
 | ~~EP-07~~ | ~~Export du rapport (PDF)~~ | — | — | — | — | — | — | Abandonné |
@@ -38,6 +39,21 @@ Tous les epics identifiés avec leur scoring RICE indicatif et leur statut.
 | EP-16 | Profil business & audit contextuel | 40 | 3 | 50% | 2 | 30 | LATER | Idée |
 
 > ⚠️ EP-10, EP-11 et EP-07 ont été abandonnés — EP-10/EP-11 car les API HubSpot n'exposent pas les données nécessaires, EP-07 car le lien de partage public suffit. Les scores RICE sur les epics LATER sont indicatifs.
+
+---
+
+## Ce qui a été livré en Phase 2 (fin)
+
+### EP-18 — Audit des leads & pipelines de prospection
+- **14 règles (L-01 à L-14)** : 10 adaptées de EP-06 (deals) avec seuils ajustés + 4 nouvelles règles spécifiques leads
+- **Qualité des leads (L-01 à L-04, L-14)** : leads ouverts anciens (>30j), leads bloqués dans un stage (>30j), leads sans propriétaire, leads sans contact associé (critique), leads sans source
+- **Configuration pipeline (L-05 à L-10)** : pipeline inactif (60j), trop de stages (>5), phases sautées (>20%), points d'entrée multiples (>20%), stages fermés redondants, stages sans activité (60j)
+- **Processus de qualification (L-11 à L-13)** : disqualifié sans motif, motif non structuré (text vs enumeration), qualifié sans deal associé (critique)
+- **Domaine optionnel** : décoché par défaut dans la modale EP-17 (beaucoup d'entreprises n'utilisent pas l'objet Lead)
+- **Scoring** : coefficient ×1.0 (standard, pas de pondération renforcée)
+- **Activation conditionnelle** : domaine sélectionné par l'utilisateur ET ≥ 1 lead dans le workspace
+- **Skipped reason** : `"no_leads"` si sélectionné mais 0 lead
+- Score Leads (0-100) intégré au score global du dashboard — **7 domaines actifs**
 
 ---
 

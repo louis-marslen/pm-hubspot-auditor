@@ -86,7 +86,8 @@ Les artefacts PM sont en lecture seule depuis ce mode. Si tu identifies une inco
 | EP-09 | [prd-09-audit-utilisateurs-equipes.md](../product/prd/prd-09-audit-utilisateurs-equipes.md) | Audit utilisateurs & équipes (7 règles) | ✅ Livré |
 | EP-06 | [prd-06-audit-deals.md](../product/prd/prd-06-audit-deals.md) | Audit deals & pipelines (15 règles, scoring pondéré) | ✅ Livré |
 | EP-17 | [prd-17-selection-domaines-audit.md](../product/prd/prd-17-selection-domaines-audit.md) | Sélection des domaines d'audit, modale pré-launch | ✅ Livré |
-| EP-18 | [prd-18-audit-leads.md](../product/prd/prd-18-audit-leads.md) | Audit leads & pipelines de prospection (14 règles, domaine optionnel) | Spécifié |
+| EP-18 | [prd-18-audit-leads.md](../product/prd/prd-18-audit-leads.md) | Audit leads & pipelines de prospection (14 règles, domaine optionnel) | ✅ Livré |
+| EP-UX-03 | [prd-ux-03-refonte-rapport.md](../product/prd/prd-ux-03-refonte-rapport.md) | Refonte rapport : sidebar, vue par sévérité, hero simplifié, quick wins | Spécifié |
 
 ---
 
