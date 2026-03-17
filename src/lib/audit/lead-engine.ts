@@ -25,6 +25,9 @@ import {
  */
 export async function runLeadAudit(
   accessToken: string,
+  onFetchProgress?: (fetchedCount: number) => void,
+  onTotalKnown?: (total: number) => void,
+  onStep?: (step: "fetching" | "analyzing" | "scoring") => void,
 ): Promise<LeadAuditResults | null> {
   const client = new HubSpotClient(accessToken);
   const t = (label: string, since: number) => console.log(`[audit:leads] ${label}: ${Date.now() - since}ms`);
@@ -63,6 +66,7 @@ export async function runLeadAudit(
     throw err;
   }
   t("count total leads", t0);
+  onTotalKnown?.(totalLeads);
 
   if (totalLeads === 0) return null;
 
@@ -71,12 +75,13 @@ export async function runLeadAudit(
   t("pipelines", t0);
 
   // 3. Fetch all open leads with hs_date_entered_* properties
-  const openLeads = await fetchOpenLeads(client, pipelines);
+  const openLeads = await fetchOpenLeads(client, pipelines, onFetchProgress);
   t(`open leads (${openLeads.length})`, t0);
 
   const totalOpenLeads = openLeads.length;
 
   // 4. Fetch lead properties schema (for L-12)
+  onStep?.("analyzing");
   const leadProperties = await fetchLeadProperties(client);
   t("lead properties schema", t0);
 
@@ -122,6 +127,7 @@ export async function runLeadAudit(
   t("l04, l11-l13", t0);
 
   // 10. Calculate score
+  onStep?.("scoring");
   const partial: LeadAuditResults = {
     totalLeads,
     totalOpenLeads,

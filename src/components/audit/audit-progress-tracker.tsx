@@ -18,6 +18,7 @@ import {
   Shield,
   TrendingUp,
   UserPlus,
+  Info,
 } from "lucide-react";
 import type { DomainProgress } from "@/lib/audit/types";
 
@@ -124,9 +125,17 @@ export function AuditProgressTracker({
   return (
     <div className="flex items-center justify-center py-12">
       <Card className="w-full max-w-[640px]">
-        <h2 className="text-lg font-semibold text-gray-100 mb-5">
+        <h2 className="text-lg font-semibold text-gray-100 mb-4">
           Audit en cours — {displayName}
         </h2>
+
+        {/* Encart informatif durée */}
+        <div className="flex items-start gap-2.5 rounded-lg bg-gray-800/50 border border-gray-700/50 px-3.5 py-2.5 mb-5">
+          <Info className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+          <p className="text-xs text-gray-400 leading-relaxed">
+            L&apos;audit peut prendre plusieurs minutes selon le volume de données dans votre CRM (contacts, entreprises, deals, leads).
+          </p>
+        </div>
 
         {/* Domaines — only show selected domains (from progress keys or all if no selection) */}
         <div className="space-y-5">
@@ -274,27 +283,55 @@ function DomainRow({
                   ? "pending"
                   : "pending";
 
+            const showFetchProgress =
+              step === "fetching" &&
+              isCurrent &&
+              domain?.fetchedCount != null &&
+              domain.fetchedCount > 0 &&
+              domain?.itemCount != null &&
+              domain.itemCount > 0;
+
+            const fetchPercent = showFetchProgress
+              ? Math.min((domain!.fetchedCount! / domain!.itemCount!) * 100, 100)
+              : 0;
+
             return (
-              <div key={step} className="flex items-center gap-2">
-                <StepIcon status={stepStatus} size="sm" />
-                <span
-                  className={`text-xs ${
-                    isCompleted
-                      ? "text-gray-400"
-                      : isCurrent
-                        ? "text-gray-200"
-                        : "text-gray-500"
-                  }`}
-                >
-                  {STEP_LABELS[step]}
-                  {step === "fetching" &&
-                    isCompleted &&
-                    domain?.itemCount != null && (
-                      <span className="text-gray-500 ml-1">
-                        ({formatCount(domain.itemCount)})
-                      </span>
-                    )}
-                </span>
+              <div key={step} className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <StepIcon status={stepStatus} size="sm" />
+                  <span
+                    className={`text-xs ${
+                      isCompleted
+                        ? "text-gray-400"
+                        : isCurrent
+                          ? "text-gray-200"
+                          : "text-gray-500"
+                    }`}
+                  >
+                    {STEP_LABELS[step]}
+                    {step === "fetching" &&
+                      isCompleted &&
+                      domain?.itemCount != null && (
+                        <span className="text-gray-500 ml-1">
+                          ({formatCount(domain.itemCount)})
+                        </span>
+                      )}
+                  </span>
+                  {showFetchProgress && (
+                    <span className="text-xs tabular-nums text-gray-500 ml-auto">
+                      {formatCount(domain!.fetchedCount!)} / {formatCount(domain!.itemCount!)}
+                    </span>
+                  )}
+                </div>
+                {showFetchProgress && (
+                  <div className="ml-5">
+                    <ProgressBar
+                      value={fetchPercent}
+                      colorClass="bg-brand-500"
+                      className="h-1"
+                    />
+                  </div>
+                )}
               </div>
             );
           })}

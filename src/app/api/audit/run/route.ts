@@ -121,6 +121,51 @@ export async function POST(req: NextRequest) {
  * Exécute l'audit complet en arrière-plan et met à jour la base une fois terminé.
  * Utilise le client admin Supabase (service role) pour écrire sans cookies.
  */
+/**
+ * Tronque les listes d'exemples dans les résultats pour éviter les payloads > 10 MB.
+ * Garde les N premiers exemples par règle ; les counts/scores restent intacts.
+ */
+const MAX_EXAMPLES = 200;
+const MAX_CLUSTER_MEMBERS = 10;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function truncateResults(results: Record<string, any> | null): Record<string, any> | null {
+  if (!results) return null;
+  const out: Record<string, unknown> = { ...results };
+  for (const key of Object.keys(out)) {
+    const val = out[key];
+    // Tableaux d'objets directs (ex: c09, c10, c11, d03, l01…)
+    if (Array.isArray(val) && val.length > MAX_EXAMPLES) {
+      // DuplicateCluster[] ou ContactIssue[] etc.
+      if (val[0] && typeof val[0] === "object" && "members" in val[0]) {
+        // Cluster arrays : garder les clusters mais tronquer les members
+        out[key] = val.slice(0, MAX_EXAMPLES).map(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (cluster: any) => ({
+            ...cluster,
+            members: Array.isArray(cluster.members)
+              ? cluster.members.slice(0, MAX_CLUSTER_MEMBERS)
+              : cluster.members,
+          }),
+        );
+      } else {
+        out[key] = val.slice(0, MAX_EXAMPLES);
+      }
+    }
+    // Objets avec sous-tableau .deals, .leads, .examples, .superAdmins, .inactiveUsers
+    if (val && typeof val === "object" && !Array.isArray(val)) {
+      const obj = val as Record<string, unknown>;
+      for (const subKey of ["deals", "leads", "examples", "superAdmins", "inactiveUsers"]) {
+        const arr = obj[subKey];
+        if (Array.isArray(arr) && arr.length > MAX_EXAMPLES) {
+          out[key] = { ...obj, [subKey]: arr.slice(0, MAX_EXAMPLES) };
+        }
+      }
+    }
+  }
+  return out;
+}
+
 async function runAuditInBackground(
   accessToken: string,
   auditId: string,
@@ -145,6 +190,7 @@ async function runAuditInBackground(
         currentStep: null,
         completedSteps: ["fetching", "analyzing", "scoring"],
         itemCount: allCompleted.domains[key].itemCount,
+        fetchedCount: null,
         error: null,
       };
     }
@@ -217,17 +263,17 @@ async function runAuditInBackground(
         }
       : undefined; // Don't overwrite if no skips
 
-    await supabase
+    const { error: updateError } = await supabase
       .from("audit_runs")
       .update({
         status: "completed",
-        results: global.propertyResults,
-        workflow_results: global.workflowResults,
-        contact_results: global.contactResults,
-        company_results: global.companyResults,
-        user_results: global.userResults,
-        deal_results: global.dealResults,
-        lead_results: global.leadResults,
+        results: truncateResults(global.propertyResults),
+        workflow_results: truncateResults(global.workflowResults),
+        contact_results: truncateResults(global.contactResults),
+        company_results: truncateResults(global.companyResults),
+        user_results: truncateResults(global.userResults),
+        deal_results: truncateResults(global.dealResults),
+        lead_results: truncateResults(global.leadResults),
         llm_summary: llmSummary,
         score: global.propertyResults.score,
         property_score: global.propertyResults.score,
@@ -248,6 +294,15 @@ async function runAuditInBackground(
         ...(updatedAuditDomains ? { audit_domains: updatedAuditDomains } : {}),
       })
       .eq("id", auditId);
+
+    if (updateError) {
+      console.error(`[audit] final update failed for ${auditId}:`, updateError.message, updateError.details);
+      // Tentative de sauvegarder au moins le statut completed sans les résultats volumineux
+      await supabase
+        .from("audit_runs")
+        .update({ status: "failed", error: `Erreur sauvegarde résultats : ${updateError.message}` })
+        .eq("id", auditId);
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Erreur inconnue";
     console.error(`[audit] background audit failed for ${auditId}:`, message);

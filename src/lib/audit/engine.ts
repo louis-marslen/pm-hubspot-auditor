@@ -10,6 +10,7 @@ import { calculateGlobalScore } from "@/lib/audit/global-score";
 import {
   initProgress,
   updateDomainStep,
+  updateFetchedCount,
   completeDomain,
   failDomain,
   persistProgress,
@@ -209,6 +210,25 @@ export async function runFullAudit(
     await persistProgress(auditId, progress);
   }
 
+  // Crée un callback throttlé pour émettre la progression du fetch (1 persist max toutes les 3s)
+  function makeFetchProgressCallback(domain: string): (fetchedCount: number) => void {
+    let lastPersistTime = 0;
+    return (fetchedCount: number) => {
+      const now = Date.now();
+      if (now - lastPersistTime < 3000) return;
+      lastPersistTime = now;
+      // Fire-and-forget : on ne bloque pas la boucle de fetch
+      emit((p) => updateFetchedCount(p, domain, fetchedCount));
+    };
+  }
+
+  // Callback pour émettre les changements de sous-étape depuis les engines
+  function makeStepCallback(domain: string): (step: "fetching" | "analyzing" | "scoring") => void {
+    return (step) => {
+      emit((p) => updateDomainStep(p, domain, step));
+    };
+  }
+
   // ── Propriétés ──────────────────────────────────────────────────────────
   let propertyResults: AuditResults;
   try {
@@ -252,7 +272,7 @@ export async function runFullAudit(
     }
     try {
       await emit((p) => updateDomainStep(p, "contacts", "fetching", totalContacts));
-      const results = await runContactAudit(accessToken, totalContacts, totalCompanies);
+      const results = await runContactAudit(accessToken, totalContacts, totalCompanies, makeFetchProgressCallback("contacts"), makeStepCallback("contacts"));
       await emit((p) => completeDomain(p, "contacts"));
       return results;
     } catch (err) {
@@ -272,7 +292,7 @@ export async function runFullAudit(
     }
     try {
       await emit((p) => updateDomainStep(p, "companies", "fetching", totalCompanies));
-      const results = await runCompanyAudit(accessToken, totalCompanies);
+      const results = await runCompanyAudit(accessToken, totalCompanies, makeFetchProgressCallback("companies"), makeStepCallback("companies"));
       await emit((p) => completeDomain(p, "companies"));
       return results;
     } catch (err) {
@@ -293,7 +313,7 @@ export async function runFullAudit(
     }
     try {
       await emit((p) => updateDomainStep(p, "deals", "fetching", totalDeals));
-      const results = await runDealAudit(accessToken, totalDeals, totalCompanies);
+      const results = await runDealAudit(accessToken, totalDeals, totalCompanies, makeFetchProgressCallback("deals"), makeStepCallback("deals"));
       await emit((p) => completeDomain(p, "deals"));
       return results;
     } catch (err) {
@@ -306,7 +326,12 @@ export async function runFullAudit(
   async function runLeadsTask(): Promise<Awaited<ReturnType<typeof runLeadAudit>>> {
     try {
       await emit((p) => updateDomainStep(p, "leads", "fetching"));
-      const results = await runLeadAudit(accessToken);
+      const results = await runLeadAudit(
+        accessToken,
+        makeFetchProgressCallback("leads"),
+        (total) => { emit((p) => updateDomainStep(p, "leads", "fetching", total)); },
+        makeStepCallback("leads"),
+      );
       if (results === null) {
         await emit((p) => {
           const updated = updateDomainStep(p, "leads", "fetching", 0);
@@ -314,8 +339,6 @@ export async function runFullAudit(
         });
         return null;
       }
-      await emit((p) => updateDomainStep(p, "leads", "analyzing", results.totalLeads));
-      await emit((p) => updateDomainStep(p, "leads", "scoring"));
       await emit((p) => completeDomain(p, "leads"));
       return results;
     } catch (err) {

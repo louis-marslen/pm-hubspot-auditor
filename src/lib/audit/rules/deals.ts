@@ -62,6 +62,7 @@ export async function fetchPipelines(client: HubSpotClient): Promise<PipelineDat
 export async function fetchOpenDeals(
   client: HubSpotClient,
   pipelines: PipelineData[],
+  onProgress?: (fetchedCount: number) => void,
 ): Promise<Record<string, unknown>[]> {
   // Collect all hs_date_entered_* property names
   const dateEnteredProps: string[] = [];
@@ -101,6 +102,7 @@ export async function fetchOpenDeals(
       body,
     );
     allDeals.push(...res.results);
+    onProgress?.(allDeals.length);
     after = res.paging?.next?.after;
   } while (after);
 

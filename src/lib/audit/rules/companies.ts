@@ -56,7 +56,10 @@ function toCompanyIssue(r: Record<string, unknown>): CompanyIssue {
  * Récupère toutes les companies via GET /crm/v3/objects/companies (list endpoint).
  * Même pattern que fetchAllContacts — le Search API ne supporte pas bien les requêtes sans filtre.
  */
-export async function fetchAllCompanies(client: HubSpotClient): Promise<CompanyIssue[]> {
+export async function fetchAllCompanies(
+  client: HubSpotClient,
+  onProgress?: (fetchedCount: number) => void,
+): Promise<CompanyIssue[]> {
   const propsParam = COMPANY_PROPERTIES.join(",");
   const allCompanies: CompanyIssue[] = [];
   let after: string | undefined;
@@ -69,6 +72,7 @@ export async function fetchAllCompanies(client: HubSpotClient): Promise<CompanyI
 
     const res = await client.get<ListResponse>(url);
     allCompanies.push(...res.results.map(toCompanyIssue));
+    onProgress?.(allCompanies.length);
     after = res.paging?.next?.after;
   } while (after);
 

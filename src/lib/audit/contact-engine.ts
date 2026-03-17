@@ -16,6 +16,8 @@ export async function runContactAudit(
   accessToken: string,
   totalContacts: number,
   totalCompanies: number,
+  onFetchProgress?: (fetchedCount: number) => void,
+  onStep?: (step: "fetching" | "analyzing" | "scoring") => void,
 ): Promise<ContactAuditResults | null> {
   if (totalContacts === 0) return null;
 
@@ -43,10 +45,11 @@ export async function runContactAudit(
   t("c05", t0);
 
   // 2. Récupération de tous les contacts pour les règles locales (C-06 à C-12)
-  const allContacts = await fetchAllContacts(client);
+  const allContacts = await fetchAllContacts(client, onFetchProgress);
   t(`fetch all contacts (${allContacts.length})`, t0);
 
   // 2b. Enrichir avec les associations company (nécessaire pour C-07)
+  onStep?.("analyzing");
   if (totalCompanies > 0) {
     await enrichContactsWithCompanies(client, allContacts);
     t("enrich companies", t0);
@@ -66,6 +69,7 @@ export async function runContactAudit(
   t("c09-c12 quality", t0);
 
   // 5. Calcul du score
+  onStep?.("scoring");
   const partialResults: ContactAuditResults = {
     totalContacts,
     hasContacts: true,

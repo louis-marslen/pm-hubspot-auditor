@@ -220,7 +220,10 @@ interface ListResponse {
   paging?: { next?: { after: string } };
 }
 
-export async function fetchAllContacts(client: HubSpotClient): Promise<ContactIssue[]> {
+export async function fetchAllContacts(
+  client: HubSpotClient,
+  onProgress?: (fetchedCount: number) => void,
+): Promise<ContactIssue[]> {
   // Utilise GET /crm/v3/objects/contacts (list endpoint) au lieu du Search API.
   // Le Search API rejette limit > ~10 avec filterGroups vide.
   const properties = [...CONTACT_PROPERTIES_BASE, ...CONTACT_PROPERTIES_OPTIONAL];
@@ -238,6 +241,7 @@ export async function fetchAllContacts(client: HubSpotClient): Promise<ContactIs
     const res = await client.get<ListResponse>(url);
 
     allContacts.push(...res.results.map(toContactIssue));
+    onProgress?.(allContacts.length);
 
     after = res.paging?.next?.after;
   } while (after);

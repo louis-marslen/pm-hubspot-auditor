@@ -46,6 +46,7 @@ export async function fetchLeadPipelines(client: HubSpotClient): Promise<LeadPip
 export async function fetchOpenLeads(
   client: HubSpotClient,
   pipelines: LeadPipelineData[],
+  onProgress?: (fetchedCount: number) => void,
 ): Promise<Record<string, unknown>[]> {
   // Collect all hs_date_entered_* property names
   const dateEnteredProps: string[] = [];
@@ -103,6 +104,7 @@ export async function fetchOpenLeads(
         body,
       );
       allLeads.push(...res.results);
+      onProgress?.(allLeads.length);
       after = res.paging?.next?.after;
     } while (after);
   }

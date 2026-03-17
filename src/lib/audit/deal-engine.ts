@@ -19,6 +19,8 @@ export async function runDealAudit(
   accessToken: string,
   totalDeals: number,
   totalCompanies: number,
+  onFetchProgress?: (fetchedCount: number) => void,
+  onStep?: (step: "fetching" | "analyzing" | "scoring") => void,
 ): Promise<DealAuditResults | null> {
   if (totalDeals === 0) return null;
 
@@ -31,12 +33,13 @@ export async function runDealAudit(
   t("pipelines", t0);
 
   // 2. Fetch all open deals with hs_date_entered_* properties
-  const openDeals = await fetchOpenDeals(client, pipelines);
+  const openDeals = await fetchOpenDeals(client, pipelines, onFetchProgress);
   t(`open deals (${openDeals.length})`, t0);
 
   const totalOpenDeals = openDeals.length;
 
   // 3. Run migrated rules (D-01 to D-04) — local computation
+  onStep?.("analyzing");
   const d01 = runD01(openDeals);
   const d02 = runD02(openDeals);
   const d03 = runD03(openDeals);
@@ -69,6 +72,7 @@ export async function runDealAudit(
   t("d08-d11", t0);
 
   // 7. Calculate score
+  onStep?.("scoring");
   const partial: DealAuditResults = {
     totalDeals,
     totalOpenDeals,

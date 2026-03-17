@@ -79,6 +79,7 @@ export interface DomainProgress {
   currentStep: "fetching" | "analyzing" | "scoring" | null;
   completedSteps: string[];
   itemCount: number | null;
+  fetchedCount: number | null;  // nombre d'objets récupérés jusqu'ici (étape fetching)
   error: string | null;
 }
 

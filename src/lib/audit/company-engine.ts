@@ -13,6 +13,8 @@ import {
 export async function runCompanyAudit(
   accessToken: string,
   totalCompanies: number,
+  onFetchProgress?: (fetchedCount: number) => void,
+  onStep?: (step: "fetching" | "analyzing" | "scoring") => void,
 ): Promise<CompanyAuditResults | null> {
   if (totalCompanies === 0) return null;
 
@@ -25,10 +27,11 @@ export async function runCompanyAudit(
   t("co01", t0);
 
   // 2. Récupération de toutes les companies
-  const allCompanies = await fetchAllCompanies(client);
+  const allCompanies = await fetchAllCompanies(client, onFetchProgress);
   t(`fetch all companies (${allCompanies.length})`, t0);
 
   // 3. Enrichir avec les associations contacts + deals
+  onStep?.("analyzing");
   await enrichCompaniesWithAssociations(client, allCompanies);
   t("enrich associations", t0);
 
@@ -46,6 +49,7 @@ export async function runCompanyAudit(
   t("co04-co08 quality", t0);
 
   // 6. Calcul du score
+  onStep?.("scoring");
   const partialResults: CompanyAuditResults = {
     totalCompanies,
     hasCompanies: true,

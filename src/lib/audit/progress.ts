@@ -21,6 +21,7 @@ export function initProgress(domains: string[]): AuditProgress {
       currentStep: null,
       completedSteps: [],
       itemCount: null,
+      fetchedCount: null,
       error: null,
     };
   }
@@ -75,6 +76,30 @@ export function updateDomainStep(
         },
       },
     }),
+  };
+}
+
+/**
+ * Met à jour le compteur d'objets récupérés pendant l'étape fetching.
+ * Utilisé pour afficher la progression intermédiaire (ex: "1 200 / 14 500").
+ */
+export function updateFetchedCount(
+  progress: AuditProgress,
+  domain: string,
+  fetchedCount: number,
+): AuditProgress {
+  const prev = progress.domains[domain];
+  if (!prev || prev.currentStep !== "fetching") return progress;
+
+  return {
+    ...progress,
+    domains: {
+      ...progress.domains,
+      [domain]: {
+        ...prev,
+        fetchedCount,
+      },
+    },
   };
 }
 
