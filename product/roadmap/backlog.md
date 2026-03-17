@@ -34,7 +34,7 @@ Tous les epics identifiés avec leur scoring RICE indicatif et leur statut.
 | ~~EP-07~~ | ~~Export du rapport (PDF)~~ | — | — | — | — | — | — | Abandonné |
 | EP-12 | Historique & comparaison d'audits | 20 | 2 | 60% | 2 | 12 | LATER | Idée |
 | EP-13 | Mode multi-workspace | 10 | 3 | 70% | 2 | 10.5 | LATER | Idée |
-| EP-14 | Recommandations enrichies (IA) | 30 | 3 | 40% | 3 | 12 | LATER | Idée |
+| EP-14 | Diagnostic global IA & Recommandations | 50 | 3 | 70% | 1.5 | 70 | NOW | Spécifié |
 | EP-15 | Modèle de pricing & paywall | 50 | 3 | 60% | 1 | 90 | LATER | Idée |
 | EP-16 | Profil business & audit contextuel | 40 | 3 | 50% | 2 | 30 | LATER | Idée |
 
@@ -57,6 +57,7 @@ Tous les epics identifiés avec leur scoring RICE indicatif et leur statut.
 - **6 nouveaux composants** : ReportSidebar, ReportLayout, DomainScoreGrid, QuickWinsCallout, RuleListItem, SeveritySection
 - **4 nouveaux utilitaires** : transform-rules, group-by-severity, generate-quick-wins, compute-score-delta
 - Refonte majeure d'`audit-results-view.tsx` (−1689 / +2857 lignes sur l'ensemble)
+- **Navigation applicative** : remplacement de la navbar (topbar) par une `AppSidebar` sur toutes les pages authentifiées (logo, navigation, paramètres, avatar), sections rapport injectées via `ReportSidebarContext`, unification des styles sidebar, renommage "Tableau de bord" → "Vue d'ensemble", cards workspace compactées
 
 ---
 

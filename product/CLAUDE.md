@@ -55,6 +55,7 @@ product/
 | EP-17 | [prd-17-selection-domaines-audit.md](prd/prd-17-selection-domaines-audit.md) | [ep17-selection-domaines-audit.md](epics/ep17-selection-domaines-audit.md) | ✅ Livré |
 | EP-18 | [prd-18-audit-leads.md](prd/prd-18-audit-leads.md) | [ep18-audit-leads.md](epics/ep18-audit-leads.md) | ✅ Livré |
 | EP-UX-03 | [prd-ux-03-refonte-rapport.md](prd/prd-ux-03-refonte-rapport.md) | [ep-ux-03-refonte-rapport.md](epics/ep-ux-03-refonte-rapport.md) | ✅ Livré |
+| EP-14 | [prd-14-diagnostic-ia.md](prd/prd-14-diagnostic-ia.md) | [ep14-diagnostic-ia.md](epics/ep14-diagnostic-ia.md) | Spécifié |
 | EP-08 | À créer | À créer | À spécifier |
 
 ---

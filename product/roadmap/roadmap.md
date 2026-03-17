@@ -9,7 +9,7 @@ Dernière mise à jour : 17 Mars 2026
 
 ## ✅ LIVRÉ — Phase 1 complète
 
-Objectif atteint : produit fonctionnel avec 7 domaines d'audit (6 + leads optionnel), utilisable par Louis sur ses missions, testable par des beta users. Rapport d'audit redesigné avec navigation sidebar et vue par sévérité.
+Objectif atteint : produit fonctionnel avec 7 domaines d'audit (6 + leads optionnel), utilisable par Louis sur ses missions, testable par des beta users. Rapport d'audit redesigné avec navigation sidebar et vue par sévérité. Navigation applicative unifiée via sidebar (remplacement de la topbar).
 
 | Epic | Thème | Valeur délivrée | Statut |
 |---|---|---|---|
@@ -26,7 +26,7 @@ Objectif atteint : produit fonctionnel avec 7 domaines d'audit (6 + leads option
 | [EP-06] Audit des deals & pipelines | Audit core | 15 règles D-01 à D-15, deals bloqués, pipeline structurel (phases sautées, stages redondants, points d'entrée multiples), scoring pondéré ×1.5, migration P13-P16, associations batch | ✅ Livré |
 | [EP-17] Sélection des domaines d'audit | Personnalisation | Modale de sélection pré-audit (6 domaines, Properties obligatoire), score global adapté, bandeau de périmètre, skipped_reasons, historique partiel, LLM scope-aware | ✅ Livré |
 | [EP-18] Audit des leads & pipelines de prospection | Audit core | 14 règles (L-01 à L-14), leads bloqués, pipelines de prospection, disqualifications, handoff lead→deal, domaine optionnel (décoché par défaut), coefficient ×1.0, 7 domaines actifs | ✅ Livré |
-| [EP-UX-03] Refonte page rapport d'audit | UX | Layout sidebar fixe, vue par sévérité cross-domaine, hero simplifié avec delta score, grille scores domaines, quick wins actionnables, section conformes, rapport public redesigné | ✅ Livré |
+| [EP-UX-03] Refonte page rapport d'audit + navigation sidebar | UX | Layout sidebar fixe, vue par sévérité cross-domaine, hero simplifié avec delta score, grille scores domaines, quick wins actionnables, section conformes, rapport public redesigné. **+** Remplacement de la navbar par une AppSidebar applicative (logo, navigation, paramètres, avatar), unification des styles sidebar dashboard/audit, renommage "Tableau de bord" → "Vue d'ensemble" | ✅ Livré |
 
 ---
 
@@ -36,7 +36,8 @@ Objectif : Packager le produit pour la distribution et l'adoption self-service.
 
 | # | Epic | Thème | Valeur délivrée | Taille |
 |---|---|---|---|---|
-| 1 | [EP-08] Onboarding & inscription self-service | Produit | Permettre à un utilisateur de s'inscrire et lancer son premier audit sans aide | M |
+| 1 | [EP-14] Diagnostic global IA & Recommandations | Intelligence | Diagnostic structuré (forces/faiblesses/risques) + roadmap de recommandations priorisées, générés par gpt-5.4. Remplace le résumé LLM et les quick wins | M |
+| 2 | [EP-08] Onboarding & inscription self-service | Produit | Permettre à un utilisateur de s'inscrire et lancer son premier audit sans aide | M |
 
 ---
 
@@ -49,7 +50,7 @@ Objectif : Étendre la valeur, explorer la monétisation et les cas d'usage avan
 | [EP-16] Profil business & audit contextuel | Personnalisation | Questionnaire business (B2B/B2C, cycle de vente, maturité CRM) → seuils adaptatifs, criticités contextuelles, recommandations personnalisées. Étend EP-17 | Idée |
 | [EP-12] Historique & comparaison d'audits | Récurrence | Comparer l'évolution d'un workspace dans le temps | Idée |
 | [EP-13] Mode multi-workspace | Consultant | Gérer plusieurs workspaces clients depuis un seul compte | Idée |
-| [EP-14] Recommandations enrichies (IA) | Intelligence | Recommandations personnalisées basées sur le secteur / la taille | Idée |
+| ~~EP-14~~ | ~~Recommandations enrichies (IA)~~ | — | Promu en NOW — voir EP-14 Diagnostic global IA & Recommandations | Promu |
 | [EP-15] Modèle de pricing & paywall | Monétisation | Freemium + plan payant pour accès complet ou multi-workspace | Idée |
 
 ---
@@ -108,6 +109,15 @@ Objectif : Étendre la valeur, explorer la monétisation et les cas d'usage avan
 - Le bloc quick wins donne un point d'entrée actionnable immédiat — essentiel pour les destinataires non-techniques
 - Le delta score (vs audit précédent) pose les bases de la récurrence (EP-12 futur)
 - Prérequis avant l'onboarding self-service (EP-08) : le rapport doit être convaincant dès le premier audit pour convertir
+
+### Pourquoi EP-14 (diagnostic IA) est priorisé maintenant ?
+
+- Le rapport liste ~100 règles par sévérité mais ne croise pas les résultats entre domaines — l'utilisateur doit lui-même synthétiser les patterns transverses et construire sa roadmap d'amélioration
+- Les consultants RevOps revendent le rapport comme livrable — il doit être **autonome** (diagnostic + plan d'action, pas juste une liste de problèmes)
+- Le résumé LLM actuel (3-5 phrases, gpt-4.1) est trop court et générique — il ne justifie pas la valeur perçue de la couche IA
+- Les quick wins déterministes (EP-UX-03) sont limités à du reformatage de règles — les recommandations IA avec impact/effort/actions clés sont nettement plus riches
+- gpt-5.4 + structured outputs permettent un JSON garanti valide avec un diagnostic de qualité — le timing technique est bon
+- **Différenciateur** : aucun concurrent ne propose de recoupement inter-domaines ni de roadmap actionnablee dans un rapport d'audit CRM
 
 ### Pourquoi EP-10 (intégrations), EP-11 (reporting) et EP-07 (PDF) ont été abandonnés ?
 
