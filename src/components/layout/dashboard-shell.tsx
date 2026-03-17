@@ -19,7 +19,7 @@ export function DashboardShell({ email, children }: DashboardShellProps) {
 
   return (
     <ToastProvider>
-      <div className="min-h-screen flex flex-col bg-gray-950">
+      <div className="min-h-screen flex flex-col bg-gray-950 pt-14">
         <Topbar variant="connected" email={email} onSignOut={handleSignOut} />
         <main className="flex-1 mx-auto w-full max-w-content px-6 py-8">
           {children}

@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, useCallback, Suspense } from "react";
+import { useEffect, useState, useCallback, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { ScanSearch, Building2, Plus, ArrowRight } from "lucide-react";
 import { AuditDomainSelector } from "@/components/audit/audit-domain-selector";
@@ -49,7 +49,9 @@ function DashboardContent() {
   const [auditing, setAuditing] = useState<string | null>(null);
   const [auditError, setAuditError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectorConnectionId, setSelectorConnectionId] = useState<string | null>(null);
+  const [filterWorkspace, setFilterWorkspace] = useState<string>("all");
+  const [filterDateFrom, setFilterDateFrom] = useState<string>("");
+  const [filterDateTo, setFilterDateTo] = useState<string>("");
 
   const connected = searchParams.get("connected");
   const error = searchParams.get("error");
@@ -78,7 +80,7 @@ function DashboardContent() {
           .select("id, status, score, global_score, total_critiques, total_avertissements, started_at, connection_id, audit_domains")
           .eq("user_id", user.id)
           .order("started_at", { ascending: false })
-          .limit(10),
+          .limit(50),
       ]);
 
       const wss = (wsList ?? []) as Workspace[];
@@ -95,21 +97,17 @@ function DashboardContent() {
     load();
   }, [router, connected]);
 
-  const handleOpenSelector = useCallback((connectionId: string) => {
-    setSelectorConnectionId(connectionId);
-    setAuditError(null);
-  }, []);
+  const [selectorOpen, setSelectorOpen] = useState(false);
 
-  const handleLaunchAudit = useCallback(async (selectedDomains: AuditDomainId[]) => {
-    if (!selectorConnectionId) return;
-    setAuditing(selectorConnectionId);
-    setSelectorConnectionId(null);
+  const handleLaunchAudit = useCallback(async (connectionId: string, selectedDomains: AuditDomainId[]) => {
+    setAuditing(connectionId);
+    setSelectorOpen(false);
     setAuditError(null);
     try {
       const res = await fetch("/api/audit/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ connectionId: selectorConnectionId, selectedDomains }),
+        body: JSON.stringify({ connectionId, selectedDomains }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -123,7 +121,22 @@ function DashboardContent() {
     } finally {
       setAuditing(null);
     }
-  }, [router, selectorConnectionId]);
+  }, [router]);
+
+  const filteredAudits = useMemo(() => {
+    return recentAudits.filter((a) => {
+      if (filterWorkspace !== "all" && a.connection_id !== filterWorkspace) return false;
+      if (filterDateFrom) {
+        const auditDate = new Date(a.started_at).toISOString().slice(0, 10);
+        if (auditDate < filterDateFrom) return false;
+      }
+      if (filterDateTo) {
+        const auditDate = new Date(a.started_at).toISOString().slice(0, 10);
+        if (auditDate > filterDateTo) return false;
+      }
+      return true;
+    });
+  }, [recentAudits, filterWorkspace, filterDateFrom, filterDateTo]);
 
   // Get last audit per workspace
   const lastAuditByWs = new Map<string, AuditRun>();
@@ -200,7 +213,6 @@ function DashboardContent() {
           {workspaces.map((ws) => {
             const isExpired = ws.token_expires_at && new Date(ws.token_expires_at) < new Date();
             const lastAudit = lastAuditByWs.get(ws.id);
-            const isRunning = auditing === ws.id;
 
             return (
               <Card key={ws.id}>
@@ -219,7 +231,7 @@ function DashboardContent() {
                 )}
 
                 {lastAudit && (lastAudit.global_score ?? lastAudit.score) !== null && (
-                  <div className="flex items-center gap-3 mb-4 p-3 rounded-md bg-gray-800/50">
+                  <div className="flex items-center gap-3 p-3 rounded-md bg-gray-800/50">
                     <ScoreCircle score={(lastAudit.global_score ?? lastAudit.score)!} size="sm" />
                     <div>
                       <p className="text-sm font-medium text-gray-200">{lastAudit.global_score ?? lastAudit.score}/100</p>
@@ -232,22 +244,12 @@ function DashboardContent() {
                   </div>
                 )}
 
-                {isExpired ? (
-                  <a href="/api/hubspot/oauth/initiate" className="block">
+                {isExpired && (
+                  <a href="/api/hubspot/oauth/initiate" className="block mt-4">
                     <Button variant="secondary" className="w-full" size="sm">
                       Reconnecter
                     </Button>
                   </a>
-                ) : (
-                  <Button
-                    onClick={() => handleOpenSelector(ws.id)}
-                    disabled={!!auditing}
-                    loading={isRunning}
-                    className="w-full"
-                    size="sm"
-                  >
-                    {lastAudit ? "Relancer un audit" : "Lancer mon premier audit"}
-                  </Button>
                 )}
               </Card>
             );
@@ -266,18 +268,80 @@ function DashboardContent() {
         </div>
       </section>
 
-      {/* Domain selection modal */}
+      {/* Audit launch modal (workspace → domains → launch) */}
       <AuditDomainSelector
-        isOpen={!!selectorConnectionId}
-        onClose={() => setSelectorConnectionId(null)}
+        isOpen={selectorOpen}
+        onClose={() => setSelectorOpen(false)}
         onLaunch={handleLaunchAudit}
         loading={!!auditing}
+        workspaces={workspaces.map((ws) => ({
+          id: ws.id,
+          portal_id: ws.portal_id,
+          portal_name: ws.portal_name,
+          hub_domain: ws.hub_domain,
+          expired: !!(ws.token_expires_at && new Date(ws.token_expires_at) < new Date()),
+        }))}
       />
 
       {/* Recent audits */}
       {recentAudits.length > 0 && (
         <section>
           <h2 className="text-lg font-semibold text-gray-100 mb-5">Historique des audits</h2>
+
+          {/* Filters + launch button */}
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <select
+              value={filterWorkspace}
+              onChange={(e) => setFilterWorkspace(e.target.value)}
+              className="rounded-md border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500"
+            >
+              <option value="all">Tous les workspaces</option>
+              {workspaces.map((ws) => (
+                <option key={ws.id} value={ws.id}>
+                  {ws.portal_name ?? `Portal ${ws.portal_id}`}
+                </option>
+              ))}
+            </select>
+
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-500">Du</label>
+              <input
+                type="date"
+                value={filterDateFrom}
+                onChange={(e) => setFilterDateFrom(e.target.value)}
+                className="rounded-md border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 [color-scheme:dark]"
+              />
+              <label className="text-xs text-gray-500">au</label>
+              <input
+                type="date"
+                value={filterDateTo}
+                onChange={(e) => setFilterDateTo(e.target.value)}
+                className="rounded-md border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 [color-scheme:dark]"
+              />
+            </div>
+
+            {(filterWorkspace !== "all" || filterDateFrom || filterDateTo) && (
+              <button
+                type="button"
+                onClick={() => { setFilterWorkspace("all"); setFilterDateFrom(""); setFilterDateTo(""); }}
+                className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+              >
+                Réinitialiser
+              </button>
+            )}
+
+            <div className="ml-auto">
+              <Button
+                onClick={() => { setSelectorOpen(true); setAuditError(null); }}
+                disabled={!!auditing}
+                loading={!!auditing}
+                size="sm"
+              >
+                Lancer un audit
+              </Button>
+            </div>
+          </div>
+
           <Card padding="compact" className="overflow-hidden">
             <table className="w-full text-sm">
               <thead>
@@ -291,7 +355,14 @@ function DashboardContent() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-700">
-                {recentAudits.map((audit) => (
+                {filteredAudits.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-500">
+                      Aucun audit ne correspond aux filtres sélectionnés
+                    </td>
+                  </tr>
+                )}
+                {filteredAudits.map((audit) => (
                   <tr key={audit.id} className="hover:bg-gray-850 transition-colors">
                     <td className="px-4 py-3 font-medium text-gray-200">
                       {audit.portal_name ?? "—"}

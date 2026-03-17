@@ -19,6 +19,7 @@ import {
   UserPlus,
   Check,
   Minus,
+  ChevronLeft,
 } from "lucide-react";
 
 const DOMAIN_ICONS: Record<AuditDomainId, typeof ListTree> = {
@@ -31,11 +32,20 @@ const DOMAIN_ICONS: Record<AuditDomainId, typeof ListTree> = {
   leads: UserPlus,
 };
 
+export interface AuditWorkspace {
+  id: string;
+  portal_id: string;
+  portal_name: string | null;
+  hub_domain: string | null;
+  expired?: boolean;
+}
+
 interface AuditDomainSelectorProps {
   isOpen: boolean;
   onClose: () => void;
-  onLaunch: (selectedDomains: AuditDomainId[]) => void;
+  onLaunch: (connectionId: string, selectedDomains: AuditDomainId[]) => void;
   loading?: boolean;
+  workspaces: AuditWorkspace[];
 }
 
 export function AuditDomainSelector({
@@ -43,7 +53,11 @@ export function AuditDomainSelector({
   onClose,
   onLaunch,
   loading = false,
+  workspaces,
 }: AuditDomainSelectorProps) {
+  const [step, setStep] = useState<"workspace" | "domains">("workspace");
+  const [selectedWorkspace, setSelectedWorkspace] = useState<string | null>(null);
+
   // Initialize with all implemented domains selected, except those with defaultSelected: false
   const [selected, setSelected] = useState<Set<AuditDomainId>>(() => {
     const initial = new Set<AuditDomainId>();
@@ -72,12 +86,10 @@ export function AuditDomainSelector({
     setSelected((prev) => {
       const next = new Set(prev);
       if (allAvailableSelected) {
-        // Deselect all optional
         for (const d of availableDomains) {
           next.delete(d.id);
         }
       } else {
-        // Select all optional
         for (const d of availableDomains) {
           next.add(d.id);
         }
@@ -88,18 +100,87 @@ export function AuditDomainSelector({
 
   const selectedCount = selected.size;
 
-  const handleLaunch = () => {
-    onLaunch(Array.from(selected));
+  const handleSelectWorkspace = (wsId: string) => {
+    setSelectedWorkspace(wsId);
+    setStep("domains");
   };
+
+  const handleBack = () => {
+    setStep("workspace");
+  };
+
+  const handleClose = () => {
+    onClose();
+    // Reset state after close animation
+    setTimeout(() => {
+      setStep("workspace");
+      setSelectedWorkspace(null);
+    }, 200);
+  };
+
+  const handleLaunch = () => {
+    if (!selectedWorkspace) return;
+    onLaunch(selectedWorkspace, Array.from(selected));
+  };
+
+  const activeWorkspaces = workspaces.filter((ws) => !ws.expired);
+  const selectedWs = workspaces.find((ws) => ws.id === selectedWorkspace);
+
+  if (step === "workspace") {
+    return (
+      <Modal
+        open={isOpen}
+        onClose={handleClose}
+        title="Lancer un audit"
+        actions={
+          <Button variant="ghost" onClick={handleClose}>
+            Annuler
+          </Button>
+        }
+      >
+        <div className="space-y-3">
+          <p className="text-sm text-gray-400 mb-4">
+            Sur quel workspace souhaitez-vous lancer l&apos;audit ?
+          </p>
+          {activeWorkspaces.length === 0 && (
+            <p className="text-sm text-gray-500 py-4 text-center">
+              Aucun workspace actif.{" "}
+              <a href="/api/hubspot/oauth/initiate" className="text-brand-500 hover:text-brand-400">
+                Connecter un workspace
+              </a>
+            </p>
+          )}
+          {activeWorkspaces.map((ws) => (
+            <button
+              key={ws.id}
+              type="button"
+              onClick={() => handleSelectWorkspace(ws.id)}
+              className="w-full flex items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors hover:bg-gray-800 border border-gray-700 cursor-pointer"
+            >
+              <Building2 className="h-5 w-5 text-gray-400 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-200">
+                  {ws.portal_name ?? `Portal ${ws.portal_id}`}
+                </p>
+                {ws.hub_domain && (
+                  <p className="text-xs text-gray-500">{ws.hub_domain}</p>
+                )}
+              </div>
+            </button>
+          ))}
+        </div>
+      </Modal>
+    );
+  }
 
   return (
     <Modal
       open={isOpen}
-      onClose={onClose}
+      onClose={handleClose}
       title="Configurer votre audit"
       actions={
         <>
-          <Button variant="ghost" onClick={onClose} disabled={loading}>
+          <Button variant="ghost" onClick={handleClose} disabled={loading}>
             Annuler
           </Button>
           <Button onClick={handleLaunch} loading={loading} disabled={loading}>
@@ -109,14 +190,22 @@ export function AuditDomainSelector({
       }
     >
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleBack}
+            className="text-gray-400 hover:text-gray-200 transition-colors"
+            aria-label="Retour"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
           <p className="text-sm text-gray-400">
-            Sélectionnez les domaines à analyser
+            {selectedWs?.portal_name ?? "Workspace"} — Sélectionnez les domaines à analyser
           </p>
           <button
             type="button"
             onClick={toggleAll}
-            className="text-xs text-brand-500 hover:text-brand-400 font-medium transition-colors"
+            className="ml-auto text-xs text-brand-500 hover:text-brand-400 font-medium transition-colors"
           >
             {allAvailableSelected ? "Tout désélectionner" : "Tout sélectionner"}
           </button>

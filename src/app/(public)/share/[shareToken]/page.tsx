@@ -43,9 +43,6 @@ export default async function SharePage({ params }: { params: Promise<{ shareTok
 
   const globalScore = audit.global_score ?? audit.results.score;
   const globalScoreLabel = getScoreLabel(globalScore);
-  const dateStr = new Date(audit.started_at).toLocaleDateString("fr-FR", {
-    day: "numeric", month: "long", year: "numeric",
-  });
 
   return (
     <div className="min-h-screen bg-gray-950">
@@ -60,17 +57,7 @@ export default async function SharePage({ params }: { params: Promise<{ shareTok
         </Link>
       </header>
 
-      <main className="mx-auto max-w-content px-6 py-8">
-        {/* Public banner */}
-        <div className="mb-6 rounded-lg bg-gray-900 border border-gray-700 px-5 py-4">
-          <p className="text-lg font-semibold text-gray-100">Rapport d&apos;audit HubSpot</p>
-          <p className="text-sm text-gray-400 mt-1">
-            {audit.portal_name && <>{audit.portal_name} · </>}
-            Généré le {dateStr}
-          </p>
-          <p className="text-xs text-gray-500 mt-2">Rapport en lecture seule</p>
-        </div>
-
+      <main>
         <AuditResultsView
           r={audit.results}
           w={audit.workflow_results}

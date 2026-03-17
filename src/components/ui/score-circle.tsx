@@ -4,7 +4,7 @@ interface ScoreCircleProps {
   className?: string;
 }
 
-function getScoreColor(score: number): string {
+export function getScoreColor(score: number): string {
   if (score >= 90) return "#22c55e";
   if (score >= 70) return "#22c55e";
   if (score >= 50) return "#f59e0b";

@@ -55,7 +55,7 @@ export function Topbar(props: TopbarProps) {
   const pathname = usePathname();
 
   return (
-    <header className="h-14 bg-gray-900 border-b border-gray-700 px-6 flex items-center justify-between shrink-0">
+    <header className="fixed top-0 left-0 right-0 z-40 h-14 bg-gray-900 border-b border-gray-700 px-6 flex items-center justify-between shrink-0">
       <div className="flex items-center gap-8">
         <Logo />
         {props.variant === "connected" && (
