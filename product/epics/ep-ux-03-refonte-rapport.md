@@ -27,6 +27,13 @@ Si nous réorganisons le rapport d'audit par sévérité (cross-domaine) au lieu
 - **Rapport public** : Même refonte, variante sidebar adaptée
 - **Responsive** : Sidebar masquée < 1024px, grille adaptative
 
+### Ajouté en cours de livraison
+
+- **Navigation applicative** : Remplacement de la navbar (topbar) par une AppSidebar sur toutes les pages authentifiées — logo, navigation, paramètres et avatar intégrés. La sidebar rapport (domaines, scores) est injectée dynamiquement via `ReportSidebarContext` sur les pages audit.
+- **Unification des styles** : Alignement visuel entre sidebar dashboard et sidebar audit (text-xs, gap-1.5, indicator blue-500, icônes h-3.5)
+- **Renommages** : "Tableau de bord" → "Vue d'ensemble", suppression du "Dashboard" redondant dans le breadcrumb audit
+- **Cards workspace** : Plus compactes, suppression du score du dernier audit
+
 ### Out of scope
 
 - Export PDF (EP-07 abandonné)
@@ -34,7 +41,6 @@ Si nous réorganisons le rapport d'audit par sévérité (cross-domaine) au lieu
 - Changement de marque ou de logo
 - Modification du moteur d'audit ou des règles
 - Modification de la page de progression (tracker)
-- Modification du dashboard principal (liste des audits)
 - Quick wins générés par LLM (v2)
 
 ---
@@ -60,7 +66,7 @@ Si nous réorganisons le rapport d'audit par sévérité (cross-domaine) au lieu
 - [ ] Étant donné un domaine avec un score, quand je regarde la sidebar, alors un dot coloré et le score numérique sont affichés
 - [ ] Étant donné un domaine non exécuté, quand je regarde la sidebar, alors un tiret grisé remplace le score
 - [ ] Étant donné que je clique sur un domaine, quand la vue se met à jour, alors seules les règles de ce domaine sont affichées
-- [ ] Étant donné que je clique sur "Tableau de bord", quand la vue se met à jour, alors toutes les règles sont affichées
+- [ ] Étant donné que je clique sur "Vue d'ensemble", quand la vue se met à jour, alors toutes les règles sont affichées
 - [ ] Étant donné un écran < 1024px, quand je consulte le rapport, alors la sidebar est masquée et accessible via hamburger
 
 ### EP-UX-03-S3 — Hero simplifié
@@ -68,7 +74,7 @@ Si nous réorganisons le rapport d'audit par sévérité (cross-domaine) au lieu
 **En tant que** destinataire du rapport, **je veux** voir un résumé textuel dès le haut de page, **afin de** comprendre la situation sans analyser des graphiques.
 
 **Critères d'acceptance :**
-- [ ] Étant donné un rapport en vue "Tableau de bord", quand j'ouvre la page, alors le hero affiche un ScoreCircle 80px avec le score global, le label, un résumé 1-2 phrases, et les métadonnées
+- [ ] Étant donné un rapport en vue "Vue d'ensemble", quand j'ouvre la page, alors le hero affiche un ScoreCircle 80px avec le score global, le label, un résumé 1-2 phrases, et les métadonnées
 - [ ] Étant donné un rapport en vue domaine filtrée, quand je clique sur un domaine, alors le hero bascule : ScoreCircle avec le score du domaine, nom du domaine en H1, résumé contextuel, métadonnées spécifiques au domaine
 - [ ] Étant donné un delta de score vs le dernier audit, quand j'ouvre le rapport en vue globale, alors "+X pts" (vert) ou "-X pts" (rouge) est affiché
 - [ ] Étant donné un résumé LLM disponible, quand j'ouvre la page en vue globale, alors il est utilisé comme texte du hero
@@ -87,7 +93,7 @@ Si nous réorganisons le rapport d'audit par sévérité (cross-domaine) au lieu
 **En tant que** destinataire du rapport, **je veux** voir 2-3 actions rapides recommandées, **afin de** savoir par où commencer.
 
 **Critères d'acceptance :**
-- [ ] Étant donné des règles déclenchées, quand j'ouvre le rapport en vue "Tableau de bord", alors un bloc bleu affiche 2-4 recommandations actionnables
+- [ ] Étant donné des règles déclenchées, quand j'ouvre le rapport en vue "Vue d'ensemble", alors un bloc bleu affiche 2-4 recommandations actionnables
 - [ ] Étant donné 0 règle déclenchée, quand j'ouvre le rapport, alors le bloc n'apparaît pas
 - [ ] Étant donné une vue filtrée par domaine, quand la vue se met à jour, alors le bloc est masqué
 
@@ -197,7 +203,7 @@ Entrée : workspace_id, audit_id courant
 
 - [ ] Le layout sidebar + contenu est fonctionnel sur desktop (≥ 1024px)
 - [ ] La sidebar est masquée et accessible via hamburger sur tablette/mobile (< 1024px)
-- [ ] La vue par défaut ("Tableau de bord") affiche toutes les règles groupées par sévérité
+- [ ] La vue par défaut ("Vue d'ensemble") affiche toutes les règles groupées par sévérité
 - [ ] Le clic sur un domaine (sidebar ou grille) filtre les règles pour ce domaine
 - [ ] Le hero affiche ScoreCircle 80px + résumé + métadonnées + delta score
 - [ ] La grille de scores affiche tous les domaines exécutés avec barres de progression

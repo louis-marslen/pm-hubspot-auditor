@@ -2,7 +2,7 @@
 
 **Auteur :** Louis
 **Date :** 2026-03-16
-**Statut :** Spécifié
+**Statut :** ✅ Livré
 **Epic :** [ep-ux-03-refonte-rapport.md](../epics/ep-ux-03-refonte-rapport.md)
 
 ---
@@ -68,7 +68,7 @@ Sophie ou Louis — celui qui lance l'audit et l'utilise au quotidien.
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│ Topbar (inchangée)                                   │
+│ AppSidebar (navigation app-wide, remplace la Topbar)  │
 ├────────────┬─────────────────────────────────────────┤
 │            │ Breadcrumb                              │
 │  Sidebar   │ Hero (score + résumé + métadonnées)     │
@@ -85,7 +85,7 @@ Sophie ou Louis — celui qui lance l'audit et l'utilise au quotidien.
 
 ```
 VUE D'ENSEMBLE
-  ● Tableau de bord          ← Vue par sévérité (défaut)
+  ● Vue d'ensemble           ← Vue par sévérité (défaut)
 
 DOMAINES
   ● Propriétés custom    ●50
@@ -106,7 +106,7 @@ RAPPORT
 - Le score numérique est affiché à droite
 - Domaines non exécutés : tiret grisé ("—")
 
-### Vue "Tableau de bord" (défaut)
+### Vue "Vue d'ensemble" (défaut)
 
 L'entrée par défaut. Affiche toutes les règles de tous les domaines, **groupées par sévérité** :
 
@@ -162,7 +162,7 @@ Clic sur un domaine dans la sidebar → filtre le contenu pour n'afficher que le
 - [ ] Étant donné un domaine avec un score, quand je regarde la sidebar, alors un dot coloré (rouge/orange/vert) et le score numérique sont affichés à droite du nom
 - [ ] Étant donné un domaine non exécuté (skipped ou non sélectionné), quand je regarde la sidebar, alors un tiret grisé remplace le score
 - [ ] Étant donné que je clique sur un domaine dans la sidebar, quand la vue se met à jour, alors seules les règles de ce domaine sont affichées (toujours groupées par sévérité)
-- [ ] Étant donné que je clique sur "Tableau de bord" dans la sidebar, quand la vue se met à jour, alors toutes les règles de tous les domaines sont affichées (vue par sévérité cross-domaine)
+- [ ] Étant donné que je clique sur "Vue d'ensemble" dans la sidebar, quand la vue se met à jour, alors toutes les règles de tous les domaines sont affichées (vue par sévérité cross-domaine)
 - [ ] Étant donné un écran < 768px de large, quand je consulte le rapport, alors la sidebar est masquée et remplacée par un menu hamburger ou un autre pattern mobile
 
 ### UX-03-S3 — Hero simplifié
@@ -189,10 +189,10 @@ Clic sur un domaine dans la sidebar → filtre le contenu pour n'afficher que le
 **En tant que** destinataire du rapport, **je veux** voir 2-3 actions rapides recommandées mises en évidence, **afin de** savoir par où commencer concrètement.
 
 **Critères d'acceptance :**
-- [ ] Étant donné un rapport avec des règles déclenchées, quand j'ouvre la page en vue "Tableau de bord", alors un bloc bleu "Corrections rapides recommandées" s'affiche entre la grille de scores et les sections de sévérité
+- [ ] Étant donné un rapport avec des règles déclenchées, quand j'ouvre la page en vue "Vue d'ensemble", alors un bloc bleu "Corrections rapides recommandées" s'affiche entre la grille de scores et les sections de sévérité
 - [ ] Étant donné les règles déclenchées, quand le bloc s'affiche, alors il contient 2 à 4 recommandations concrètes et actionnables, extraites des règles les plus impactantes
 - [ ] Étant donné 0 règle déclenchée (score 100 partout), quand j'ouvre le rapport, alors le bloc quick wins n'apparaît pas
-- [ ] Étant donné une vue filtrée par domaine (clic sidebar), quand la vue se met à jour, alors le bloc quick wins est masqué (il n'apparaît qu'en vue "Tableau de bord")
+- [ ] Étant donné une vue filtrée par domaine (clic sidebar), quand la vue se met à jour, alors le bloc quick wins est masqué (il n'apparaît qu'en vue "Vue d'ensemble")
 
 ### UX-03-S6 — Cartes de règles redesignées
 
@@ -229,7 +229,7 @@ Props :
 Structure :
   <nav> fixe, 200px, bg-gray-900, border-right gray-700
     Section "Vue d'ensemble"
-      Item "Tableau de bord" (actif par défaut)
+      Item "Vue d'ensemble" (actif par défaut)
     Section "Domaines"
       Pour chaque domaine :
         Item avec label + dot coloré + score
@@ -322,7 +322,7 @@ Logique de génération des recommandations :
   → Formuler une action concrète avec le count : "Supprimer les X propriétés vides depuis plus de 90 jours"
   → Prioriser les règles avec le plus grand count ou impact business
 
-Affiché uniquement en vue "Tableau de bord" (pas en vue domaine filtré)
+Affiché uniquement en vue "Vue d'ensemble" (pas en vue domaine filtré)
 Masqué si 0 règle déclenchée
 ```
 
