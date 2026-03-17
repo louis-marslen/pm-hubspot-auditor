@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { AuditResults, WorkflowAuditResults, ContactAuditResults, CompanyAuditResults, UserAuditResults, DealAuditResults, LeadAuditResults, type AuditDomainSelection } from "@/lib/audit/types";
+import { AuditResults, WorkflowAuditResults, ContactAuditResults, CompanyAuditResults, UserAuditResults, DealAuditResults, LeadAuditResults, type AuditDomainSelection, type AIDiagnostic } from "@/lib/audit/types";
 import { AuditResultsView } from "@/components/audit/audit-results-view";
 import Link from "next/link";
 
@@ -15,6 +15,7 @@ interface SharedAuditRun {
   lead_results: LeadAuditResults | null;
   global_score: number | null;
   llm_summary: string | null;
+  ai_diagnostic: AIDiagnostic | null;
   portal_name: string | null;
   execution_duration_ms: number | null;
   started_at: string;
@@ -32,12 +33,30 @@ export default async function SharePage({ params }: { params: Promise<{ shareTok
   const { shareToken } = await params;
   const supabase = await createClient();
 
-  const { data: audit } = await supabase
-    .from("audit_runs")
-    .select("id, results, workflow_results, contact_results, company_results, user_results, deal_results, lead_results, global_score, llm_summary, portal_name, execution_duration_ms, started_at, audit_domains")
-    .eq("share_token", shareToken)
-    .eq("status", "completed")
-    .single<SharedAuditRun>();
+  // Essai avec ai_diagnostic, fallback sans si la colonne n'existe pas encore (migration 011)
+  let audit: SharedAuditRun | null = null;
+  {
+    const { data, error } = await supabase
+      .from("audit_runs")
+      .select("id, results, workflow_results, contact_results, company_results, user_results, deal_results, lead_results, global_score, llm_summary, ai_diagnostic, portal_name, execution_duration_ms, started_at, audit_domains")
+      .eq("share_token", shareToken)
+      .eq("status", "completed")
+      .single<SharedAuditRun>();
+
+    if (data) {
+      audit = data;
+    } else if (error?.message?.includes("ai_diagnostic")) {
+      const { data: fallback } = await supabase
+        .from("audit_runs")
+        .select("id, results, workflow_results, contact_results, company_results, user_results, deal_results, lead_results, global_score, llm_summary, portal_name, execution_duration_ms, started_at, audit_domains")
+        .eq("share_token", shareToken)
+        .eq("status", "completed")
+        .single<Omit<SharedAuditRun, "ai_diagnostic">>();
+      if (fallback) {
+        audit = { ...fallback, ai_diagnostic: null };
+      }
+    }
+  }
 
   if (!audit || !audit.results) notFound();
 
@@ -69,6 +88,7 @@ export default async function SharePage({ params }: { params: Promise<{ shareTok
           globalScore={globalScore}
           globalScoreLabel={globalScoreLabel}
           llmSummary={audit.llm_summary}
+          aiDiagnostic={audit.ai_diagnostic}
           portalName={audit.portal_name}
           startedAt={audit.started_at}
           executionDurationMs={audit.execution_duration_ms}

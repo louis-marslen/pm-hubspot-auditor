@@ -73,7 +73,7 @@ Données d'audit :
 Rédige un résumé exécutif en français, en 3 à 5 phrases maximum. Ton dirigeant, direct et factuel. Mentionne les principaux problèmes identifiés et termine par : "${callToAction}"${scopeInstruction}`;
 
   try {
-    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 60_000 });
     const response = await client.chat.completions.create({
       model,
       temperature: 0.4,

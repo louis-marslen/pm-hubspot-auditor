@@ -173,7 +173,7 @@ export function AuditProgressTracker({
           />
           <Sparkles className="h-5 w-5 text-gray-400" />
           <span className="text-sm text-gray-200 font-medium">
-            Résumé exécutif
+            Diagnostic IA
           </span>
           {llmSummary?.status === "running" && (
             <span className="text-xs text-gray-500 ml-auto">En cours</span>

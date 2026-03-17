@@ -124,6 +124,38 @@ export interface WorkflowAuditResults {
   totalInfos: number;
 }
 
+// ─── AI Diagnostic (EP-14) ───────────────────────────────────────────────
+
+export interface DiagnosticCluster {
+  titre: string;
+  description: string;
+  domaines: string[];
+  regles_sources: string[];
+  criticite: "critique" | "élevé" | "modéré";
+}
+
+export interface RecommandationProject {
+  titre: string;
+  objectif: string;
+  impact_attendu: string;
+  niveau_impact: "Fort" | "Moyen" | "Faible";
+  taille: "XS" | "S" | "M" | "L" | "XL";
+  priorite: "P1" | "P2" | "P3";
+  domaines: string[];
+  actions_cles: string[];
+}
+
+export interface AIDiagnostic {
+  diagnostic: {
+    forces: DiagnosticCluster[];
+    faiblesses: DiagnosticCluster[];
+    risques: DiagnosticCluster[];
+  };
+  hero_summary: string;
+  roadmap: RecommandationProject[];
+  backlog: RecommandationProject[];
+}
+
 export interface GlobalAuditResults {
   propertyResults: AuditResults;
   workflowResults: WorkflowAuditResults | null;

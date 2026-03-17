@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { getScoreColor } from "@/components/ui/score-circle";
-import { LayoutDashboard, Share2, ExternalLink, Menu, X } from "lucide-react";
+import { LayoutDashboard, Share2, ExternalLink, Menu, X, Sparkles, ListChecks } from "lucide-react";
 
 interface SidebarDomain {
   id: string;
@@ -18,6 +18,7 @@ interface ReportSidebarProps {
   isPublic?: boolean;
   shareToken?: string | null;
   className?: string;
+  hasAIDiagnostic?: boolean;
 }
 
 function SidebarItem({
@@ -71,6 +72,7 @@ export function ReportSidebar({
   isPublic,
   shareToken,
   className = "",
+  hasAIDiagnostic,
 }: ReportSidebarProps) {
   const [copied, setCopied] = useState(false);
 
@@ -96,6 +98,29 @@ export function ReportSidebar({
             icon={<LayoutDashboard className="h-3.5 w-3.5 flex-shrink-0" />}
           />
         </SidebarSection>
+
+        {hasAIDiagnostic && (
+          <SidebarSection title="Analyse IA">
+            <SidebarItem
+              label="Diagnostic"
+              active={false}
+              onClick={() => {
+                onDomainSelect(null);
+                setTimeout(() => document.getElementById("diagnostic")?.scrollIntoView({ behavior: "smooth" }), 100);
+              }}
+              icon={<Sparkles className="h-3.5 w-3.5 flex-shrink-0" />}
+            />
+            <SidebarItem
+              label="Recommandations"
+              active={false}
+              onClick={() => {
+                onDomainSelect(null);
+                setTimeout(() => document.getElementById("recommandations")?.scrollIntoView({ behavior: "smooth" }), 100);
+              }}
+              icon={<ListChecks className="h-3.5 w-3.5 flex-shrink-0" />}
+            />
+          </SidebarSection>
+        )}
 
         <SidebarSection title="Domaines">
           {domains.map((d) => (
@@ -154,6 +179,7 @@ export function MobileSidebarToggle({
   onDomainSelect,
   isPublic,
   shareToken,
+  hasAIDiagnostic,
 }: ReportSidebarProps) {
   const [open, setOpen] = useState(false);
 

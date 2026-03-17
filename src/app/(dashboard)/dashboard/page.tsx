@@ -269,64 +269,68 @@ function DashboardContent() {
       />
 
       {/* Recent audits */}
-      {recentAudits.length > 0 && (
-        <section>
-          <h2 className="text-lg font-semibold text-gray-100 mb-5">Historique des audits</h2>
+      <section>
+        <h2 className="text-lg font-semibold text-gray-100 mb-5">Historique des audits</h2>
 
-          {/* Filters + launch button */}
-          <div className="flex flex-wrap items-center gap-3 mb-4">
-            <select
-              value={filterWorkspace}
-              onChange={(e) => setFilterWorkspace(e.target.value)}
-              className="rounded-md border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500"
+        {/* Launch button + filters */}
+        <div className="flex flex-wrap items-center gap-3 mb-4">
+          {recentAudits.length > 0 && (
+            <>
+              <select
+                value={filterWorkspace}
+                onChange={(e) => setFilterWorkspace(e.target.value)}
+                className="rounded-md border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500"
+              >
+                <option value="all">Tous les workspaces</option>
+                {workspaces.map((ws) => (
+                  <option key={ws.id} value={ws.id}>
+                    {ws.portal_name ?? `Portal ${ws.portal_id}`}
+                  </option>
+                ))}
+              </select>
+
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-gray-500">Du</label>
+                <input
+                  type="date"
+                  value={filterDateFrom}
+                  onChange={(e) => setFilterDateFrom(e.target.value)}
+                  className="rounded-md border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 [color-scheme:dark]"
+                />
+                <label className="text-xs text-gray-500">au</label>
+                <input
+                  type="date"
+                  value={filterDateTo}
+                  onChange={(e) => setFilterDateTo(e.target.value)}
+                  className="rounded-md border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 [color-scheme:dark]"
+                />
+              </div>
+
+              {(filterWorkspace !== "all" || filterDateFrom || filterDateTo) && (
+                <button
+                  type="button"
+                  onClick={() => { setFilterWorkspace("all"); setFilterDateFrom(""); setFilterDateTo(""); }}
+                  className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                >
+                  Réinitialiser
+                </button>
+              )}
+            </>
+          )}
+
+          <div className="ml-auto">
+            <Button
+              onClick={() => { setSelectorOpen(true); setAuditError(null); }}
+              disabled={!!auditing}
+              loading={!!auditing}
+              size="sm"
             >
-              <option value="all">Tous les workspaces</option>
-              {workspaces.map((ws) => (
-                <option key={ws.id} value={ws.id}>
-                  {ws.portal_name ?? `Portal ${ws.portal_id}`}
-                </option>
-              ))}
-            </select>
-
-            <div className="flex items-center gap-2">
-              <label className="text-xs text-gray-500">Du</label>
-              <input
-                type="date"
-                value={filterDateFrom}
-                onChange={(e) => setFilterDateFrom(e.target.value)}
-                className="rounded-md border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 [color-scheme:dark]"
-              />
-              <label className="text-xs text-gray-500">au</label>
-              <input
-                type="date"
-                value={filterDateTo}
-                onChange={(e) => setFilterDateTo(e.target.value)}
-                className="rounded-md border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 [color-scheme:dark]"
-              />
-            </div>
-
-            {(filterWorkspace !== "all" || filterDateFrom || filterDateTo) && (
-              <button
-                type="button"
-                onClick={() => { setFilterWorkspace("all"); setFilterDateFrom(""); setFilterDateTo(""); }}
-                className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
-              >
-                Réinitialiser
-              </button>
-            )}
-
-            <div className="ml-auto">
-              <Button
-                onClick={() => { setSelectorOpen(true); setAuditError(null); }}
-                disabled={!!auditing}
-                loading={!!auditing}
-                size="sm"
-              >
-                Lancer un audit
-              </Button>
-            </div>
+              Lancer un audit
+            </Button>
           </div>
+        </div>
 
+        {recentAudits.length > 0 ? (
           <Card padding="compact" className="overflow-hidden">
             <table className="w-full text-sm">
               <thead>
@@ -412,8 +416,14 @@ function DashboardContent() {
               </tbody>
             </table>
           </Card>
-        </section>
-      )}
+        ) : (
+          <EmptyState
+            icon={ScanSearch}
+            title="Aucun audit pour le moment"
+            description="Lancez votre premier audit pour analyser votre workspace HubSpot."
+          />
+        )}
+      </section>
     </div>
   );
 }

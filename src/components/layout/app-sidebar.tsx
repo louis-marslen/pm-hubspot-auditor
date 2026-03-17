@@ -9,6 +9,8 @@ import {
   Settings,
   ArrowLeft,
   Share2,
+  Sparkles,
+  ListChecks,
 } from "lucide-react";
 import { getScoreColor } from "@/components/ui/score-circle";
 import { useReportSidebar } from "@/components/layout/report-sidebar-context";
@@ -71,6 +73,29 @@ export function AppSidebar({ email, onSignOut }: AppSidebarProps) {
               icon={<LayoutDashboard className="h-3.5 w-3.5 shrink-0" />}
             />
           </SidebarSection>
+
+          {reportState.hasAIDiagnostic && (
+            <SidebarSection title="Analyse IA">
+              <ReportNavItem
+                label="Diagnostic"
+                active={false}
+                onClick={() => {
+                  reportState.onDomainSelect(null);
+                  setTimeout(() => document.getElementById("diagnostic")?.scrollIntoView({ behavior: "smooth" }), 100);
+                }}
+                icon={<Sparkles className="h-3.5 w-3.5 shrink-0" />}
+              />
+              <ReportNavItem
+                label="Recommandations"
+                active={false}
+                onClick={() => {
+                  reportState.onDomainSelect(null);
+                  setTimeout(() => document.getElementById("recommandations")?.scrollIntoView({ behavior: "smooth" }), 100);
+                }}
+                icon={<ListChecks className="h-3.5 w-3.5 shrink-0" />}
+              />
+            </SidebarSection>
+          )}
 
           <SidebarSection title="Domaines">
             {reportState.domains.map((d) => (

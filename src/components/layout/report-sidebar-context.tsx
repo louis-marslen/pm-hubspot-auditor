@@ -15,6 +15,7 @@ interface ReportSidebarState {
   onDomainSelect: (id: string | null) => void;
   shareToken: string | null;
   isPublic: boolean;
+  hasAIDiagnostic?: boolean;
 }
 
 interface ReportSidebarContextValue {

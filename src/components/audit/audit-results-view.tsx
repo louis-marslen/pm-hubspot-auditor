@@ -31,6 +31,9 @@ import { RuleListItem } from "@/components/report/rule-list-item";
 import { flattenAllRules, type FlatRule } from "@/lib/report/transform-rules";
 import { groupBySeverity } from "@/lib/report/group-by-severity";
 import { generateQuickWins } from "@/lib/report/generate-quick-wins";
+import { DiagnosticSection } from "@/components/diagnostic-section";
+import { RecommandationsSection } from "@/components/recommandations-section";
+import type { AIDiagnostic } from "@/lib/audit/types";
 
 // ─── Item Row Helpers ────────────────────────────────────────────────────
 
@@ -211,6 +214,7 @@ interface AuditResultsViewProps {
   globalScore?: number;
   globalScoreLabel?: string;
   llmSummary?: string | null;
+  aiDiagnostic?: AIDiagnostic | null;
   shareToken?: string | null;
   isPublic?: boolean;
   portalName?: string | null;
@@ -223,7 +227,7 @@ interface AuditResultsViewProps {
 // ─── Component ───────────────────────────────────────────────────────────
 
 export function AuditResultsView({
-  r, w, c, co, u, d, l, globalScore, globalScoreLabel, llmSummary,
+  r, w, c, co, u, d, l, globalScore, globalScoreLabel, llmSummary, aiDiagnostic,
   shareToken, isPublic, portalName, startedAt, executionDurationMs, auditDomains, scoreDelta,
 }: AuditResultsViewProps) {
   const displayScore = globalScore ?? r.score;
@@ -689,6 +693,7 @@ export function AuditResultsView({
     onDomainSelect: setActiveDomain,
     isPublic,
     shareToken,
+    hasAIDiagnostic: !!aiDiagnostic,
   };
 
   // Register sidebar state with app-level sidebar (authenticated views)
@@ -701,10 +706,11 @@ export function AuditResultsView({
         onDomainSelect: setActiveDomain,
         shareToken: shareToken ?? null,
         isPublic: false,
+        hasAIDiagnostic: !!aiDiagnostic,
       });
     }
     return () => { if (!isPublic) unregister(); };
-  }, [isPublic, domainsList, activeDomain, shareToken, register, unregister]);
+  }, [isPublic, domainsList, activeDomain, shareToken, aiDiagnostic, register, unregister]);
 
   return (
     <div className={isPublic ? "" : ""}>
@@ -741,7 +747,7 @@ export function AuditResultsView({
               {/* Résumé texte */}
               {activeDomain === null ? (
                 <p className="text-[12.5px] text-gray-400 leading-relaxed mt-1">
-                  {llmSummary || (
+                  {aiDiagnostic?.hero_summary || llmSummary || (
                     <>
                       Votre workspace présente {totalCritiques > 0 && <>{totalCritiques} critique{totalCritiques !== 1 ? "s" : ""}</>}
                       {totalCritiques > 0 && totalAvertissements > 0 && " et "}
@@ -796,9 +802,19 @@ export function AuditResultsView({
           onDomainClick={setActiveDomain}
         />
 
-        {/* Quick Wins (only in dashboard view) */}
-        {activeDomain === null && quickWins.length > 0 && (
+        {/* Quick Wins (only in dashboard view, hidden if AI diagnostic available) */}
+        {activeDomain === null && !aiDiagnostic && quickWins.length > 0 && (
           <QuickWinsCallout recommendations={quickWins} />
+        )}
+
+        {/* Diagnostic IA (only in dashboard view) */}
+        {activeDomain === null && aiDiagnostic && (
+          <DiagnosticSection diagnostic={aiDiagnostic.diagnostic} />
+        )}
+
+        {/* Recommandations IA (only in dashboard view) */}
+        {activeDomain === null && aiDiagnostic && (
+          <RecommandationsSection roadmap={aiDiagnostic.roadmap} backlog={aiDiagnostic.backlog} />
         )}
 
         {/* Scope alerts for leads/users */}

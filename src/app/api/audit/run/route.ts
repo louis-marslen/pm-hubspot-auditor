@@ -4,6 +4,7 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { getValidAccessToken } from "@/lib/hubspot/tokens";
 import { runFullAudit } from "@/lib/audit/engine";
 import { generateLlmSummary } from "@/lib/audit/llm-summary";
+import { generateDiagnosticIA } from "@/lib/audit/diagnostic-ia";
 import { initProgress, persistProgress } from "@/lib/audit/progress";
 import { AUDIT_DOMAINS, type AuditDomainId, type AuditDomainSelection } from "@/lib/audit/types";
 
@@ -198,7 +199,11 @@ async function runAuditInBackground(
     allCompleted.globalProgress = Object.keys(allCompleted.domains).length * 3 / (Object.keys(allCompleted.domains).length * 3 + 1);
     await persistProgress(auditId, allCompleted);
 
-    const llmSummary = await generateLlmSummary(global, selectedDomains);
+    // Générer le diagnostic IA (remplace le résumé LLM pour les nouveaux audits)
+    const aiDiagnostic = await generateDiagnosticIA(global, selectedDomains);
+
+    // Fallback : générer un résumé LLM classique si le diagnostic IA échoue
+    const llmSummary = aiDiagnostic ? null : await generateLlmSummary(global, selectedDomains);
 
     // Progression LLM terminée
     allCompleted.llmSummary = { status: "completed" };
@@ -263,37 +268,51 @@ async function runAuditInBackground(
         }
       : undefined; // Don't overwrite if no skips
 
-    const { error: updateError } = await supabase
+    // Payload de mise à jour final
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const updatePayload: Record<string, any> = {
+      status: "completed",
+      results: truncateResults(global.propertyResults),
+      workflow_results: truncateResults(global.workflowResults),
+      contact_results: truncateResults(global.contactResults),
+      company_results: truncateResults(global.companyResults),
+      user_results: truncateResults(global.userResults),
+      deal_results: truncateResults(global.dealResults),
+      lead_results: truncateResults(global.leadResults),
+      llm_summary: llmSummary,
+      ...(aiDiagnostic ? { ai_diagnostic: aiDiagnostic } : {}),
+      score: global.propertyResults.score,
+      property_score: global.propertyResults.score,
+      workflow_score: global.workflowResults?.score ?? null,
+      contact_score: global.contactResults?.score ?? null,
+      company_score: global.companyResults?.score ?? null,
+      user_score: global.userResults?.score ?? null,
+      deal_score: global.dealResults?.score ?? null,
+      lead_score: global.leadResults?.score ?? null,
+      global_score: global.globalScore,
+      total_critiques: totalCritiques,
+      total_avertissements: totalAvertissements,
+      total_infos: totalInfos,
+      portal_id: connection.portal_id ?? null,
+      portal_name: connection.portal_name ?? null,
+      execution_duration_ms: executionDurationMs,
+      completed_at: new Date().toISOString(),
+      ...(updatedAuditDomains ? { audit_domains: updatedAuditDomains } : {}),
+    };
+
+    let { error: updateError } = await supabase
       .from("audit_runs")
-      .update({
-        status: "completed",
-        results: truncateResults(global.propertyResults),
-        workflow_results: truncateResults(global.workflowResults),
-        contact_results: truncateResults(global.contactResults),
-        company_results: truncateResults(global.companyResults),
-        user_results: truncateResults(global.userResults),
-        deal_results: truncateResults(global.dealResults),
-        lead_results: truncateResults(global.leadResults),
-        llm_summary: llmSummary,
-        score: global.propertyResults.score,
-        property_score: global.propertyResults.score,
-        workflow_score: global.workflowResults?.score ?? null,
-        contact_score: global.contactResults?.score ?? null,
-        company_score: global.companyResults?.score ?? null,
-        user_score: global.userResults?.score ?? null,
-        deal_score: global.dealResults?.score ?? null,
-        lead_score: global.leadResults?.score ?? null,
-        global_score: global.globalScore,
-        total_critiques: totalCritiques,
-        total_avertissements: totalAvertissements,
-        total_infos: totalInfos,
-        portal_id: connection.portal_id ?? null,
-        portal_name: connection.portal_name ?? null,
-        execution_duration_ms: executionDurationMs,
-        completed_at: new Date().toISOString(),
-        ...(updatedAuditDomains ? { audit_domains: updatedAuditDomains } : {}),
-      })
+      .update(updatePayload)
       .eq("id", auditId);
+
+    // Si la colonne ai_diagnostic n'existe pas encore (migration 011 pas appliquée), retry sans
+    if (updateError?.message?.includes("ai_diagnostic")) {
+      delete updatePayload.ai_diagnostic;
+      ({ error: updateError } = await supabase
+        .from("audit_runs")
+        .update(updatePayload)
+        .eq("id", auditId));
+    }
 
     if (updateError) {
       console.error(`[audit] final update failed for ${auditId}:`, updateError.message, updateError.details);
