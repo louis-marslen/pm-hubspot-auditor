@@ -3,13 +3,13 @@
 Format : **Now / Next / Later**
 Pas de dates fermes — les items avancent selon la disponibilité et les apprentissages terrain.
 
-Dernière mise à jour : 16 Mars 2026
+Dernière mise à jour : 17 Mars 2026
 
 ---
 
 ## ✅ LIVRÉ — Phase 1 complète
 
-Objectif atteint : produit fonctionnel avec 7 domaines d'audit (6 + leads optionnel), utilisable par Louis sur ses missions, testable par des beta users.
+Objectif atteint : produit fonctionnel avec 7 domaines d'audit (6 + leads optionnel), utilisable par Louis sur ses missions, testable par des beta users. Rapport d'audit redesigné avec navigation sidebar et vue par sévérité.
 
 | Epic | Thème | Valeur délivrée | Statut |
 |---|---|---|---|
@@ -26,6 +26,7 @@ Objectif atteint : produit fonctionnel avec 7 domaines d'audit (6 + leads option
 | [EP-06] Audit des deals & pipelines | Audit core | 15 règles D-01 à D-15, deals bloqués, pipeline structurel (phases sautées, stages redondants, points d'entrée multiples), scoring pondéré ×1.5, migration P13-P16, associations batch | ✅ Livré |
 | [EP-17] Sélection des domaines d'audit | Personnalisation | Modale de sélection pré-audit (6 domaines, Properties obligatoire), score global adapté, bandeau de périmètre, skipped_reasons, historique partiel, LLM scope-aware | ✅ Livré |
 | [EP-18] Audit des leads & pipelines de prospection | Audit core | 14 règles (L-01 à L-14), leads bloqués, pipelines de prospection, disqualifications, handoff lead→deal, domaine optionnel (décoché par défaut), coefficient ×1.0, 7 domaines actifs | ✅ Livré |
+| [EP-UX-03] Refonte page rapport d'audit | UX | Layout sidebar fixe, vue par sévérité cross-domaine, hero simplifié avec delta score, grille scores domaines, quick wins actionnables, section conformes, rapport public redesigné | ✅ Livré |
 
 ---
 
@@ -35,8 +36,7 @@ Objectif : Packager le produit pour la distribution et l'adoption self-service.
 
 | # | Epic | Thème | Valeur délivrée | Taille |
 |---|---|---|---|---|
-| 1 | [EP-UX-03] Refonte page rapport d'audit | UX | Layout sidebar, vue par sévérité cross-domaine, hero simplifié, quick wins, section conformes | M |
-| 2 | [EP-08] Onboarding & inscription self-service | Produit | Permettre à un utilisateur de s'inscrire et lancer son premier audit sans aide | M |
+| 1 | [EP-08] Onboarding & inscription self-service | Produit | Permettre à un utilisateur de s'inscrire et lancer son premier audit sans aide | M |
 
 ---
 
@@ -100,6 +100,14 @@ Objectif : Étendre la valeur, explorer la monétisation et les cas d'usage avan
 - Le domaine est **optionnel par défaut** (décoché dans EP-17) car beaucoup d'entreprises n'utilisent pas l'objet Lead HubSpot
 - EP-17 posait les fondations techniques pour les domaines optionnels — l'intégration a été minimale
 - Le périmètre d'audit est désormais **complet avec 7 domaines** : propriétés, workflows, contacts, companies, utilisateurs, deals + leads
+
+### Pourquoi EP-UX-03 (refonte rapport) a été priorisé après EP-18 ?
+
+- Le rapport est le **livrable principal** vu par les destinataires (clients, managers) — son efficacité détermine la valeur perçue de l'outil
+- Avec 7 domaines d'audit, le rapport par tabs horizontaux devenait difficile à scanner — la vue par sévérité cross-domaine permet d'identifier les priorités en < 10 secondes
+- Le bloc quick wins donne un point d'entrée actionnable immédiat — essentiel pour les destinataires non-techniques
+- Le delta score (vs audit précédent) pose les bases de la récurrence (EP-12 futur)
+- Prérequis avant l'onboarding self-service (EP-08) : le rapport doit être convaincant dès le premier audit pour convertir
 
 ### Pourquoi EP-10 (intégrations), EP-11 (reporting) et EP-07 (PDF) ont été abandonnés ?
 

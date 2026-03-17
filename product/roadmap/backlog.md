@@ -26,7 +26,7 @@ Tous les epics identifiés avec leur scoring RICE indicatif et leur statut.
 | EP-06 | Audit des deals & pipelines | 40 | 2 | 70% | 1.5 | 37 | LIVRÉ | ✅ Livré |
 | EP-09 | Audit utilisateurs & équipes | 30 | 2 | 60% | 1 | 36 | LIVRÉ | ✅ Livré |
 | EP-17 | Sélection des domaines d'audit | 50 | 2 | 90% | 0.5 | 180 | LIVRÉ | ✅ Livré |
-| EP-UX-03 | Refonte page rapport d'audit | 50 | 3 | 90% | 1 | 135 | NOW | Spécifié |
+| EP-UX-03 | Refonte page rapport d'audit | 50 | 3 | 90% | 1 | 135 | LIVRÉ | ✅ Livré |
 | EP-08 | Onboarding self-service | 50 | 3 | 70% | 1 | 105 | NOW | À spécifier |
 | EP-18 | Audit des leads & pipelines de prospection | 25 | 2 | 70% | 1 | 35 | LIVRÉ | ✅ Livré |
 | ~~EP-10~~ | ~~Audit des intégrations~~ | — | — | — | — | — | — | Abandonné |
@@ -43,6 +43,22 @@ Tous les epics identifiés avec leur scoring RICE indicatif et leur statut.
 ---
 
 ## Ce qui a été livré en Phase 2 (fin)
+
+### EP-UX-03 — Refonte de la page rapport d'audit
+- **Layout sidebar** : navigation latérale fixe (200px) avec scores par domaine (dot coloré + score numérique), remplace les tabs horizontaux
+- **Vue par sévérité cross-domaine** : règles groupées par sévérité (critiques → avertissements → infos → conformes) au lieu de par domaine, tri par count décroissant
+- **Hero simplifié** : ScoreCircle 80px + résumé texte + métadonnées, bascule en vue domaine (score domaine, label, résumé contextuel)
+- **Delta score** : comparaison avec l'audit précédent (+X pts vert / -X pts rouge)
+- **Grille de scores** : mini-cards par domaine avec barres de progression colorées (rouge/orange/vert)
+- **Quick wins** : bloc de 2-4 recommandations actionnables, logique déterministe (top critiques + avertissements)
+- **Cartes de règles redesignées** : dot + titre + description + badge sévérité + tag domaine + count, détail au clic
+- **Section "Conformes"** : règles sans problème, opacité réduite, badge OK vert
+- **Rapport public** : même layout redesigné, sidebar adaptée avec CTA "Lancer votre audit"
+- **6 nouveaux composants** : ReportSidebar, ReportLayout, DomainScoreGrid, QuickWinsCallout, RuleListItem, SeveritySection
+- **4 nouveaux utilitaires** : transform-rules, group-by-severity, generate-quick-wins, compute-score-delta
+- Refonte majeure d'`audit-results-view.tsx` (−1689 / +2857 lignes sur l'ensemble)
+
+---
 
 ### EP-18 — Audit des leads & pipelines de prospection
 - **14 règles (L-01 à L-14)** : 10 adaptées de EP-06 (deals) avec seuils ajustés + 4 nouvelles règles spécifiques leads

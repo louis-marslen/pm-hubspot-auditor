@@ -2,7 +2,7 @@
 
 **PRD associé :** [prd-ux-03-refonte-rapport.md](../prd/prd-ux-03-refonte-rapport.md)
 **Date de création :** 2026-03-16
-**Statut :** Spécifié
+**Statut :** ✅ Livré
 
 ---
 
