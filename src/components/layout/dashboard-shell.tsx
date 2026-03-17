@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Topbar } from "@/components/ui/topbar";
+import { AppSidebar } from "@/components/layout/app-sidebar";
+import { ReportSidebarProvider } from "@/components/layout/report-sidebar-context";
 import { ToastProvider } from "@/components/ui/toast";
 
 interface DashboardShellProps {
@@ -19,12 +20,14 @@ export function DashboardShell({ email, children }: DashboardShellProps) {
 
   return (
     <ToastProvider>
-      <div className="min-h-screen flex flex-col bg-gray-950 pt-14">
-        <Topbar variant="connected" email={email} onSignOut={handleSignOut} />
-        <main className="flex-1 mx-auto w-full max-w-content px-6 py-8">
-          {children}
-        </main>
-      </div>
+      <ReportSidebarProvider>
+        <div className="min-h-screen flex bg-gray-950">
+          <AppSidebar email={email} onSignOut={handleSignOut} />
+          <main className="flex-1 ml-[220px] px-6 py-6">
+            {children}
+          </main>
+        </div>
+      </ReportSidebarProvider>
     </ToastProvider>
   );
 }

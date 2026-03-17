@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   AuditResults, WorkflowAuditResults, ContactAuditResults, CompanyAuditResults, UserAuditResults, DealAuditResults, LeadAuditResults,
   WorkflowIssue, PropertyIssue, PropertyPair, TypingIssue, DealIssue, PipelineStageIssue,
@@ -22,7 +22,8 @@ import { ChevronDown, Info, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 
 import { ReportLayout } from "@/components/report/report-layout";
-import { ReportSidebar, MobileSidebarToggle } from "@/components/report/report-sidebar";
+import { MobileSidebarToggle } from "@/components/report/report-sidebar";
+import { useReportSidebar } from "@/components/layout/report-sidebar-context";
 import { DomainScoreGrid } from "@/components/report/domain-score-grid";
 import { QuickWinsCallout } from "@/components/report/quick-wins-callout";
 import { SeveritySection } from "@/components/report/severity-section";
@@ -690,18 +691,32 @@ export function AuditResultsView({
     shareToken,
   };
 
+  // Register sidebar state with app-level sidebar (authenticated views)
+  const { register, unregister } = useReportSidebar();
+  useEffect(() => {
+    if (!isPublic) {
+      register({
+        domains: domainsList,
+        activeDomain,
+        onDomainSelect: setActiveDomain,
+        shareToken: shareToken ?? null,
+        isPublic: false,
+      });
+    }
+    return () => { if (!isPublic) unregister(); };
+  }, [isPublic, domainsList, activeDomain, shareToken, register, unregister]);
+
   return (
-    <div className={isPublic ? "" : "-mx-6 -mt-8 -mb-8"}>
+    <div className={isPublic ? "" : ""}>
       <ReportLayout
-        sidebar={<ReportSidebar {...sidebarProps} />}
+        sidebar={isPublic ? sidebarProps : null}
       >
-        {/* Mobile sidebar toggle */}
-        <MobileSidebarToggle {...sidebarProps} />
+        {/* Mobile sidebar toggle (public only — authenticated uses app sidebar) */}
+        {isPublic && <MobileSidebarToggle {...sidebarProps} />}
 
         {/* Breadcrumb */}
         {!isPublic && (
           <Breadcrumb items={[
-            { label: "Dashboard", href: "/dashboard" },
             { label: portalName ?? "Workspace" },
             { label: `Audit du ${dateStr}` },
           ]} />

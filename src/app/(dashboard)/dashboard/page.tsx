@@ -209,43 +209,28 @@ function DashboardContent() {
       {/* Workspaces */}
       <section>
         <h2 className="text-lg font-semibold text-gray-100 mb-5">Mes workspaces</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {workspaces.map((ws) => {
             const isExpired = ws.token_expires_at && new Date(ws.token_expires_at) < new Date();
-            const lastAudit = lastAuditByWs.get(ws.id);
 
             return (
-              <Card key={ws.id}>
-                <div className="flex items-center justify-between mb-3">
+              <Card key={ws.id} className="!py-3.5 !px-4">
+                <div className="flex items-center justify-between mb-2">
                   <Badge variant={isExpired ? "critique" : "succes"}>
                     {isExpired ? "Expiré" : "Actif"}
                   </Badge>
                   <span className="text-caption text-gray-500">Hub {ws.portal_id}</span>
                 </div>
 
-                <h3 className="text-[15px] font-semibold text-gray-100 mb-1">
+                <h3 className="text-sm font-semibold text-gray-100">
                   {ws.portal_name ?? `Portal ${ws.portal_id}`}
                 </h3>
                 {ws.hub_domain && (
-                  <p className="text-xs text-gray-500 mb-4">{ws.hub_domain}</p>
-                )}
-
-                {lastAudit && (lastAudit.global_score ?? lastAudit.score) !== null && (
-                  <div className="flex items-center gap-3 p-3 rounded-md bg-gray-800/50">
-                    <ScoreCircle score={(lastAudit.global_score ?? lastAudit.score)!} size="sm" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-200">{lastAudit.global_score ?? lastAudit.score}/100</p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(lastAudit.started_at).toLocaleDateString("fr-FR", {
-                          day: "numeric", month: "short",
-                        })}
-                      </p>
-                    </div>
-                  </div>
+                  <p className="text-xs text-gray-500 mt-0.5">{ws.hub_domain}</p>
                 )}
 
                 {isExpired && (
-                  <a href="/api/hubspot/oauth/initiate" className="block mt-4">
+                  <a href="/api/hubspot/oauth/initiate" className="block mt-3">
                     <Button variant="secondary" className="w-full" size="sm">
                       Reconnecter
                     </Button>
@@ -256,13 +241,13 @@ function DashboardContent() {
           })}
 
           {/* Add workspace card */}
-          <Card variant="dashed" className="flex flex-col items-center justify-center min-h-[200px]">
+          <Card variant="dashed" className="flex flex-col items-center justify-center !py-3.5 !px-4 min-h-[100px]">
             <a
               href="/api/hubspot/oauth/initiate"
-              className="flex flex-col items-center gap-3 text-gray-400 hover:text-gray-200 transition-colors"
+              className="flex flex-col items-center gap-2 text-gray-400 hover:text-gray-200 transition-colors"
             >
-              <Plus className="h-8 w-8" />
-              <span className="text-sm font-medium">Connecter un workspace HubSpot</span>
+              <Plus className="h-6 w-6" />
+              <span className="text-xs font-medium">Connecter un workspace HubSpot</span>
             </a>
           </Card>
         </div>

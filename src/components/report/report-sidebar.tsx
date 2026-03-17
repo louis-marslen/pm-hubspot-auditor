@@ -85,7 +85,7 @@ export function ReportSidebar({
 
   return (
     <nav
-      className={`fixed top-14 bottom-0 left-0 w-[200px] bg-gray-900 border-r border-gray-700 overflow-y-auto z-30 ${className}`}
+      className={`fixed top-0 bottom-0 left-0 w-[200px] bg-gray-900 border-r border-gray-700 overflow-y-auto z-30 ${className}`}
     >
       <div className="py-3">
         <SidebarSection title="Rapport">
@@ -192,7 +192,7 @@ export function MobileSidebarToggle({
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="absolute top-16 left-[208px] p-1 text-gray-400 hover:text-gray-200"
+              className="absolute top-3 left-[208px] p-1 text-gray-400 hover:text-gray-200"
               aria-label="Fermer la navigation"
             >
               <X className="h-5 w-5" />
