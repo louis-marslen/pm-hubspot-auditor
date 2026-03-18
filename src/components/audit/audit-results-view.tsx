@@ -31,8 +31,8 @@ import { RuleListItem } from "@/components/report/rule-list-item";
 import { flattenAllRules, type FlatRule } from "@/lib/report/transform-rules";
 import { groupBySeverity } from "@/lib/report/group-by-severity";
 import { generateQuickWins } from "@/lib/report/generate-quick-wins";
-import { DiagnosticSection } from "@/components/diagnostic-section";
-import { RecommandationsSection } from "@/components/recommandations-section";
+import { DiagnosticGrid } from "@/components/diagnostic-grid";
+import { RecommandationsTable } from "@/components/recommandations-table";
 import type { AIDiagnostic } from "@/lib/audit/types";
 
 // ─── Item Row Helpers ────────────────────────────────────────────────────
@@ -795,118 +795,129 @@ export function AuditResultsView({
         </Card>
 
 
-        {/* Domain Score Grid */}
-        <DomainScoreGrid
-          domains={domainsList}
-          activeDomain={activeDomain}
-          onDomainClick={setActiveDomain}
-        />
+        {/* ═══ Section: Scores par domaine ═══ */}
+        <div className="mt-4">
+          <h2 className="text-[13px] font-semibold uppercase tracking-wide text-gray-500 mb-3">
+            Scores par domaine
+          </h2>
+          <DomainScoreGrid
+            domains={domainsList}
+            activeDomain={activeDomain}
+            onDomainClick={setActiveDomain}
+          />
+        </div>
+
+        {/* ═══ Section: Diagnostic & Recommandations IA ═══ */}
+        {activeDomain === null && aiDiagnostic && (
+          <div className="mt-6 space-y-6">
+            <DiagnosticGrid diagnostic={aiDiagnostic.diagnostic} />
+            <RecommandationsTable roadmap={aiDiagnostic.roadmap} backlog={aiDiagnostic.backlog} />
+          </div>
+        )}
 
         {/* Quick Wins (only in dashboard view, hidden if AI diagnostic available) */}
         {activeDomain === null && !aiDiagnostic && quickWins.length > 0 && (
           <QuickWinsCallout recommendations={quickWins} />
         )}
 
-        {/* Diagnostic IA (only in dashboard view) */}
-        {activeDomain === null && aiDiagnostic && (
-          <DiagnosticSection diagnostic={aiDiagnostic.diagnostic} />
-        )}
+        {/* ═══ Section: Détail des règles ═══ */}
+        <div className="mt-6">
+          <h2 className="text-[13px] font-semibold uppercase tracking-wide text-gray-500 mb-4">
+            {activeDomain === null ? "Détail des règles" : "Règles du domaine"}
+          </h2>
 
-        {/* Recommandations IA (only in dashboard view) */}
-        {activeDomain === null && aiDiagnostic && (
-          <RecommandationsSection roadmap={aiDiagnostic.roadmap} backlog={aiDiagnostic.backlog} />
-        )}
-
-        {/* Scope alerts for leads/users */}
-        {activeDomain === "leads" && l?.scopeError && (
-          <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-5 py-4">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-red-400 mt-0.5 shrink-0" />
-              <div>
-                <p className="text-sm font-medium text-red-400">{l.scopeError}</p>
-                <p className="text-xs text-red-400/70 mt-1">Rendez-vous dans Dashboard → Connexions HubSpot pour re-autoriser l&apos;application.</p>
+          {/* Scope alerts for leads/users */}
+          {activeDomain === "leads" && l?.scopeError && (
+            <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-5 py-4 mb-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-red-400 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-red-400">{l.scopeError}</p>
+                  <p className="text-xs text-red-400/70 mt-1">Rendez-vous dans Dashboard → Connexions HubSpot pour re-autoriser l&apos;application.</p>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-        {activeDomain === "users" && u?.scopeError && (
-          <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-5 py-4">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-red-400 mt-0.5 shrink-0" />
-              <div>
-                <p className="text-sm font-medium text-red-400">{u.scopeError}</p>
-                <p className="text-xs text-red-400/70 mt-1">Rendez-vous dans Dashboard → Connexions HubSpot pour re-autoriser l&apos;application.</p>
+          )}
+          {activeDomain === "users" && u?.scopeError && (
+            <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-5 py-4 mb-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-red-400 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-red-400">{u.scopeError}</p>
+                  <p className="text-xs text-red-400/70 mt-1">Rendez-vous dans Dashboard → Connexions HubSpot pour re-autoriser l&apos;application.</p>
+                </div>
               </div>
             </div>
+          )}
+
+          <div className="space-y-4">
+            <SeveritySection title="Actions critiques" count={groups.critiques.length}>
+              {groups.critiques.map((rule) => (
+                <RuleListItem
+                  key={rule.ruleKey}
+                  title={rule.title}
+                  description={rule.description}
+                  severity="critique"
+                  domainLabel={rule.domainLabel}
+                  count={rule.count}
+                  hasBusinessImpact={rule.hasBusinessImpact}
+                  expandable
+                >
+                  {getRuleDetail(rule.ruleKey)}
+                  <ImpactBlock ruleKey={rule.ruleKey} />
+                </RuleListItem>
+              ))}
+            </SeveritySection>
+
+            <SeveritySection title="Avertissements" count={groups.avertissements.length}>
+              {groups.avertissements.map((rule) => (
+                <RuleListItem
+                  key={rule.ruleKey}
+                  title={rule.title}
+                  description={rule.description}
+                  severity="avertissement"
+                  domainLabel={rule.domainLabel}
+                  count={rule.count}
+                  hasBusinessImpact={rule.hasBusinessImpact}
+                  expandable
+                >
+                  {getRuleDetail(rule.ruleKey)}
+                  <ImpactBlock ruleKey={rule.ruleKey} />
+                </RuleListItem>
+              ))}
+            </SeveritySection>
+
+            <SeveritySection title="Informations" count={groups.infos.length}>
+              {groups.infos.map((rule) => (
+                <RuleListItem
+                  key={rule.ruleKey}
+                  title={rule.title}
+                  description={rule.description}
+                  severity="info"
+                  domainLabel={rule.domainLabel}
+                  count={rule.count}
+                  hasBusinessImpact={rule.hasBusinessImpact}
+                  expandable
+                >
+                  {getRuleDetail(rule.ruleKey)}
+                  <ImpactBlock ruleKey={rule.ruleKey} />
+                </RuleListItem>
+              ))}
+            </SeveritySection>
+
+            <SeveritySection title="Conformes" count={groups.conformes.length}>
+              {groups.conformes.map((rule) => (
+                <RuleListItem
+                  key={rule.ruleKey}
+                  title={rule.title}
+                  severity="ok"
+                  domainLabel={rule.domainLabel}
+                  expandable={false}
+                />
+              ))}
+            </SeveritySection>
           </div>
-        )}
-
-        {/* Severity Sections */}
-        <SeveritySection title="Actions critiques" count={groups.critiques.length}>
-          {groups.critiques.map((rule) => (
-            <RuleListItem
-              key={rule.ruleKey}
-              title={rule.title}
-              description={rule.description}
-              severity="critique"
-              domainLabel={rule.domainLabel}
-              count={rule.count}
-              hasBusinessImpact={rule.hasBusinessImpact}
-              expandable
-            >
-              {getRuleDetail(rule.ruleKey)}
-              <ImpactBlock ruleKey={rule.ruleKey} />
-            </RuleListItem>
-          ))}
-        </SeveritySection>
-
-        <SeveritySection title="Avertissements" count={groups.avertissements.length}>
-          {groups.avertissements.map((rule) => (
-            <RuleListItem
-              key={rule.ruleKey}
-              title={rule.title}
-              description={rule.description}
-              severity="avertissement"
-              domainLabel={rule.domainLabel}
-              count={rule.count}
-              hasBusinessImpact={rule.hasBusinessImpact}
-              expandable
-            >
-              {getRuleDetail(rule.ruleKey)}
-              <ImpactBlock ruleKey={rule.ruleKey} />
-            </RuleListItem>
-          ))}
-        </SeveritySection>
-
-        <SeveritySection title="Informations" count={groups.infos.length}>
-          {groups.infos.map((rule) => (
-            <RuleListItem
-              key={rule.ruleKey}
-              title={rule.title}
-              description={rule.description}
-              severity="info"
-              domainLabel={rule.domainLabel}
-              count={rule.count}
-              hasBusinessImpact={rule.hasBusinessImpact}
-              expandable
-            >
-              {getRuleDetail(rule.ruleKey)}
-              <ImpactBlock ruleKey={rule.ruleKey} />
-            </RuleListItem>
-          ))}
-        </SeveritySection>
-
-        <SeveritySection title="Conformes" count={groups.conformes.length}>
-          {groups.conformes.map((rule) => (
-            <RuleListItem
-              key={rule.ruleKey}
-              title={rule.title}
-              severity="ok"
-              domainLabel={rule.domainLabel}
-              expandable={false}
-            />
-          ))}
-        </SeveritySection>
+        </div>
 
         {/* Footer */}
         <footer className="text-center py-6 border-t border-gray-700 mt-4">

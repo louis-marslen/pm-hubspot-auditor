@@ -28,10 +28,10 @@ export function DomainScoreGrid({ domains, activeDomain, onDomainClick }: Domain
             type="button"
             onClick={() => !d.skipped && onDomainClick(d.id)}
             className={`border rounded-lg p-2.5 px-3 text-left transition-colors ${
-              d.skipped ? "cursor-default opacity-60" : "cursor-pointer hover:border-gray-600"
+              d.skipped ? "cursor-default opacity-60" : "cursor-pointer hover:border-gray-600 hover:bg-gray-850"
             } ${
               isActive
-                ? "border-gray-500 bg-gray-850"
+                ? "border-violet-500 bg-violet-500/[0.06]"
                 : "border-gray-700"
             }`}
           >
