@@ -3,13 +3,13 @@
 Format : **Now / Next / Later**
 Pas de dates fermes — les items avancent selon la disponibilité et les apprentissages terrain.
 
-Dernière mise à jour : 17 Mars 2026
+Dernière mise à jour : 18 Mars 2026
 
 ---
 
 ## ✅ LIVRÉ — Phase 1 complète
 
-Objectif atteint : produit fonctionnel avec 7 domaines d'audit (6 + leads optionnel), utilisable par Louis sur ses missions, testable par des beta users. Rapport d'audit redesigné avec navigation sidebar et vue par sévérité. Navigation applicative unifiée via sidebar (remplacement de la topbar).
+Objectif atteint : produit fonctionnel avec 7 domaines d'audit (6 + leads optionnel), utilisable par Louis sur ses missions, testable par des beta users. Rapport d'audit redesigné avec navigation sidebar et vue par sévérité. Navigation applicative unifiée via sidebar (remplacement de la topbar). Diagnostic IA structuré avec recommandations actionnables.
 
 | Epic | Thème | Valeur délivrée | Statut |
 |---|---|---|---|
@@ -27,6 +27,7 @@ Objectif atteint : produit fonctionnel avec 7 domaines d'audit (6 + leads option
 | [EP-17] Sélection des domaines d'audit | Personnalisation | Modale de sélection pré-audit (6 domaines, Properties obligatoire), score global adapté, bandeau de périmètre, skipped_reasons, historique partiel, LLM scope-aware | ✅ Livré |
 | [EP-18] Audit des leads & pipelines de prospection | Audit core | 14 règles (L-01 à L-14), leads bloqués, pipelines de prospection, disqualifications, handoff lead→deal, domaine optionnel (décoché par défaut), coefficient ×1.0, 7 domaines actifs | ✅ Livré |
 | [EP-UX-03] Refonte page rapport d'audit + navigation sidebar | UX | Layout sidebar fixe, vue par sévérité cross-domaine, hero simplifié avec delta score, grille scores domaines, quick wins actionnables, section conformes, rapport public redesigné. **+** Remplacement de la navbar par une AppSidebar applicative (logo, navigation, paramètres, avatar), unification des styles sidebar dashboard/audit, renommage "Tableau de bord" → "Vue d'ensemble" | ✅ Livré |
+| [EP-14] Diagnostic global IA & Recommandations | Intelligence | Diagnostic structuré (forces/faiblesses/risques) + roadmap de recommandations priorisées (top 5 + backlog), générés par gpt-5.4 via structured outputs. Knowledge base CRM (4 fichiers). Remplace le résumé LLM et les quick wins (fallback déterministe si diagnostic indisponible). 2 nouvelles sections rapport (Diagnostic, Recommandations) + hero summary IA | ✅ Livré |
 
 ---
 
@@ -36,7 +37,7 @@ Objectif : Packager le produit pour la distribution et l'adoption self-service.
 
 | # | Epic | Thème | Valeur délivrée | Taille |
 |---|---|---|---|---|
-| 1 | [EP-14] Diagnostic global IA & Recommandations | Intelligence | Diagnostic structuré (forces/faiblesses/risques) + roadmap de recommandations priorisées, générés par gpt-5.4. Remplace le résumé LLM et les quick wins | M |
+| 1 | [EP-UX-04] Refonte UX Diagnostic & Recommandations | UX | Diagnostic en grille 3 colonnes (forces/faiblesses/risques), recommandations en tableau style Notion, side panel partagé avec checklist actions. Remplacement du scroll linéaire par navigation clic avant/arrière | S |
 | 2 | [EP-08] Onboarding & inscription self-service | Produit | Permettre à un utilisateur de s'inscrire et lancer son premier audit sans aide | M |
 
 ---
@@ -50,7 +51,6 @@ Objectif : Étendre la valeur, explorer la monétisation et les cas d'usage avan
 | [EP-16] Profil business & audit contextuel | Personnalisation | Questionnaire business (B2B/B2C, cycle de vente, maturité CRM) → seuils adaptatifs, criticités contextuelles, recommandations personnalisées. Étend EP-17 | Idée |
 | [EP-12] Historique & comparaison d'audits | Récurrence | Comparer l'évolution d'un workspace dans le temps | Idée |
 | [EP-13] Mode multi-workspace | Consultant | Gérer plusieurs workspaces clients depuis un seul compte | Idée |
-| ~~EP-14~~ | ~~Recommandations enrichies (IA)~~ | — | Promu en NOW — voir EP-14 Diagnostic global IA & Recommandations | Promu |
 | [EP-15] Modèle de pricing & paywall | Monétisation | Freemium + plan payant pour accès complet ou multi-workspace | Idée |
 
 ---

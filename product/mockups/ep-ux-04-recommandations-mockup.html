@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EP-UX-04 — Maquette Recommandations (Roadmap)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #0a0a0f;
+      color: #e4e4e7;
+      min-height: 100vh;
+      padding: 32px 40px;
+    }
+
+    /* — Annotation banner — */
+    .mockup-banner {
+      background: rgba(124, 58, 237, 0.1);
+      border: 1px solid rgba(124, 58, 237, 0.25);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 32px;
+      font-size: 13px;
+      color: #c4b5fd;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .mockup-banner strong { color: #e9d5ff; }
+
+    /* — Section header — */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .section-header h2 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #fafafa;
+    }
+    .section-header .count-badge {
+      font-size: 11px;
+      background: rgba(139, 92, 246, 0.15);
+      color: #a78bfa;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-weight: 500;
+    }
+    .section-header .sparkle { color: #a78bfa; }
+
+    /* — Tabs (Roadmap / Backlog) — */
+    .tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #1e1e24;
+    }
+    .tab {
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #52525b;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+      margin-bottom: -1px;
+    }
+    .tab:hover { color: #a1a1aa; }
+    .tab.active {
+      color: #e4e4e7;
+      border-bottom-color: #a78bfa;
+    }
+    .tab .tab-count {
+      font-size: 11px;
+      color: #52525b;
+      margin-left: 4px;
+    }
+    .tab.active .tab-count { color: #a78bfa; }
+
+    /* — Table — */
+    .roadmap-table {
+      width: 100%;
+      border: 1px solid #27272a;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #111116;
+    }
+
+    .table-header {
+      display: grid;
+      grid-template-columns: 36px 1fr 100px 90px 70px 160px;
+      gap: 0;
+      padding: 0 16px;
+      height: 36px;
+      align-items: center;
+      background: #0e0e14;
+      border-bottom: 1px solid #1e1e24;
+    }
+    .table-header span {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #52525b;
+    }
+
+    .table-row {
+      display: grid;
+      grid-template-columns: 36px 1fr 100px 90px 70px 160px;
+      gap: 0;
+      padding: 0 16px;
+      min-height: 52px;
+      align-items: center;
+      border-bottom: 1px solid #1a1a20;
+      cursor: pointer;
+      transition: background 0.12s;
+      position: relative;
+    }
+    .table-row:last-child { border-bottom: none; }
+    .table-row:hover { background: #16161c; }
+    .table-row.active { background: rgba(124, 58, 237, 0.06); }
+
+    .row-index {
+      font-size: 12px;
+      font-weight: 600;
+      color: #3f3f46;
+    }
+    .table-row:hover .row-index { color: #52525b; }
+
+    .row-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: #e4e4e7;
+      line-height: 1.35;
+      padding-right: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .row-arrow {
+      color: #3f3f46;
+      flex-shrink: 0;
+      opacity: 0;
+      transition: opacity 0.12s, color 0.12s;
+    }
+    .row-arrow svg { width: 14px; height: 14px; display: block; }
+    .table-row:hover .row-arrow { opacity: 1; color: #71717a; }
+    .table-row.active .row-arrow { opacity: 1; color: #a78bfa; }
+
+    /* Badges */
+    .badge {
+      font-size: 10.5px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+      white-space: nowrap;
+      display: inline-block;
+    }
+    .badge.p1 { background: rgba(239, 68, 68, 0.12); color: #f87171; }
+    .badge.p2 { background: rgba(245, 158, 11, 0.12); color: #fbbf24; }
+    .badge.p3 { background: rgba(82, 82, 91, 0.3); color: #a1a1aa; }
+
+    .badge.impact-fort { background: rgba(34, 197, 94, 0.12); color: #4ade80; }
+    .badge.impact-moyen { background: rgba(245, 158, 11, 0.12); color: #fbbf24; }
+    .badge.impact-faible { background: rgba(82, 82, 91, 0.3); color: #a1a1aa; }
+
+    .badge.taille {
+      background: rgba(82, 82, 91, 0.2);
+      color: #71717a;
+    }
+
+    .row-domains {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .domain-tag {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: #1a1a22;
+      color: #71717a;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    /* — Side panel — */
+    .side-panel-overlay {
+      position: fixed;
+      top: 0; right: 0; bottom: 0; left: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 40;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .side-panel-overlay.open { opacity: 1; pointer-events: all; }
+
+    .side-panel {
+      position: fixed;
+      top: 0; right: 0; bottom: 0;
+      width: 520px;
+      background: #111116;
+      border-left: 1px solid #27272a;
+      z-index: 50;
+      transform: translateX(100%);
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .side-panel.open { transform: translateX(0); }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid #1e1e24;
+      flex-shrink: 0;
+    }
+    .panel-header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel-type {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #a78bfa;
+    }
+    .panel-priority-badge {
+      font-size: 10.5px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .panel-close {
+      width: 28px; height: 28px;
+      border-radius: 6px;
+      border: 1px solid #27272a;
+      background: transparent;
+      color: #71717a;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      transition: all 0.15s;
+    }
+    .panel-close:hover { background: #1e1e24; color: #a1a1aa; border-color: #3f3f46; }
+
+    .panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+    }
+    .panel-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fafafa;
+      line-height: 1.4;
+      margin-bottom: 6px;
+    }
+    .panel-objective {
+      font-size: 13.5px;
+      color: #a1a1aa;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    /* Panel metadata grid */
+    .panel-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .meta-item {
+      background: #0e0e14;
+      border: 1px solid #1e1e24;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .meta-label {
+      font-size: 10.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #52525b;
+      margin-bottom: 6px;
+    }
+    .meta-value {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    /* Panel domains */
+    .panel-section {
+      margin-bottom: 24px;
+    }
+    .panel-section-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #52525b;
+      margin-bottom: 10px;
+    }
+    .panel-badges {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .panel-badge-domain {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 6px;
+      background: #1e1e24;
+      color: #a1a1aa;
+      font-weight: 500;
+    }
+
+    /* Panel impact */
+    .panel-impact {
+      font-size: 13.5px;
+      color: #a1a1aa;
+      line-height: 1.6;
+    }
+
+    /* Panel actions checklist */
+    .actions-list {
+      list-style: none;
+    }
+    .action-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid #1a1a20;
+    }
+    .action-item:last-child { border-bottom: none; }
+
+    .action-checkbox {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      border: 1.5px solid #3f3f46;
+      background: transparent;
+      flex-shrink: 0;
+      margin-top: 1px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    .action-checkbox:hover {
+      border-color: #a78bfa;
+      background: rgba(124, 58, 237, 0.08);
+    }
+    .action-checkbox.checked {
+      border-color: #7c3aed;
+      background: #7c3aed;
+    }
+    .action-checkbox.checked svg { display: block; }
+    .action-checkbox svg {
+      display: none;
+      width: 12px;
+      height: 12px;
+      color: white;
+    }
+
+    .action-text {
+      font-size: 13px;
+      color: #a1a1aa;
+      line-height: 1.5;
+    }
+    .action-item.done .action-text {
+      text-decoration: line-through;
+      color: #52525b;
+    }
+
+    /* — Panel nav — */
+    .panel-nav {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 12px 24px 16px;
+      border-top: 1px solid #1e1e24;
+      flex-shrink: 0;
+    }
+    .panel-nav-btn {
+      flex: 1;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #27272a;
+      background: transparent;
+      color: #a1a1aa;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .panel-nav-btn:hover { background: #1e1e24; border-color: #3f3f46; color: #e4e4e7; }
+    .panel-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .panel-nav-btn:disabled:hover { background: transparent; border-color: #27272a; color: #a1a1aa; }
+    .panel-nav-counter {
+      font-size: 11px;
+      color: #52525b;
+      padding: 0 8px;
+      white-space: nowrap;
+    }
+
+    /* — Responsive — */
+    @media (max-width: 1000px) {
+      .table-header, .table-row { grid-template-columns: 36px 1fr 90px 80px; }
+      .table-header span:nth-child(5),
+      .table-header span:nth-child(6),
+      .table-row > *:nth-child(5),
+      .table-row > *:nth-child(6) { display: none; }
+      .side-panel { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="mockup-banner">
+    <span>✦</span>
+    <span><strong>Maquette EP-UX-04</strong> — Section Recommandations. Cliquer sur une ligne du tableau pour ouvrir le side panel. Naviguer avec ← →.</span>
+  </div>
+
+  <!-- Section header -->
+  <div class="section-header">
+    <span class="sparkle">✦</span>
+    <h2>Recommandations</h2>
+    <span class="count-badge">8 projets</span>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('roadmap')">Roadmap<span class="tab-count">5</span></div>
+    <div class="tab" onclick="switchTab('backlog')">Backlog<span class="tab-count">3</span></div>
+  </div>
+
+  <!-- Table -->
+  <div class="roadmap-table" id="tableContainer">
+    <div class="table-header">
+      <span>#</span>
+      <span>Projet</span>
+      <span>Priorité</span>
+      <span>Impact</span>
+      <span>Taille</span>
+      <span>Domaines</span>
+    </div>
+    <div id="tableBody">
+      <!-- Rendered by JS -->
+    </div>
+  </div>
+
+  <!-- Side panel overlay -->
+  <div class="side-panel-overlay" id="panelOverlay" onclick="closePanel()"></div>
+
+  <!-- Side panel -->
+  <div class="side-panel" id="sidePanel">
+    <div class="panel-header">
+      <div class="panel-header-left">
+        <span class="panel-type" id="panelType">Recommandation</span>
+      </div>
+      <button class="panel-close" onclick="closePanel()">✕</button>
+    </div>
+    <div class="panel-body" id="panelBody"></div>
+    <div class="panel-nav">
+      <button class="panel-nav-btn" id="navPrev" onclick="navigatePanel(-1)">← Précédent</button>
+      <span class="panel-nav-counter" id="navCounter"></span>
+      <button class="panel-nav-btn" id="navNext" onclick="navigatePanel(1)">Suivant →</button>
+    </div>
+  </div>
+
+  <script>
+    const data = {
+      roadmap: [
+        {
+          titre: "Plan de déduplication contacts & companies",
+          objectif: "Éliminer les doublons cross-objets et mettre en place un workflow automatique de prévention pour maintenir la qualité dans le temps.",
+          impact_attendu: "Réduction de 80% des doublons en 4 semaines, amélioration de la fiabilité du reporting commercial et suppression des frictions pour les équipes de vente.",
+          niveau_impact: "Fort",
+          taille: "M",
+          priorite: "P1",
+          domaines: ["Contacts", "Companies"],
+          actions_cles: [
+            "Exporter la liste des doublons identifiés (152 contacts, 38 companies) et prioriser par impact business",
+            "Fusionner les doublons contacts par email exact dans HubSpot (lot de 50/jour pour éviter les erreurs)",
+            "Fusionner les doublons companies par domaine, en conservant celle avec le plus de deals associés",
+            "Créer un workflow de déduplication automatique sur les nouveaux contacts (trigger: email déjà existant)",
+            "Mettre en place une revue mensuelle des doublons résiduels (rapport sauvegardé)"
+          ]
+        },
+        {
+          titre: "Remédiation qualité des données CRM",
+          objectif: "Combler les champs critiques manquants sur les contacts, companies et deals pour fiabiliser le reporting et la segmentation.",
+          impact_attendu: "Taux de remplissage des champs critiques passant de ~70% à >95%, permettant une segmentation fiable et un forecast précis.",
+          niveau_impact: "Fort",
+          taille: "L",
+          priorite: "P1",
+          domaines: ["Contacts", "Companies", "Deals"],
+          actions_cles: [
+            "Rendre obligatoires les champs lifecycle stage, email et source à la création de contact",
+            "Enrichir en masse les companies sans domaine via un outil d'enrichissement (Clearbit, Apollo)",
+            "Ajouter le montant et la close date comme champs requis sur les pipelines de deals",
+            "Créer des vues filtrées pour les records incomplets et assigner la remédiation aux owners respectifs"
+          ]
+        },
+        {
+          titre: "Revue de gouvernance et optimisation des accès",
+          objectif: "Réduire les Super Admins au strict nécessaire, réactiver ou désactiver les comptes inactifs, et documenter la politique d'accès.",
+          impact_attendu: "Réduction du risque de sécurité (moins de Super Admins), économie potentielle de 2-3 licences, politique d'accès documentée.",
+          niveau_impact: "Moyen",
+          taille: "S",
+          priorite: "P1",
+          domaines: ["Utilisateurs"],
+          actions_cles: [
+            "Auditer les 4 Super Admins et rétrograder ceux qui n'ont pas besoin de ce niveau d'accès",
+            "Contacter les 3 utilisateurs inactifs pour confirmer s'ils doivent conserver leur accès",
+            "Créer un rôle custom adapté pour les utilisateurs qui n'ont besoin que d'un accès en lecture",
+            "Documenter la politique d'attribution des rôles dans le wiki interne"
+          ]
+        },
+        {
+          titre: "Corriger le handoff lead → deal",
+          objectif: "S'assurer que chaque lead qualifié génère un deal avec les bonnes associations, pour éliminer les fuites dans le pipeline commercial.",
+          impact_attendu: "28% de leads qualifiés récupérés dans le pipeline deals, meilleure visibilité sur le taux de conversion prospection → closing.",
+          niveau_impact: "Fort",
+          taille: "M",
+          priorite: "P2",
+          domaines: ["Leads", "Deals", "Contacts"],
+          actions_cles: [
+            "Créer un workflow automatique : quand un lead passe en stage 'Qualifié', créer un deal associé dans le pipeline par défaut",
+            "Associer automatiquement le contact au deal lors de la création",
+            "Traiter manuellement les 28% de leads qualifiés existants sans deal (backlog one-shot)",
+            "Ajouter une alerte Slack quand un lead est qualifié sans deal après 48h"
+          ]
+        },
+        {
+          titre: "Standardisation et documentation des workflows",
+          objectif: "Appliquer une convention de nommage et ajouter des descriptions à tous les workflows pour faciliter la maintenance.",
+          impact_attendu: "Réduction du temps de diagnostic en cas de problème, onboarding plus rapide des nouveaux admins HubSpot.",
+          niveau_impact: "Faible",
+          taille: "S",
+          priorite: "P2",
+          domaines: ["Workflows"],
+          actions_cles: [
+            "Définir une convention de nommage : [Objet] - [Trigger] - [Action] (ex: Contact - Form Submit - Send Welcome Email)",
+            "Renommer les 40% de workflows non conformes",
+            "Ajouter une description aux 60% de workflows qui n'en ont pas"
+          ]
+        }
+      ],
+      backlog: [
+        {
+          titre: "Audit et nettoyage des propriétés inutilisées",
+          objectif: "Supprimer ou archiver les propriétés custom qui ne sont plus utilisées pour simplifier l'interface et réduire la confusion.",
+          impact_attendu: "Interface CRM plus claire, moins d'erreurs de saisie, formulaires simplifiés.",
+          niveau_impact: "Faible",
+          taille: "S",
+          priorite: "P3",
+          domaines: ["Propriétés"],
+          actions_cles: [
+            "Exporter la liste des propriétés avec usage < 1% et vérifier avec les équipes métier",
+            "Archiver les propriétés confirmées comme obsolètes",
+            "Regrouper les propriétés restantes dans des groupes logiques"
+          ]
+        },
+        {
+          titre: "Mise en place d'un scoring de maturité CRM",
+          objectif: "Créer un tableau de bord interne de suivi de la maturité CRM pour mesurer les progrès dans le temps.",
+          impact_attendu: "Visibilité managériale sur la qualité CRM, base pour des revues trimestrielles structurées.",
+          niveau_impact: "Moyen",
+          taille: "M",
+          priorite: "P3",
+          domaines: ["Contacts", "Companies", "Deals", "Workflows"],
+          actions_cles: [
+            "Définir 5-7 KPIs de maturité CRM (taux de remplissage, doublons, workflows actifs, etc.)",
+            "Construire un dashboard HubSpot custom avec ces métriques",
+            "Planifier une revue trimestrielle avec les stakeholders"
+          ]
+        },
+        {
+          titre: "Politique de rétention et archivage des contacts stale",
+          objectif: "Définir et appliquer une politique de rétention pour les contacts sans activité depuis plus d'un an.",
+          impact_attendu: "Base de contacts plus propre, meilleur taux de délivrabilité email, conformité RGPD améliorée.",
+          niveau_impact: "Moyen",
+          taille: "S",
+          priorite: "P3",
+          domaines: ["Contacts"],
+          actions_cles: [
+            "Identifier les contacts stale (>12 mois sans activité) et les segmenter par source",
+            "Lancer une campagne de réengagement avant archivage",
+            "Archiver les contacts non réengagés dans une liste dédiée"
+          ]
+        }
+      ]
+    };
+
+    let activeTab = 'roadmap';
+    let currentIndex = 0;
+
+    function switchTab(tab) {
+      activeTab = tab;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab')[tab === 'roadmap' ? 0 : 1].classList.add('active');
+      closePanel();
+      renderTable();
+    }
+
+    function renderTable() {
+      const items = data[activeTab];
+      const tbody = document.getElementById('tableBody');
+
+      tbody.innerHTML = items.map((item, i) => {
+        const pCls = item.priorite === 'P1' ? 'p1' : item.priorite === 'P2' ? 'p2' : 'p3';
+        const iCls = item.niveau_impact === 'Fort' ? 'impact-fort' : item.niveau_impact === 'Moyen' ? 'impact-moyen' : 'impact-faible';
+
+        return `
+          <div class="table-row" data-index="${i}" onclick="openPanel(${i})">
+            <span class="row-index">${activeTab === 'roadmap' ? i + 1 : '·'}</span>
+            <span class="row-title">
+              <span>${item.titre}</span>
+              <span class="row-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
+            </span>
+            <span><span class="badge ${pCls}">${item.priorite}</span></span>
+            <span><span class="badge ${iCls}">${item.niveau_impact}</span></span>
+            <span><span class="badge taille">${item.taille}</span></span>
+            <span class="row-domains">${item.domaines.map(d => `<span class="domain-tag">${d}</span>`).join('')}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openPanel(index) {
+      currentIndex = index;
+
+      // highlight row
+      document.querySelectorAll('.table-row').forEach(r => r.classList.remove('active'));
+      const rows = document.querySelectorAll('.table-row');
+      if (rows[index]) rows[index].classList.add('active');
+
+      renderPanel();
+      document.getElementById('sidePanel').classList.add('open');
+      document.getElementById('panelOverlay').classList.add('open');
+    }
+
+    function closePanel() {
+      document.getElementById('sidePanel').classList.remove('open');
+      document.getElementById('panelOverlay').classList.remove('open');
+      document.querySelectorAll('.table-row').forEach(r => r.classList.remove('active'));
+    }
+
+    function navigatePanel(dir) {
+      const items = data[activeTab];
+      const newIdx = currentIndex + dir;
+      if (newIdx < 0 || newIdx >= items.length) return;
+      currentIndex = newIdx;
+
+      document.querySelectorAll('.table-row').forEach(r => r.classList.remove('active'));
+      const rows = document.querySelectorAll('.table-row');
+      if (rows[currentIndex]) rows[currentIndex].classList.add('active');
+
+      renderPanel();
+    }
+
+    function renderPanel() {
+      const item = data[activeTab][currentIndex];
+      const total = data[activeTab].length;
+      const pCls = item.priorite === 'P1' ? 'p1' : item.priorite === 'P2' ? 'p2' : 'p3';
+      const iCls = item.niveau_impact === 'Fort' ? 'impact-fort' : item.niveau_impact === 'Moyen' ? 'impact-moyen' : 'impact-faible';
+
+      document.getElementById('panelType').textContent = activeTab === 'roadmap' ? `Roadmap #${currentIndex + 1}` : 'Backlog';
+
+      document.getElementById('panelBody').innerHTML = `
+        <h3 class="panel-title">${item.titre}</h3>
+        <p class="panel-objective">${item.objectif}</p>
+
+        <div class="panel-meta">
+          <div class="meta-item">
+            <div class="meta-label">Priorité</div>
+            <div class="meta-value"><span class="badge ${pCls}">${item.priorite}</span></div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">Impact</div>
+            <div class="meta-value"><span class="badge ${iCls}">${item.niveau_impact}</span></div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">Taille</div>
+            <div class="meta-value"><span class="badge taille">${item.taille}</span></div>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="panel-section-label">Domaines concernés</div>
+          <div class="panel-badges">
+            ${item.domaines.map(d => `<span class="panel-badge-domain">${d}</span>`).join('')}
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="panel-section-label">Impact attendu</div>
+          <p class="panel-impact">${item.impact_attendu}</p>
+        </div>
+
+        <div class="panel-section">
+          <div class="panel-section-label">Actions à réaliser</div>
+          <ul class="actions-list">
+            ${item.actions_cles.map((a, j) => `
+              <li class="action-item" data-idx="${j}">
+                <div class="action-checkbox" onclick="event.stopPropagation(); toggleAction(this, ${j})">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <span class="action-text">${a}</span>
+              </li>
+            `).join('')}
+          </ul>
+        </div>
+      `;
+
+      document.getElementById('navPrev').disabled = currentIndex === 0;
+      document.getElementById('navNext').disabled = currentIndex === total - 1;
+      document.getElementById('navCounter').textContent = `${currentIndex + 1} / ${total}`;
+    }
+
+    function toggleAction(el, idx) {
+      el.classList.toggle('checked');
+      el.closest('.action-item').classList.toggle('done');
+    }
+
+    // Keyboard nav
+    document.addEventListener('keydown', (e) => {
+      if (!document.getElementById('sidePanel').classList.contains('open')) return;
+      if (e.key === 'Escape') closePanel();
+      if (e.key === 'ArrowLeft') navigatePanel(-1);
+      if (e.key === 'ArrowRight') navigatePanel(1);
+    });
+
+    // Initial render
+    renderTable();
+  </script>
+
+</body>
+</html>

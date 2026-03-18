@@ -88,7 +88,8 @@ Les artefacts PM sont en lecture seule depuis ce mode. Si tu identifies une inco
 | EP-17 | [prd-17-selection-domaines-audit.md](../product/prd/prd-17-selection-domaines-audit.md) | Sélection des domaines d'audit, modale pré-launch | ✅ Livré |
 | EP-18 | [prd-18-audit-leads.md](../product/prd/prd-18-audit-leads.md) | Audit leads & pipelines de prospection (14 règles, domaine optionnel) | ✅ Livré |
 | EP-UX-03 | [prd-ux-03-refonte-rapport.md](../product/prd/prd-ux-03-refonte-rapport.md) | Refonte rapport : sidebar, vue par sévérité, hero simplifié, quick wins | Spécifié |
-| EP-14 | [prd-14-diagnostic-ia.md](../product/prd/prd-14-diagnostic-ia.md) | Diagnostic IA structuré (forces/faiblesses/risques) + roadmap recommandations, gpt-5.4 structured outputs | Spécifié |
+| EP-14 | [prd-14-diagnostic-ia.md](../product/prd/prd-14-diagnostic-ia.md) | Diagnostic IA structuré (forces/faiblesses/risques) + roadmap recommandations, gpt-5.4 structured outputs | ✅ Livré |
+| EP-UX-04 | [prd-ux-04-refonte-diagnostic-recommandations.md](../product/prd/prd-ux-04-refonte-diagnostic-recommandations.md) | Refonte UX diagnostic (grille 3 colonnes) + recommandations (tableau + side panel) | Spécifié |
 
 ---
 

@@ -27,6 +27,7 @@ Tous les epics identifiés avec leur scoring RICE indicatif et leur statut.
 | EP-09 | Audit utilisateurs & équipes | 30 | 2 | 60% | 1 | 36 | LIVRÉ | ✅ Livré |
 | EP-17 | Sélection des domaines d'audit | 50 | 2 | 90% | 0.5 | 180 | LIVRÉ | ✅ Livré |
 | EP-UX-03 | Refonte page rapport d'audit | 50 | 3 | 90% | 1 | 135 | LIVRÉ | ✅ Livré |
+| EP-UX-04 | Refonte UX Diagnostic & Recommandations | 50 | 2 | 90% | 0.5 | 180 | NOW | Spécifié |
 | EP-08 | Onboarding self-service | 50 | 3 | 70% | 1 | 105 | NOW | À spécifier |
 | EP-18 | Audit des leads & pipelines de prospection | 25 | 2 | 70% | 1 | 35 | LIVRÉ | ✅ Livré |
 | ~~EP-10~~ | ~~Audit des intégrations~~ | — | — | — | — | — | — | Abandonné |
@@ -34,7 +35,7 @@ Tous les epics identifiés avec leur scoring RICE indicatif et leur statut.
 | ~~EP-07~~ | ~~Export du rapport (PDF)~~ | — | — | — | — | — | — | Abandonné |
 | EP-12 | Historique & comparaison d'audits | 20 | 2 | 60% | 2 | 12 | LATER | Idée |
 | EP-13 | Mode multi-workspace | 10 | 3 | 70% | 2 | 10.5 | LATER | Idée |
-| EP-14 | Diagnostic global IA & Recommandations | 50 | 3 | 70% | 1.5 | 70 | NOW | Spécifié |
+| EP-14 | Diagnostic global IA & Recommandations | 50 | 3 | 70% | 1.5 | 70 | LIVRÉ | ✅ Livré |
 | EP-15 | Modèle de pricing & paywall | 50 | 3 | 60% | 1 | 90 | LATER | Idée |
 | EP-16 | Profil business & audit contextuel | 40 | 3 | 50% | 2 | 30 | LATER | Idée |
 
@@ -43,6 +44,18 @@ Tous les epics identifiés avec leur scoring RICE indicatif et leur statut.
 ---
 
 ## Ce qui a été livré en Phase 2 (fin)
+
+### EP-14 — Diagnostic global IA & Recommandations
+- **Diagnostic structuré** : génération IA (gpt-5.4, OpenAI Responses API, structured outputs) de clusters forces / faiblesses / risques à partir des résultats d'audit croisés inter-domaines
+- **Roadmap de recommandations** : top 5 projets prioritaires + backlog (5-10 projets), avec impact (Fort/Moyen/Faible), taille (XS à XL), priorité (P1/P2/P3), domaines concernés et 3-5 actions clés expandables
+- **Knowledge base** : 4 fichiers markdown injectés dans le system prompt (best practices HubSpot, maturité CRM, patterns inter-domaines, templates projets)
+- **Hero summary IA** : remplacement du résumé LLM (gpt-4.1, 3-5 phrases) par un extrait du diagnostic (2-3 phrases contextuelles)
+- **Intégration rapport** : 2 nouvelles sections (Diagnostic, Recommandations) + 2 items sidebar entre "Vue d'ensemble" et les domaines
+- **Suppression Quick Wins** : remplacés par les recommandations IA quand le diagnostic est disponible (fallback déterministe sinon)
+- **Rapport public** : même rendu complet (diagnostic + recommandations visibles sans auth)
+- **4 nouveaux composants** : DiagnosticSection, DiagnosticClusterCard, RecommandationsSection, ProjectCard
+- **Migration DB** : colonne `ai_diagnostic` (jsonb) dans `audit_runs` (migration 011)
+- **Fallback silencieux** : rapport sans diagnostic si erreur API OpenAI
 
 ### EP-UX-03 — Refonte de la page rapport d'audit
 - **Layout sidebar** : navigation latérale fixe (200px) avec scores par domaine (dot coloré + score numérique), remplace les tabs horizontaux

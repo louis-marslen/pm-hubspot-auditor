@@ -2,7 +2,7 @@
 
 **PRD associé :** [prd-14-diagnostic-ia.md](../prd/prd-14-diagnostic-ia.md)
 **Date de création :** 2026-03-17
-**Statut :** Spécifié
+**Statut :** ✅ Livré
 
 ---
 

@@ -2,7 +2,7 @@
 
 **Auteur :** Louis
 **Date :** 2026-03-17
-**Statut :** Spécifié
+**Statut :** ✅ Livré
 **Epic :** [ep14-diagnostic-ia.md](../epics/ep14-diagnostic-ia.md)
 
 ---

@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EP-UX-04 — Maquette Diagnostic</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #0a0a0f;
+      color: #e4e4e7;
+      min-height: 100vh;
+      padding: 32px 40px;
+    }
+
+    /* — Header section — */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .section-header h2 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #fafafa;
+    }
+    .section-header .count-badge {
+      font-size: 11px;
+      background: rgba(139, 92, 246, 0.15);
+      color: #a78bfa;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-weight: 500;
+    }
+    .section-header .sparkle {
+      color: #a78bfa;
+    }
+
+    /* — 3-column grid — */
+    .diagnostic-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 0;
+    }
+
+    .column-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #1e1e24;
+    }
+    .column-header .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .dot.green { background: #4ade80; }
+    .dot.amber { background: #fbbf24; }
+    .dot.red { background: #f87171; }
+
+    .column-header h3 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #a1a1aa;
+    }
+    .column-header .col-count {
+      font-size: 11px;
+      color: #52525b;
+      margin-left: auto;
+    }
+
+    .column-header .severity-pills {
+      display: flex;
+      gap: 5px;
+      margin-left: auto;
+    }
+    .severity-pill {
+      font-size: 10px;
+      padding: 1px 7px;
+      border-radius: 999px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .severity-pill.critique { background: rgba(239, 68, 68, 0.12); color: #f87171; }
+    .severity-pill.eleve { background: rgba(245, 158, 11, 0.12); color: #fbbf24; }
+    .severity-pill.modere { background: rgba(59, 130, 246, 0.12); color: #60a5fa; }
+
+    /* — Cluster cards (Notion-style) — */
+    .cluster-card {
+      border: 1px solid #27272a;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      background: #111116;
+      position: relative;
+    }
+    .cluster-card:hover {
+      border-color: #3f3f46;
+      background: #16161c;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    }
+    .cluster-card.active {
+      border-color: #7c3aed;
+      background: rgba(124, 58, 237, 0.06);
+    }
+
+    /* Top row: title + arrow button */
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .card-title {
+      flex: 1;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: #e4e4e7;
+      line-height: 1.45;
+    }
+    .card-arrow-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: #3f3f46;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s;
+      pointer-events: none;
+      margin-top: -2px;
+    }
+    .card-arrow-btn svg {
+      width: 15px;
+      height: 15px;
+    }
+    .cluster-card:hover .card-arrow-btn {
+      color: #a1a1aa;
+      border-color: #3f3f46;
+      background: #1e1e24;
+    }
+    .cluster-card.active .card-arrow-btn {
+      color: #a78bfa;
+      border-color: rgba(124, 58, 237, 0.3);
+      background: rgba(124, 58, 237, 0.1);
+    }
+
+    /* Badges row */
+    .card-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .criticite-badge {
+      font-size: 10.5px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .criticite-badge.critique { background: rgba(239, 68, 68, 0.12); color: #f87171; }
+    .criticite-badge.eleve { background: rgba(245, 158, 11, 0.12); color: #fbbf24; }
+    .criticite-badge.modere { background: rgba(59, 130, 246, 0.12); color: #60a5fa; }
+
+    .domain-tag {
+      font-size: 10.5px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: #1a1a22;
+      color: #71717a;
+      font-weight: 500;
+    }
+
+    /* — Side panel — */
+    .side-panel-overlay {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 40;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .side-panel-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .side-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 480px;
+      background: #111116;
+      border-left: 1px solid #27272a;
+      z-index: 50;
+      transform: translateX(100%);
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .side-panel.open {
+      transform: translateX(0);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid #1e1e24;
+      flex-shrink: 0;
+    }
+    .panel-header .panel-type {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .panel-type.force { color: #4ade80; }
+    .panel-type.faiblesse { color: #fbbf24; }
+    .panel-type.risque { color: #f87171; }
+
+    .panel-close {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: 1px solid #27272a;
+      background: transparent;
+      color: #71717a;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.15s;
+    }
+    .panel-close:hover {
+      background: #1e1e24;
+      color: #a1a1aa;
+      border-color: #3f3f46;
+    }
+
+    .panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+    }
+
+    .panel-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fafafa;
+      line-height: 1.4;
+      margin-bottom: 16px;
+    }
+
+    .panel-section {
+      margin-bottom: 24px;
+    }
+    .panel-section-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #52525b;
+      margin-bottom: 8px;
+    }
+    .panel-description {
+      font-size: 13.5px;
+      color: #a1a1aa;
+      line-height: 1.65;
+    }
+
+    .panel-badges {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .panel-badge {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-weight: 500;
+    }
+    .panel-badge.domain {
+      background: #1e1e24;
+      color: #a1a1aa;
+    }
+    .panel-badge.criticite-detail {
+      font-weight: 600;
+    }
+
+    .panel-rules {
+      list-style: none;
+    }
+    .panel-rules li {
+      font-size: 12.5px;
+      color: #71717a;
+      padding: 6px 0;
+      border-bottom: 1px solid #1a1a20;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel-rules li:last-child { border-bottom: none; }
+    .rule-code {
+      font-size: 10.5px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      background: #1e1e24;
+      color: #a78bfa;
+      padding: 1px 6px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    /* — Navigation arrows in panel — */
+    .panel-nav {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 12px 24px 16px;
+      border-top: 1px solid #1e1e24;
+      flex-shrink: 0;
+    }
+    .panel-nav-btn {
+      flex: 1;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #27272a;
+      background: transparent;
+      color: #a1a1aa;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .panel-nav-btn:hover {
+      background: #1e1e24;
+      border-color: #3f3f46;
+      color: #e4e4e7;
+    }
+    .panel-nav-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+    .panel-nav-btn:disabled:hover {
+      background: transparent;
+      border-color: #27272a;
+      color: #a1a1aa;
+    }
+    .panel-nav-counter {
+      font-size: 11px;
+      color: #52525b;
+      padding: 0 8px;
+      white-space: nowrap;
+    }
+
+    /* — Responsive — */
+    @media (max-width: 900px) {
+      .diagnostic-grid { grid-template-columns: 1fr; }
+      .summary-bar { grid-template-columns: 1fr; }
+      .side-panel { width: 100%; }
+    }
+
+    /* — Annotation banner — */
+    .mockup-banner {
+      background: rgba(124, 58, 237, 0.1);
+      border: 1px solid rgba(124, 58, 237, 0.25);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 32px;
+      font-size: 13px;
+      color: #c4b5fd;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .mockup-banner strong { color: #e9d5ff; }
+  </style>
+</head>
+<body>
+
+  <div class="mockup-banner">
+    <span>✦</span>
+    <span><strong>Maquette EP-UX-04</strong> — Section Diagnostic. Cliquer sur une card pour ouvrir le side panel. Naviguer avec ← →.</span>
+  </div>
+
+  <!-- Section header -->
+  <div class="section-header">
+    <span class="sparkle">✦</span>
+    <h2>Diagnostic</h2>
+    <span class="count-badge">9 insights</span>
+  </div>
+
+  <!-- 3-column grid -->
+  <div class="diagnostic-grid">
+
+    <!-- Forces -->
+    <div class="diagnostic-column" data-type="force">
+      <div class="column-header">
+        <div class="dot green"></div>
+        <h3>Forces</h3>
+        <span class="col-count">3</span>
+        <div class="severity-pills"><!-- no severity for forces --></div>
+      </div>
+
+      <div class="cluster-card" data-index="0" onclick="openPanel(this, 'force')">
+        <div class="card-top">
+          <span class="card-title">Pipelines de vente bien structurés</span>
+          <span class="card-arrow-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
+        </div>
+        <div class="card-badges">
+          <span class="domain-tag">Deals</span>
+          <span class="domain-tag">Leads</span>
+        </div>
+      </div>
+
+      <div class="cluster-card" data-index="1" onclick="openPanel(this, 'force')">
+        <div class="card-top">
+          <span class="card-title">Couverture complète des propriétés CRM</span>
+          <span class="card-arrow-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
+        </div>
+        <div class="card-badges">
+          <span class="domain-tag">Propriétés</span>
+          <span class="domain-tag">Contacts</span>
+          <span class="domain-tag">Companies</span>
+        </div>
+      </div>
+
+      <div class="cluster-card" data-index="2" onclick="openPanel(this, 'force')">
+        <div class="card-top">
+          <span class="card-title">Automatisations actives et fonctionnelles</span>
+          <span class="card-arrow-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
+        </div>
+        <div class="card-badges">
+          <span class="domain-tag">Workflows</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Faiblesses -->
+    <div class="diagnostic-column" data-type="faiblesse">
+      <div class="column-header">
+        <div class="dot amber"></div>
+        <h3>Faiblesses</h3>
+        <div class="severity-pills">
+          <span class="severity-pill critique">1 critique</span>
+          <span class="severity-pill eleve">2 élevé</span>
+          <span class="severity-pill modere">1 modéré</span>
+        </div>
+      </div>
+
+      <div class="cluster-card" data-index="0" onclick="openPanel(this, 'faiblesse')">
+        <div class="card-top">
+          <span class="card-title">Doublons cross-objets non traités</span>
+          <span class="card-arrow-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
+        </div>
+        <div class="card-badges">
+          <span class="criticite-badge critique">Critique</span>
+          <span class="domain-tag">Contacts</span>
+          <span class="domain-tag">Companies</span>
+        </div>
+      </div>
+
+      <div class="cluster-card" data-index="1" onclick="openPanel(this, 'faiblesse')">
+        <div class="card-top">
+          <span class="card-title">Problème systémique de qualité des données</span>
+          <span class="card-arrow-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
+        </div>
+        <div class="card-badges">
+          <span class="criticite-badge eleve">Élevé</span>
+          <span class="domain-tag">Contacts</span>
+          <span class="domain-tag">Companies</span>
+          <span class="domain-tag">Deals</span>
+        </div>
+      </div>
+
+      <div class="cluster-card" data-index="2" onclick="openPanel(this, 'faiblesse')">
+        <div class="card-top">
+          <span class="card-title">Gouvernance utilisateurs insuffisante</span>
+          <span class="card-arrow-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
+        </div>
+        <div class="card-badges">
+          <span class="criticite-badge eleve">Élevé</span>
+          <span class="domain-tag">Utilisateurs</span>
+        </div>
+      </div>
+
+      <div class="cluster-card" data-index="3" onclick="openPanel(this, 'faiblesse')">
+        <div class="card-top">
+          <span class="card-title">Workflows mal documentés et mal nommés</span>
+          <span class="card-arrow-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
+        </div>
+        <div class="card-badges">
+          <span class="criticite-badge modere">Modéré</span>
+          <span class="domain-tag">Workflows</span>
+          <span class="domain-tag">Propriétés</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Risques -->
+    <div class="diagnostic-column" data-type="risque">
+      <div class="column-header">
+        <div class="dot red"></div>
+        <h3>Risques</h3>
+        <div class="severity-pills">
+          <span class="severity-pill critique">1 critique</span>
+          <span class="severity-pill eleve">1 élevé</span>
+        </div>
+      </div>
+
+      <div class="cluster-card" data-index="0" onclick="openPanel(this, 'risque')">
+        <div class="card-top">
+          <span class="card-title">Perte de données sur le handoff lead → deal</span>
+          <span class="card-arrow-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
+        </div>
+        <div class="card-badges">
+          <span class="criticite-badge critique">Critique</span>
+          <span class="domain-tag">Leads</span>
+          <span class="domain-tag">Deals</span>
+          <span class="domain-tag">Contacts</span>
+        </div>
+      </div>
+
+      <div class="cluster-card" data-index="1" onclick="openPanel(this, 'risque')">
+        <div class="card-top">
+          <span class="card-title">Concentration des accès Super Admin</span>
+          <span class="card-arrow-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
+        </div>
+        <div class="card-badges">
+          <span class="criticite-badge eleve">Élevé</span>
+          <span class="domain-tag">Utilisateurs</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Side panel overlay -->
+  <div class="side-panel-overlay" id="panelOverlay" onclick="closePanel()"></div>
+
+  <!-- Side panel -->
+  <div class="side-panel" id="sidePanel">
+    <div class="panel-header">
+      <span class="panel-type" id="panelType"></span>
+      <button class="panel-close" onclick="closePanel()">✕</button>
+    </div>
+
+    <div class="panel-body" id="panelBody">
+      <!-- Dynamic content -->
+    </div>
+
+    <div class="panel-nav">
+      <button class="panel-nav-btn" id="navPrev" onclick="navigatePanel(-1)">← Précédent</button>
+      <span class="panel-nav-counter" id="navCounter"></span>
+      <button class="panel-nav-btn" id="navNext" onclick="navigatePanel(1)">Suivant →</button>
+    </div>
+  </div>
+
+  <script>
+    // Mock detailed data for the side panel
+    const panelData = {
+      force: [
+        {
+          title: "Pipelines de vente bien structurés",
+          description: "Les pipelines de deals et de leads suivent une progression logique avec des étapes clairement définies. Le taux de phases sautées est faible (<10%) et les stages sont régulièrement utilisés, ce qui indique une adoption solide par les équipes commerciales.",
+          criticite: null,
+          domaines: ["Deals", "Leads"],
+          regles: [
+            { code: "D-12", label: "Phases sautées dans le pipeline" },
+            { code: "D-13", label: "Points d'entrée multiples" },
+            { code: "L-07", label: "Trop de stages dans le pipeline" },
+          ]
+        },
+        {
+          title: "Couverture complète des propriétés CRM",
+          description: "Les objets CRM clés (contacts, companies, deals) ont un excellent taux de remplissage sur les propriétés critiques. Les propriétés custom sont bien typées et documentées, avec moins de 5% de propriétés inutilisées.",
+          criticite: null,
+          domaines: ["Propriétés", "Contacts", "Companies"],
+          regles: [
+            { code: "P-01", label: "Propriétés inutilisées" },
+            { code: "P-02", label: "Propriétés sous-utilisées (<5%)" },
+            { code: "C-05", label: "Contacts sans email" },
+          ]
+        },
+        {
+          title: "Automatisations actives et fonctionnelles",
+          description: "94% des workflows sont actifs et ont eu au moins un enrollment dans les 90 derniers jours. Aucun workflow en erreur détecté. Les automatisations couvrent les étapes clés du cycle de vente.",
+          criticite: null,
+          domaines: ["Workflows"],
+          regles: [
+            { code: "W-02", label: "Workflows zombies (0 enrollment >90j)" },
+            { code: "W-03", label: "Workflows inactifs" },
+            { code: "W-04", label: "Workflows sans actions" },
+          ]
+        },
+      ],
+      faiblesse: [
+        {
+          title: "Doublons cross-objets non traités",
+          description: "152 doublons de contacts détectés (email exact + nom+company) et 38 doublons de companies (par domaine). L'absence de workflow de déduplication automatique indique un problème de processus, pas seulement de données. Les doublons faussent le reporting et créent des frictions pour les commerciaux.",
+          criticite: "Critique",
+          domaines: ["Contacts", "Companies"],
+          regles: [
+            { code: "C-01", label: "Doublons par email exact" },
+            { code: "C-02", label: "Doublons par nom + company" },
+            { code: "CO-01", label: "Doublons par domaine" },
+            { code: "CO-02", label: "Doublons par nom" },
+          ]
+        },
+        {
+          title: "Problème systémique de qualité des données",
+          description: "Un pattern transverse de données incomplètes ou incohérentes affecte les 3 objets CRM principaux. 23% des contacts n'ont pas de lifecycle stage, 34% des companies n'ont pas de domaine, et 18% des deals n'ont pas de montant. Ces lacunes impactent la fiabilité du reporting et la segmentation.",
+          criticite: "Élevé",
+          domaines: ["Contacts", "Companies", "Deals"],
+          regles: [
+            { code: "C-11", label: "Contacts sans lifecycle stage" },
+            { code: "CO-03", label: "Companies sans domaine" },
+            { code: "D-08", label: "Deals sans montant" },
+            { code: "D-09", label: "Deals sans close date" },
+            { code: "C-12", label: "Contacts créés sans source" },
+          ]
+        },
+        {
+          title: "Gouvernance utilisateurs insuffisante",
+          description: "4 Super Admins sur 12 utilisateurs (33%) — bien au-dessus du seuil recommandé de 25%. 3 utilisateurs n'ont aucune activité CRM dans les 90 derniers jours. Risque de sécurité et coût de licences inutile.",
+          criticite: "Élevé",
+          domaines: ["Utilisateurs"],
+          regles: [
+            { code: "U-01", label: "Super Admins en excès" },
+            { code: "U-05", label: "Utilisateurs inactifs" },
+            { code: "U-03", label: "Utilisateurs sans équipe" },
+          ]
+        },
+        {
+          title: "Workflows mal documentés et mal nommés",
+          description: "40% des workflows ne suivent pas la convention de nommage recommandée et 60% n'ont aucune description. Cela rend la maintenance difficile et augmente le risque d'erreur lors de modifications.",
+          criticite: "Modéré",
+          domaines: ["Workflows", "Propriétés"],
+          regles: [
+            { code: "W-01", label: "Mauvais nommage" },
+            { code: "P-04", label: "Propriétés non documentées" },
+          ]
+        },
+      ],
+      risque: [
+        {
+          title: "Perte de données sur le handoff lead → deal",
+          description: "28% des leads qualifiés n'ont pas de deal associé, ce qui signifie que des opportunités commerciales sont perdues dans la transition lead → deal. Combiné avec 15% de leads sans contact associé, le pipeline de prospection a des fuites significatives qui impactent directement le chiffre d'affaires.",
+          criticite: "Critique",
+          domaines: ["Leads", "Deals", "Contacts"],
+          regles: [
+            { code: "L-13", label: "Qualifié sans deal associé" },
+            { code: "L-04", label: "Leads sans contact associé" },
+            { code: "D-11", label: "Deals sans contact associé" },
+          ]
+        },
+        {
+          title: "Concentration des accès Super Admin",
+          description: "Avec 33% de Super Admins et l'absence de différenciation des rôles, une erreur de manipulation ou une compromission de compte pourrait affecter l'ensemble du workspace. Le risque est amplifié par l'absence de politique de revue des accès.",
+          criticite: "Élevé",
+          domaines: ["Utilisateurs"],
+          regles: [
+            { code: "U-01", label: "Super Admins en excès" },
+            { code: "U-02", label: "Rôles non différenciés" },
+          ]
+        },
+      ]
+    };
+
+    let currentType = null;
+    let currentIndex = 0;
+
+    function openPanel(card, type) {
+      // Remove active from all cards
+      document.querySelectorAll('.cluster-card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+
+      currentType = type;
+      currentIndex = parseInt(card.dataset.index);
+
+      renderPanel();
+
+      document.getElementById('sidePanel').classList.add('open');
+      document.getElementById('panelOverlay').classList.add('open');
+    }
+
+    function closePanel() {
+      document.getElementById('sidePanel').classList.remove('open');
+      document.getElementById('panelOverlay').classList.remove('open');
+      document.querySelectorAll('.cluster-card').forEach(c => c.classList.remove('active'));
+    }
+
+    function navigatePanel(direction) {
+      const items = panelData[currentType];
+      const newIndex = currentIndex + direction;
+      if (newIndex < 0 || newIndex >= items.length) return;
+
+      currentIndex = newIndex;
+
+      // Update active card
+      document.querySelectorAll('.cluster-card').forEach(c => c.classList.remove('active'));
+      const col = document.querySelector(`.diagnostic-column[data-type="${currentType}"]`);
+      const cards = col.querySelectorAll('.cluster-card');
+      if (cards[currentIndex]) cards[currentIndex].classList.add('active');
+
+      renderPanel();
+    }
+
+    function renderPanel() {
+      const data = panelData[currentType][currentIndex];
+      const total = panelData[currentType].length;
+
+      // Type label
+      const typeEl = document.getElementById('panelType');
+      const typeLabels = { force: 'Force', faiblesse: 'Faiblesse', risque: 'Risque' };
+      typeEl.textContent = typeLabels[currentType];
+      typeEl.className = 'panel-type ' + currentType;
+
+      // Body
+      const body = document.getElementById('panelBody');
+      let critBadge = '';
+      if (data.criticite) {
+        const cls = data.criticite === 'Critique' ? 'critique' : data.criticite === 'Élevé' ? 'eleve' : 'modere';
+        critBadge = `<span class="criticite-badge criticite-detail ${cls}">${data.criticite}</span>`;
+      }
+
+      body.innerHTML = `
+        <h3 class="panel-title">${data.title}</h3>
+
+        ${data.criticite ? `
+        <div class="panel-section">
+          <div class="panel-section-label">Criticité</div>
+          <div class="panel-badges">${critBadge}</div>
+        </div>
+        ` : ''}
+
+        <div class="panel-section">
+          <div class="panel-section-label">Analyse</div>
+          <p class="panel-description">${data.description}</p>
+        </div>
+
+        <div class="panel-section">
+          <div class="panel-section-label">Domaines concernés</div>
+          <div class="panel-badges">
+            ${data.domaines.map(d => `<span class="panel-badge domain">${d}</span>`).join('')}
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="panel-section-label">Règles sources</div>
+          <ul class="panel-rules">
+            ${data.regles.map(r => `
+              <li>
+                <span class="rule-code">${r.code}</span>
+                <span>${r.label}</span>
+              </li>
+            `).join('')}
+          </ul>
+        </div>
+      `;
+
+      // Nav
+      document.getElementById('navPrev').disabled = currentIndex === 0;
+      document.getElementById('navNext').disabled = currentIndex === total - 1;
+      document.getElementById('navCounter').textContent = `${currentIndex + 1} / ${total}`;
+    }
+
+    // Keyboard nav
+    document.addEventListener('keydown', (e) => {
+      if (!document.getElementById('sidePanel').classList.contains('open')) return;
+      if (e.key === 'Escape') closePanel();
+      if (e.key === 'ArrowLeft') navigatePanel(-1);
+      if (e.key === 'ArrowRight') navigatePanel(1);
+    });
+  </script>
+
+</body>
+</html>
