@@ -57,6 +57,7 @@ product/
 | EP-UX-03 | [prd-ux-03-refonte-rapport.md](prd/prd-ux-03-refonte-rapport.md) | [ep-ux-03-refonte-rapport.md](epics/ep-ux-03-refonte-rapport.md) | ✅ Livré |
 | EP-14 | [prd-14-diagnostic-ia.md](prd/prd-14-diagnostic-ia.md) | [ep14-diagnostic-ia.md](epics/ep14-diagnostic-ia.md) | ✅ Livré |
 | EP-UX-04 | [prd-ux-04-refonte-diagnostic-recommandations.md](prd/prd-ux-04-refonte-diagnostic-recommandations.md) | [ep-ux-04-refonte-diagnostic-recommandations.md](epics/ep-ux-04-refonte-diagnostic-recommandations.md) | Spécifié |
+| EP-19 | [prd-19-patch-regles-v1.md](prd/prd-19-patch-regles-v1.md) | [ep19-patch-regles-v1.md](epics/ep19-patch-regles-v1.md) | Spécifié |
 | EP-08 | À créer | À créer | À spécifier |
 
 ---

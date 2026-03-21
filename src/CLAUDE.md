@@ -90,6 +90,7 @@ Les artefacts PM sont en lecture seule depuis ce mode. Si tu identifies une inco
 | EP-UX-03 | [prd-ux-03-refonte-rapport.md](../product/prd/prd-ux-03-refonte-rapport.md) | Refonte rapport : sidebar, vue par sévérité, hero simplifié, quick wins | Spécifié |
 | EP-14 | [prd-14-diagnostic-ia.md](../product/prd/prd-14-diagnostic-ia.md) | Diagnostic IA structuré (forces/faiblesses/risques) + roadmap recommandations, gpt-5.4 structured outputs | ✅ Livré |
 | EP-UX-04 | [prd-ux-04-refonte-diagnostic-recommandations.md](../product/prd/prd-ux-04-refonte-diagnostic-recommandations.md) | Refonte UX diagnostic (grille 3 colonnes) + recommandations (tableau + side panel) | Spécifié |
+| EP-19 | [prd-19-patch-regles-v1.md](../product/prd/prd-19-patch-regles-v1.md) | Patch règles v1 : LLM validation (P3, P6, W6, C-06), refonte contacts, suppression règles obsolètes | Spécifié |
 
 ---
 
